@@ -1,0 +1,17 @@
+ALGEBRA_SKILLS=12
+ALL_SKILLS=60
+algebra live=12
+latin_hits=0
+
+linear-eq: drill=18 extra=7 domain=algebra live=true viz=linear-eq-lab ok=true
+two-step-eq: drill=18 extra=7 domain=algebra live=true viz=two-step-eq-lab ok=true
+eval-expr: drill=18 extra=7 domain=algebra live=true viz=eval-expr-lab ok=true
+simplify: drill=18 extra=7 domain=algebra live=true viz=simplify-lab ok=true
+inequalities: drill=18 extra=7 domain=algebra live=true viz=inequalities-lab ok=true
+arith-seq: drill=18 extra=7 domain=algebra live=true viz=arith-seq-lab ok=true
+square-patterns: drill=18 extra=7 domain=algebra live=true viz=square-patterns-lab ok=true
+ages: drill=18 extra=7 domain=algebra live=true viz=ages-lab ok=true
+word-to-algebra: drill=18 extra=7 domain=algebra live=true viz=word-to-algebra-lab ok=true
+algebra-relations: drill=18 extra=7 domain=algebra live=true viz=algebra-relations-lab ok=true
+balance-sides: drill=18 extra=7 domain=algebra live=true viz=balance-sides-lab ok=true
+check-by-sub: drill=18 extra=7 domain=algebra live=true viz=check-by-sub-lab ok=true

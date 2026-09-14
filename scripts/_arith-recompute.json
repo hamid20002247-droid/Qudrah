@@ -1,0 +1,11 @@
+{
+  "ok": 427,
+  "fails": 1,
+  "failsDetail": [
+    {
+      "skill": "number-sense",
+      "id": "ns-f05",
+      "msg": "solve mismatch ans=1499 + 1504 solveTail=3,3003,3000"
+    }
+  ]
+}

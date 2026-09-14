@@ -1,0 +1,15 @@
+COMPARISON_SKILLS=10
+ALL_SKILLS=60
+catalog live=10
+latin_hits=0
+
+cmp-numbers: drill=18 extra=7 live=true viz=cmp-numbers-lab missingSolve=0 badChoices=0 insufCorrect=2
+cmp-percent: drill=18 extra=7 live=true viz=cmp-percent-lab missingSolve=0 badChoices=0 insufCorrect=2
+cmp-frac: drill=18 extra=7 live=true viz=cmp-frac-lab missingSolve=0 badChoices=0 insufCorrect=2
+cmp-area: drill=18 extra=7 live=true viz=cmp-area-lab missingSolve=0 badChoices=0 insufCorrect=2
+cmp-peri-area: drill=18 extra=7 live=true viz=cmp-peri-area-lab missingSolve=0 badChoices=0 insufCorrect=2
+cmp-algebra: drill=18 extra=7 live=true viz=cmp-algebra-lab missingSolve=0 badChoices=0 insufCorrect=0
+cmp-roots-exp: drill=18 extra=7 live=true viz=cmp-roots-exp-lab missingSolve=0 badChoices=0 insufCorrect=0
+cmp-rates: drill=18 extra=7 live=true viz=cmp-rates-lab missingSolve=0 badChoices=0 insufCorrect=0
+cmp-means: drill=18 extra=7 live=true viz=cmp-means-lab missingSolve=0 badChoices=0 insufCorrect=0
+cmp-insufficient: drill=18 extra=7 live=true viz=cmp-insufficient-lab missingSolve=0 badChoices=0 insufCorrect=17

@@ -1,0 +1,18 @@
+PASS count: 286
+FAIL count: 14
+
+FAIL list:
+perimeter/per-12 | expected: 6 | choice_at_index: 6 سم | why: solve_ar ends with 40, expected 6
+pythagoras/py-08 | expected: 7√2 | choice_at_index: 7√2 سم | why: duplicate equivalent choices [0] vs [3]
+pythagoras/py-14 | expected: 5 | choice_at_index: 5 و 12 و 13 | why: duplicate equivalent choices [0] vs [1]
+pythagoras/py-15 | expected: 25√2 | choice_at_index: 25√2 سم | why: duplicate equivalent choices [0] vs [3]
+pythagoras/py-f04 | expected: 6√2 | choice_at_index: 6√2 سم | why: duplicate equivalent choices [0] vs [3]
+volume/vo-07 | expected: 5 | choice_at_index: 5 سم | why: solve_ar ends with 125, expected 5
+volume/vo-14 | expected: 4 | choice_at_index: 4 م | why: solve_ar ends with 64, expected 4
+special-triangles/st-06 | expected: 6 | choice_at_index: 6 و8 و10 | why: solve_ar ends with 2, expected 6
+parallel-lines/pl-09 | expected: 45 | choice_at_index: 45° | why: solve_ar ends with 135, expected 45
+units-measure/um-07 | expected: 10000 | choice_at_index: 1 م² = 10000 سم² | why: duplicate equivalent choices [0] vs [1]
+units-measure/um-14 | expected: 2 | choice_at_index: 2 م | why: solve_ar ends with 80, expected 2
+units-measure/um-16 | expected: 180 | choice_at_index: ١٨٠ سم أكبر | why: solve_ar ends with 1.5, expected 180
+units-measure/um-17 | expected: 100 | choice_at_index: 1 م² = 100 سم² | why: duplicate equivalent choices [1] vs [2]
+units-measure/um-f03 | expected: 90 | choice_at_index: 90 سم | why: solve_ar ends with 95, expected 90

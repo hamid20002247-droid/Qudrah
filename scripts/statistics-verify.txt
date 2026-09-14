@@ -1,0 +1,15 @@
+STATISTICS_SKILLS=10
+ALL_SKILLS=60
+catalog live=10
+latin_hits=0
+
+mean-list: drill=18 extra=7 live=true viz=mean-list-lab missingSolve=0 badChoices=0
+mean-missing: drill=18 extra=7 live=true viz=mean-missing-lab missingSolve=0 badChoices=0
+median: drill=18 extra=7 live=true viz=median-lab missingSolve=0 badChoices=0
+mode: drill=18 extra=7 live=true viz=mode-lab missingSolve=0 badChoices=0
+range: drill=18 extra=7 live=true viz=range-lab missingSolve=0 badChoices=0
+tables: drill=18 extra=7 live=true viz=tables-lab missingSolve=0 badChoices=0
+charts: drill=18 extra=7 live=true viz=charts-lab missingSolve=0 badChoices=0
+prob-simple: drill=18 extra=7 live=true viz=prob-simple-lab missingSolve=0 badChoices=0
+prob-without-replace: drill=18 extra=7 live=true viz=prob-without-replace-lab missingSolve=0 badChoices=0
+data-percent: drill=18 extra=7 live=true viz=data-percent-lab missingSolve=0 badChoices=0

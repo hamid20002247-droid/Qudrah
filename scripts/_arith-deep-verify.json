@@ -1,0 +1,146 @@
+{
+  "ok": 393,
+  "critical": 20,
+  "major": 2,
+  "minor": 1,
+  "F": [
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "PercentOfLab.tsx:97",
+      "msg": "Latin: ${percent} بالمئة من ${base} تساوي ${part}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "AverageLab.tsx:55",
+      "msg": "Latin: القيمة ${index + 1}: ${value}. اضغط لزيادتها"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "FractionsLab.tsx:79",
+      "msg": "Latin: أُخذ أولاً ${firstTaken}، وأُخذ ثانياً ${secondTaken}، والباقي ${remainder}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "CompareFractionsLab.tsx:276",
+      "msg": "Latin: الكسر ${labelOf(fraction)}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "CompareFractionsLab.tsx:277",
+      "msg": "Latin: شريط الكسر ${label}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "GcdLcmLab.tsx:74",
+      "msg": "Latin: العدد الأول ${a}. اضغط لتغييره"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "GcdLcmLab.tsx:91",
+      "msg": "Latin: العدد الثاني ${b}. اضغط لتغييره"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "ExponentsLab.tsx:152",
+      "msg": "Latin: القاعدة ${base}. اضغط لتغييرها"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "ExponentsLab.tsx:168",
+      "msg": "Latin: الأس الأول ${mode === \"zero\" ? 0 : expA}. اضغط لزيادته"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "ExponentsLab.tsx:186",
+      "msg": "Latin: الأس الثاني ${mode === \"zero\" ? 0 : expB}. اضغط لزيادته"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "RootsLab.tsx:84",
+      "msg": "Latin: = ${low} تماماً"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "RootsLab.tsx:166",
+      "msg": "Latin: الجذر التربيعي لـ ${n} يساوي ${low}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "RootsLab.tsx:167",
+      "msg": "Latin: الجذر التربيعي لـ ${n} بين ${low} و ${high}"
+    },
+    {
+      "sev": "Critical",
+      "skill": "lab",
+      "id": "NumberSenseLab.tsx:171",
+      "msg": "Latin: ن تساوي ${n}. حاصل الزوج ${productPair}، والمربع ${square}"
+    },
+    {
+      "sev": "Major",
+      "skill": "percent-of",
+      "id": "po-16",
+      "msg": "map-scale belongs in ratios"
+    },
+    {
+      "sev": "Major",
+      "skill": "roots",
+      "id": "ro-01",
+      "msg": "map-scale belongs in ratios"
+    },
+    {
+      "sev": "Critical",
+      "skill": "percent-change",
+      "id": "pc-06",
+      "msg": "multi-correct numeric 15"
+    },
+    {
+      "sev": "Minor",
+      "skill": "percent-change",
+      "id": "pc-13",
+      "msg": "unparsed انخفض عدد مشاهدات بث بنسبة 20% فصار 480 ألفاً. كم كان العدد قبل الانخف"
+    },
+    {
+      "sev": "Critical",
+      "skill": "successive-percent",
+      "id": "sp-03",
+      "msg": "multi-correct 1"
+    },
+    {
+      "sev": "Critical",
+      "skill": "successive-percent",
+      "id": "sp-05",
+      "msg": "multi-correct 10"
+    },
+    {
+      "sev": "Critical",
+      "skill": "successive-percent",
+      "id": "sp-f04",
+      "msg": "multi-correct 0.64"
+    },
+    {
+      "sev": "Critical",
+      "skill": "compare-fractions",
+      "id": "cf-02",
+      "msg": "multi-correct 4"
+    },
+    {
+      "sev": "Critical",
+      "skill": "number-sense",
+      "id": "ns-f05",
+      "msg": "multi-correct 1499"
+    }
+  ]
+}

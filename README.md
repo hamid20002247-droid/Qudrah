@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# قُدرة (Qudrah)
 
-## Getting Started
+Arabic-first, mobile web MVP for Saudi Qudurat **quantitative (arithmetic)** prep.
 
-First, run the development server:
+> افهم الحيلة بالتصوّر، وحُلّ أسرع — مو بالحفظ.
+
+## Stack
+
+- Next.js (App Router) + React + TypeScript
+- Tailwind CSS v4 (RTL logical-friendly)
+- KaTeX, Zustand, PostHog, Supabase (minimal)
+
+## Quick start
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Set `REVIEW_PIN` in `.env.local` then visit `/review`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Screens
 
-## Learn More
+| Route | Purpose |
+|-------|---------|
+| `/` | Landing + live visual + teaser question |
+| `/skills` | Arithmetic skills map |
+| `/skill/[id]` | Visual → trick → timed drill |
+| `/mock` | 12Q / 12min mini-mock |
+| `/result` | Score + weak spots + notify me |
+| `/auth` | Sign in / sign up + Google |
+| `/about` | Brand + social handles |
+| `/review` | PIN-gated draft review |
 
-To learn more about Next.js, take a look at the following resources:
+## Content
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Skills live in `src/content/arithmetic/`. Mock pool in `src/content/mock/pool.ts`.
+Only `review_status: "approved"` items appear publicly.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Auth & Supabase
 
-## Deploy on Vercel
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` in the SQL editor.
+3. Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`.
+4. Enable Email (+ Google if you want) and add redirect URLs — see [docs/AUTH_HOSTING.md](docs/AUTH_HOSTING.md).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Training works without login. Signed-in users sync progress to `user_progress`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deploy
+
+Vercel project name: `qudrah`. Domain target: `qudrah.app`.
+
+Copy the same env vars into Vercel, then add the production Site URL and `/auth/callback` redirect in Supabase.
+
+## Legal
+
+قُدرة is independent of ETEC / Qiyas. Questions are original, modeled on public practice style — never leaked official items.

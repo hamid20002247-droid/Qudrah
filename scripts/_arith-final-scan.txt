@@ -1,0 +1,6 @@
+{
+  "latin": 0,
+  "hits": [],
+  "dups": [],
+  "idCount": 400
+}

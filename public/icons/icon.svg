@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Qudrah">
+  <rect width="512" height="512" fill="#0D9488"/>
+  <g fill="#FFFFFF">
+    <rect x="96" y="320" width="128" height="64" rx="20" transform="rotate(-36 160 352)"/>
+    <rect x="168" y="236" width="128" height="64" rx="20" transform="rotate(-36 232 268)"/>
+    <path d="M268 108 L396 236 L344 236 L344 292 L268 292 L268 236 L216 236 Z" transform="rotate(-36 306 200)"/>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+GEOMETRY_SKILLS=12
+ALL_SKILLS=60
+geometry live in catalog=12
+latin_hits=0
+
+angles: drill=18 extra=7 domain=geometry live=true ok=true
+perimeter: drill=18 extra=7 domain=geometry live=true ok=true
+rect-area: drill=18 extra=7 domain=geometry live=true ok=true
+triangle-area: drill=18 extra=7 domain=geometry live=true ok=true
+pythagoras: drill=18 extra=7 domain=geometry live=true ok=true
+circle-circ: drill=18 extra=7 domain=geometry live=true ok=true
+circle-area: drill=18 extra=7 domain=geometry live=true ok=true
+volume: drill=18 extra=7 domain=geometry live=true ok=true
+surface-area: drill=18 extra=7 domain=geometry live=true ok=true
+special-triangles: drill=18 extra=7 domain=geometry live=true ok=true
+parallel-lines: drill=18 extra=7 domain=geometry live=true ok=true
+units-measure: drill=18 extra=7 domain=geometry live=true ok=true

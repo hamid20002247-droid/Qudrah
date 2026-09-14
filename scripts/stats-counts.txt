@@ -1,0 +1,11 @@
+n=10
+mean-list: drill=18 extra=7 domain=statistics
+mean-missing: drill=18 extra=7 domain=statistics
+median: drill=18 extra=7 domain=statistics
+mode: drill=18 extra=7 domain=statistics
+range: drill=18 extra=7 domain=statistics
+tables: drill=18 extra=7 domain=statistics
+charts: drill=18 extra=7 domain=statistics
+prob-simple: drill=18 extra=7 domain=statistics
+prob-without-replace: drill=18 extra=7 domain=statistics
+data-percent: drill=18 extra=7 domain=statistics

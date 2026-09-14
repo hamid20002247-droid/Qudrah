@@ -1,0 +1,7 @@
+﻿The variable '$1' cannot be retrieved because it has not been set.
+At line:5 char:218
++ ... turn s.replace(/[٠-٩٫−]/g,c=>m[c]??c).replace(/سالب\s*(\d+)/g,'-$1')}
++                                                                     ~~
+    + CategoryInfo          : InvalidOperation: (1:String) [], RuntimeException
+    + FullyQualifiedErrorId : VariableIsUndefined
+ 

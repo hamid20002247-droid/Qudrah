@@ -1,0 +1,16 @@
+percent-change | التغيّر المئوي | drill=18 final=7 | viz=percent-change-lab
+percent-of | النسبة من العدد | drill=18 final=7 | viz=percent-of-lab
+successive-percent | النسب المتتالية | drill=18 final=7 | viz=successive-lab
+ratios | النسب والتناسب | drill=18 final=7 | viz=ratio-lab
+direct-inverse | التناسب الطردي والعكسي | drill=18 final=7 | viz=direct-inverse-lab
+buy-sell | الربح والخصم | drill=18 final=7 | viz=buy-sell-lab
+average | المتوسط الحسابي | drill=18 final=7 | viz=average-lab
+fractions | الكسور في المسائل | drill=18 final=7 | viz=fractions-lab
+compare-fractions | مقارنة الكسور | drill=18 final=7 | viz=compare-fractions-lab
+rate-distance | السرعة والمسافة والزمن | drill=18 final=7 | viz=rate-distance-lab
+work-rate | العمل والإنجاز | drill=18 final=7 | viz=work-rate-lab
+gcd-lcm | القواسم والمضاعفات | drill=18 final=7 | viz=gcd-lcm-lab
+exponents | الأسس والقوى | drill=18 final=7 | viz=exponents-lab
+roots | الجذور والتقدير | drill=18 final=7 | viz=roots-lab
+number-sense | الحس العددي | drill=18 final=7 | viz=number-sense-lab
+word-arith | المسائل اللفظية الحسابية | drill=18 final=7 | viz=word-arith-lab

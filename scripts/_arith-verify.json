@@ -1,0 +1,159 @@
+{
+  "ok": 50,
+  "miss": 25,
+  "critical": 0,
+  "major": 0,
+  "minor": 25,
+  "F": [
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-01",
+      "msg": "parse fail base=null rates=20,20 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-02",
+      "msg": "parse fail base=null rates=25,20 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-03",
+      "msg": "parse fail base=null rates=10,10 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-04",
+      "msg": "ambiguous ops base=264 rates=10,20 stored=200"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-05",
+      "msg": "parse fail base=null rates=50,40 ops=0"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-06",
+      "msg": "parse fail base=null rates=25 ops=0"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-07",
+      "msg": "parse fail base=null rates=15,15 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-08",
+      "msg": "parse fail base=null rates=20,25 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-09",
+      "msg": "parse fail base=null rates=30,10 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-10",
+      "msg": "parse fail base=null rates=20,10 ops=1"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-11",
+      "msg": "parse fail base=null rates=5,5 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-12",
+      "msg": "parse fail base=null rates=25,20 ops=1"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-13",
+      "msg": "parse fail base=null rates=20,25 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-14",
+      "msg": "parse fail base=null rates=10,20,20,10 ops=0"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-15",
+      "msg": "parse fail base=null rates=40 ops=1"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-16",
+      "msg": "parse fail base=null rates=5,5 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-17",
+      "msg": "parse fail base=null rates=10,10 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-18",
+      "msg": "parse fail base=null rates=20,30 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f01",
+      "msg": "parse fail base=null rates=10,20 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f02",
+      "msg": "parse fail base=null rates=25 ops=1"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f03",
+      "msg": "parse fail base=null rates=20,50 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f04",
+      "msg": "parse fail base=null rates=8,8 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f05",
+      "msg": "parse fail base=null rates=60 ops=0"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f06",
+      "msg": "parse fail base=null rates=50,50 ops=2"
+    },
+    {
+      "sev": "Minor",
+      "skill": "successive-percent",
+      "id": "sp-f07",
+      "msg": "parse fail base=null rates=12,12 ops=2"
+    }
+  ]
+}

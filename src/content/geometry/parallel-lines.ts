@@ -1,0 +1,493 @@
+import type { Skill } from "@/lib/types";
+
+const review = {
+  source: "style-modeled-practice-2024",
+  review_status: "approved" as const,
+  reviewed_by: "founder",
+  reviewed_at: "2026-09-13T00:00:00.000Z",
+};
+
+export const parallelLines: Skill = {
+  id: "parallel-lines",
+  title_ar: "التوازي وقطع مستقيم",
+  domain: "geometry",
+  hook_ar: "زوايا متناظرة ومتبادلة ومتحالفة",
+  estimated_minutes: 8,
+  icon: "∥",
+  visual: { kind: "custom", component: "parallel-lines-lab" },
+  intuition_ar: [
+    "خطّان متوازيان يقطعهما قاطع يُنشئ زوايا مرتبطة.",
+    "المتناظرة: في الموقع نفسه عند التقاطعين — متساويتان.",
+    "المتبادلة (الداخلية): داخل المتوازيين وعلى جهتين مختلفتين من القاطع — متساويتان.",
+    "المتحالفة (الداخلية على جهة واحدة): داخل المتوازيين وعلى الجهة نفسها — مجموعهما ١٨٠°.",
+  ],
+  trick_ar: {
+    statement: "سمِّ العلاقة: متناظرة أو متبادلة → تساوٍ؛ متحالفة → تكامل ١٨٠°.",
+    steps: [
+      "ارسم ذهنياً: متوازيان + قاطع",
+      "حدّد نوع الزوج المطلوب",
+      "متناظرة/متبادلة: انسخ القياس؛ متحالفة: اطرح من ١٨٠",
+    ],
+    time_target_sec: 22,
+    example_ar:
+      "زاوية متناظرة لـ ٦٥° تساوي ٦٥°. زاوية متحالفة معها = ١٨٠ − ٦٥ = ١١٥°.",
+  },
+  timing: {
+    excellent_sec: 22,
+    good_sec: 32,
+    ok_sec: 42,
+    slow_sec: 56,
+  },
+  review_status: "approved",
+  reviewed_by: "founder",
+  reviewed_at: "2026-09-13T00:00:00.000Z",
+  drill: [
+    {
+      id: "pl-01",
+      prompt_ar:
+        "خطّان متوازيان قطعهما قاطع. زاوية قياسها ٧٠°. ما قياس الزاوية المتناظرة لها؟",
+      choices_ar: ["70°", "110°", "20°", "140°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المتحالفة (١٨٠−٧٠) بدل المتناظرة.",
+        2: "طُرح من ٩٠ خطأ.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "الزوايا المتناظرة متساوية. إذن القياس = ٧٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-02",
+      prompt_ar:
+        "خطّان متوازيان وقاطع. زاوية داخلية ٤٠°. ما قياس الزاوية المتبادلة الداخلية معها؟",
+      choices_ar: ["40°", "140°", "50°", "80°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المتحالفة بدل المتبادلة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "المتبادلة الداخلية متساوية. القياس = ٤٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-03",
+      prompt_ar:
+        "خطّان متوازيان وقاطع. زاوية داخلية ٦٥°. ما قياس الزاوية المتحالفة الداخلية معها؟",
+      choices_ar: ["115°", "65°", "25°", "130°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت الزاوية كما لو كانت متناظرة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "المتحالفة الداخلية مجموعها ١٨٠°. القياس = ١٨٠ − ٦٥ = ١١٥°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-04",
+      prompt_ar:
+        "زاويتان متناظرتان عند قاطع لمتوازيين. إحداهما ١١٠°. ما الأخرى؟",
+      choices_ar: ["110°", "70°", "20°", "180°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المكملة إلى ١٨٠.",
+        2: "طُرح من ٩٠.",
+        3: "خُلط بمجموع المستقيم.",
+      },
+      solve_ar: "المتناظرتان متساويتان = ١١٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-05",
+      prompt_ar:
+        "زاويتان متحالفتان داخليتان مجموعهما ١٨٠°. إذا كانت إحداهما ٩٥° فما الأخرى؟",
+      choices_ar: ["85°", "95°", "5°", "190°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت الزاوية.",
+        2: "طُرح من ٩٠.",
+        3: "جُمعت بدل الطرح.",
+      },
+      solve_ar: "١٨٠ − ٩٥ = ٨٥°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-06",
+      prompt_ar:
+        "أي وصف صحيح للزاويتين المتناظرتين عند قاطع لمتوازيين؟",
+      choices_ar: [
+        "متساويتان",
+        "مجموعهما ١٨٠° دائماً",
+        "مجموعهما ٩٠°",
+        "لا علاقة بينهما",
+      ],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "هذا وصف المتحالفتين لا المتناظرتين.",
+        2: "ليستا متتامتين بالضرورة.",
+        3: "بينهما تساوٍ واضح.",
+      },
+      solve_ar: "المتناظرتان متساويتان دائماً عند توازي الخطين.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-07",
+      prompt_ar:
+        "قاطع لمتوازيين تكوّنت عنده زاوية ٥٨°. ما قياس الزاوية المتبادلة الداخلية لها؟",
+      choices_ar: ["58°", "122°", "32°", "116°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المتحالفة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "المتبادلة = ٥٨°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-08",
+      prompt_ar:
+        "زاوية متناظرة = ٧٢°. ما قياس الزاوية المتحالفة الداخلية مع تلك الزاوية؟",
+      choices_ar: ["108°", "72°", "18°", "144°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت المتناظرة دون التكامل.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar:
+        "المتناظرة = ٧٢°، فالمتحالفة معها = ١٨٠ − ٧٢ = ١٠٨°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-09",
+      prompt_ar:
+        "زاويتان متحالفتان داخليتان. إحداهما ثلاثة أمثال الأخرى. ما قياس الصغرى؟",
+      choices_ar: ["45°", "60°", "30°", "90°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "قُسم ١٨٠ على ٣ فقط.",
+        2: "قُسم ١٨٠ على ٦.",
+        3: "أُخذ نصف ١٨٠.",
+      },
+      solve_ar:
+        "س + ٣س = ١٨٠ ⇒ ٤س = ١٨٠ ⇒ س = ٤٥°. الصغرى ٤٥° والكبرى ١٣٥°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-10",
+      prompt_ar:
+        "أي زوج مجموعه ١٨٠° عند قاطع لمتوازيين؟",
+      choices_ar: [
+        "المتحالفتان الداخليتان",
+        "المتناظرتان",
+        "المتبادلتان الداخليتان",
+        "أي زاويتين متجاورتين خارجيتين فقط دائماً بلا شرط",
+      ],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "المتناظرتان متساويتان لا متكاملتان.",
+        2: "المتبادلتان متساويتان.",
+        3: "الوصف غير دقيق لهذه المهارة.",
+      },
+      solve_ar: "المتحالفتان الداخليتان مجموعهما ١٨٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-11",
+      prompt_ar:
+        "زاوية عند القاطع = ١٢٥°. ما قياس زاويتها المتناظرة؟",
+      choices_ar: ["125°", "55°", "35°", "250°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المكملة إلى ١٨٠.",
+        2: "طُرح من ٩٠ أو ١٦٠ خطأ.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "المتناظرة = ١٢٥°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-12",
+      prompt_ar:
+        "زاوية داخلية ٨٣°. ما المتحالفة الداخلية معها؟",
+      choices_ar: ["97°", "83°", "7°", "166°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت كمتبادلة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت الزاوية.",
+      },
+      solve_ar: "١٨٠ − ٨٣ = ٩٧°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-13",
+      prompt_ar:
+        "إذا كانت زاوية متناظرة لزاوية أخرى تساوي ٥٠°، فما المتبادلة الداخلية لتلك الزاوية؟",
+      choices_ar: ["50°", "130°", "40°", "100°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المتحالفة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت.",
+      },
+      solve_ar:
+        "المتناظرة = ٥٠° تعني أصل الزاوية ٥٠°. المتبادلة الداخلية لها أيضاً ٥٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-14",
+      prompt_ar:
+        "زاويتان متبادلتان داخليتان. إحداهما ٢س والأخرى ٦٠°. ما قيمة س؟",
+      choices_ar: ["30", "60", "120", "15"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "جُعلت س = ٦٠ دون القسمة.",
+        2: "حُسبت متحالفة: ١٨٠−٦٠.",
+        3: "قُسمت على ٤ خطأ.",
+      },
+      solve_ar: "المتبادلتان متساويتان: ٢س = ٦٠ ⇒ س = ٣٠.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-15",
+      prompt_ar:
+        "زاويتان متحالفتان: س و٢س. ما قياس الكبرى؟",
+      choices_ar: ["120°", "60°", "90°", "180°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "هذه الصغرى س.",
+        2: "قُسم ١٨٠ على ٢.",
+        3: "أُخذ المجموع كله.",
+      },
+      solve_ar: "س + ٢س = ١٨٠ ⇒ ٣س = ١٨٠ ⇒ س = ٦٠. الكبرى ٢س = ١٢٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "hard",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-16",
+      prompt_ar:
+        "قاطع لمتوازيين. زاوية خارجية عند أحد التقاطعين = ١٣٤°. ما قياس الزاوية المتناظرة لها؟",
+      choices_ar: ["134°", "46°", "44°", "226°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُسبت المكملة إلى ١٨٠.",
+        2: "طُرح من ٩٠ تقريباً.",
+        3: "جُمعت مع ٩٠.",
+      },
+      solve_ar: "المتناظرة تساوي ١٣٤°.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-17",
+      prompt_ar:
+        "زاوية متبادلة داخلية = ٦٨°. ما المتحالفة الداخلية لنفس الزاوية؟",
+      choices_ar: ["112°", "68°", "22°", "136°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت المتبادلة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت.",
+      },
+      solve_ar: "١٨٠ − ٦٨ = ١١٢°.",
+      trick_ref: "parallel-lines",
+      difficulty: "hard",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-18",
+      prompt_ar:
+        "أي جملة صحيحة؟",
+      choices_ar: [
+        "المتبادلة الداخلية = المتناظرة عند التوازي",
+        "المتحالفة دائماً متساوية",
+        "المتناظرة مجموعهما ١٨٠°",
+        "لا توجد علاقة عند التوازي",
+      ],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "المتحالفة متكاملة لا متساوية.",
+        2: "المتناظرة متساوية لا متكاملة.",
+        3: "التوازي يفرض علاقات واضحة.",
+      },
+      solve_ar:
+        "عند التوازي: المتناظرة = المتبادلة الداخلية (كلاهما يساوي نفس القياس).",
+      trick_ref: "parallel-lines",
+      difficulty: "hard",
+      sub_pattern: "geometry",
+      ...review,
+    },
+  ],
+  final_extra: [
+    {
+      id: "pl-f01",
+      prompt_ar:
+        "زاوية متناظرة = ٩٠°. ما قياس المتبادلة الداخلية لها؟",
+      choices_ar: ["90°", "180°", "0°", "45°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "خُلط بالمستقيم المستوي.",
+        2: "لا معنى هنا.",
+        3: "نُصّفت الزاوية.",
+      },
+      solve_ar: "المتبادلة = المتناظرة = ٩٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f02",
+      prompt_ar:
+        "متحالفتان داخليتان: إحداهما ٤٢°. ما الأخرى؟",
+      choices_ar: ["138°", "42°", "48°", "84°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت كمتناظرة.",
+        2: "طُرح من ٩٠.",
+        3: "ضُعّفت.",
+      },
+      solve_ar: "١٨٠ − ٤٢ = ١٣٨°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f03",
+      prompt_ar:
+        "زاويتان متناظرتان: ٣س−١٠ و٢س+٢٠. ما قيمة س؟",
+      choices_ar: ["30", "20", "10", "40"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "حُلّت كمتحالفتين أو بحساب ناقص.",
+        2: "نُقلت الحدود خطأ.",
+        3: "جُمعت المعاملات خطأ.",
+      },
+      solve_ar: "٣س − ١٠ = ٢س + ٢٠ ⇒ س = ٣٠.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f04",
+      prompt_ar:
+        "زاويتان متحالفتان: س+٢٠ و٣س. ما قياس الصغرى؟",
+      choices_ar: ["60°", "40°", "50°", "120°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "أُخذت قيمة س دون إضافة ٢٠.",
+        2: "نُقل حدّ أو قُسم المجموع خطأ.",
+        3: "هذه الكبرى ٣س.",
+      },
+      solve_ar: "س+٢٠ + ٣س = ١٨٠ ⇒ ٤س = ١٦٠ ⇒ س = ٤٠. الصغرى = ٤٠+٢٠ = ٦٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "hard",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f05",
+      prompt_ar:
+        "زاوية داخلية ٧٧°. ما مجموعها مع زاويتها المتحالفة؟",
+      choices_ar: ["180°", "154°", "77°", "103°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "ضُعّفت الزاوية.",
+        2: "أُعيدت الزاوية وحدها.",
+        3: "حُسبت المتحالفة فقط.",
+      },
+      solve_ar: "المتحالفتان مجموعهما دائماً ١٨٠°.",
+      trick_ref: "parallel-lines",
+      difficulty: "easy",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f06",
+      prompt_ar:
+        "متبادلتان داخليتان: ٤س و١٠٠°. ما س؟",
+      choices_ar: ["25", "50", "20", "100"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "قُسم على ٢ بدل ٤.",
+        2: "قُسم ١٨٠ أو حُسب متحالفة.",
+        3: "جُعلت س = ١٠٠.",
+      },
+      solve_ar: "٤س = ١٠٠ ⇒ س = ٢٥.",
+      trick_ref: "parallel-lines",
+      difficulty: "mid",
+      sub_pattern: "geometry",
+      ...review,
+    },
+    {
+      id: "pl-f07",
+      prompt_ar:
+        "زاوية متناظرة = ١١٨°. ما قياس الزاوية المجاورة لها على خط مستقيم؟",
+      choices_ar: ["62°", "118°", "28°", "242°"],
+      correct_index: 0,
+      trap_explanations_ar: {
+        1: "نُسخت المتناظرة.",
+        2: "طُرح من ٩٠.",
+        3: "جُمعت مع ١٨٠ خطأ بالاتجاه.",
+      },
+      solve_ar:
+        "المتجاورتان على مستقيم متكاملتان: ١٨٠ − ١١٨ = ٦٢°. (هذا يستخدم تكامل المستقيم مع قياس عُرف من التوازي.)",
+      trick_ref: "parallel-lines",
+      difficulty: "hard",
+      sub_pattern: "geometry",
+      ...review,
+    },
+  ],
+};

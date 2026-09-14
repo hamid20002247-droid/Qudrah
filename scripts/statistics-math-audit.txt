@@ -1,0 +1,13 @@
+STATISTICS MATH AUDIT
+Generated: 2026-09-14T12:25:58.746Z
+Scope: drill + final_extra in src/content/statistics/*.ts (except index.ts) = 250 questions
+Checks: independent recompute; correct_index; exclusivity (exact / reduced frac / frac↔٪); solve_ar arith; median sort; without-replace reduced total; data-percent category/total×100; intuition/trick/traps
+
+PASS: 250
+FAIL: 0
+
+FAIL LIST:
+(none)
+
+META ISSUES:
+(none)

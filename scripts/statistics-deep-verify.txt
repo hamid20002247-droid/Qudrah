@@ -1,0 +1,31 @@
+STATISTICS DEEP MATH VERIFY
+Generated: 2026-09-14T12:12:48.256Z
+Scope: drill + final_extra = 250 questions across 10 skills
+Checks: independent recompute; correct_index; exclusivity; solve_ar; median sort; without-replace reduced total; data-percent cat/total×100; intuition/trick/traps; Latin in Arabic strings
+
+PASS: 250
+FAIL: 0
+
+FAIL LIST:
+(none)
+
+META ISSUES (intuition / trick / traps):
+(none)
+
+LATIN in Arabic content strings: 0
+(none — zero A-Z/a-z in user-facing Arabic)
+
+NOTES:
+tables/tbl-15: column-compare verified via solve (شمال)
+
+PER-SKILL COUNTS:
+- mean-list: 25/25 pass
+- mean-missing: 25/25 pass
+- median: 25/25 pass
+- mode: 25/25 pass
+- range: 25/25 pass
+- tables: 25/25 pass
+- charts: 25/25 pass
+- prob-simple: 25/25 pass
+- prob-without-replace: 25/25 pass
+- data-percent: 25/25 pass

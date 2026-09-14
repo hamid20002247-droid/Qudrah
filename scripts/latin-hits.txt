@@ -1,0 +1,43 @@
+count=42
+lab/AgesLab.tsx:38: أب = 3 × س = ${3 * son} ، س = ${son}
+lab/AgesLab.tsx:39: أب = 2 × س = ${2 * son} ، س = ${son}
+lab/AgesLab.tsx:40: س + (48 − س) = 48 ، س = ${son}
+lab/AgesLab.tsx:41: س + (60 − س) = 60 ، س = ${son}
+lab/AverageLab.tsx:55: القيمة ${index + 1}: ${value}. اضغط لزيادتها
+lab/CmpMeansLab.tsx:94: قيمة أ ${index + 1}: ${value}
+lab/CmpMeansLab.tsx:115: قيمة ب ${index + 1}: ${value}
+lab/CompareFractionsLab.tsx:276: الكسر ${labelOf(fraction)}
+lab/CompareFractionsLab.tsx:277: شريط الكسر ${label}
+lab/EvalExprLab.tsx:30: ${p.a2}س²
+lab/EvalExprLab.tsx:34: ${abs}س
+lab/ExponentsLab.tsx:152: القاعدة ${base}. اضغط لتغييرها
+lab/ExponentsLab.tsx:168: الأس الأول ${mode === "zero" ? 0 : expA}. اضغط لزيادته
+lab/ExponentsLab.tsx:186: الأس الثاني ${mode === "zero" ? 0 : expB}. اضغط لزيادته
+lab/FractionsLab.tsx:79: أُخذ أولاً ${firstTaken}، وأُخذ ثانياً ${secondTaken}، والباقي ${remainder}
+lab/GcdLcmLab.tsx:74: العدد الأول ${a}. اضغط لتغييره
+lab/GcdLcmLab.tsx:91: العدد الثاني ${b}. اضغط لتغييره
+lab/InequalitiesLab.tsx:252: العدد ${n}${lit ? " يحقق" : " لا يحقق"}
+lab/LinearEqLab.tsx:30: ${sign}س
+lab/LinearEqLab.tsx:31: ${sign}${abs}س
+lab/LinearEqLab.tsx:44: ${a === 1 ? "س" : a === -1 ? "−س" :
+lab/MeanListLab.tsx:61: القيمة ${index + 1}: ${value}. اضغط لزيادتها
+lab/MeanMissingLab.tsx:39: المطلوب: متوسط ${newCount} قيم = ${targetMean}
+lab/MeanMissingLab.tsx:41: بعد الإضافة صار المتوسط = ${targetMean}
+lab/ModeLab.tsx:71: القيمة ${value} تكررت ${freq}. اضغط لإضافة تكرار
+lab/NumberSenseLab.tsx:171: ن تساوي ${n}. حاصل الزوج ${productPair}، والمربع ${square}
+lab/PercentOfLab.tsx:97: ${percent} بالمئة من ${base} تساوي ${part}
+lab/ProbSimpleLab.tsx:111: إنقاص ${label}
+lab/ProbSimpleLab.tsx:119: زيادة ${label}
+lab/RangeLab.tsx:127: الأصغر ${minVal}
+lab/RangeLab.tsx:138: الأكبر ${maxVal}
+lab/RootsLab.tsx:84: = ${low} تماماً
+lab/RootsLab.tsx:166: الجذر التربيعي لـ ${n} يساوي ${low}
+lab/RootsLab.tsx:167: الجذر التربيعي لـ ${n} بين ${low} و ${high}
+lab/SimplifyLab.tsx:66: ${coef}س
+lab/SimplifyLab.tsx:87: ${sSum}س
+lab/SquarePatternsLab.tsx:58: شبكة ${n} في ${n}
+lab/SquarePatternsLab.tsx:91: ن تساوي ${value}
+lab/TablesLab.tsx:137: ${preset.rowLabels[r]}، ${preset.colLabels[c]}: ${value}
+lab/TablesLab.tsx:197: ${a} − ${b} → |فرق| = ${diff}
+lab/TwoStepEqLab.tsx:66: ${preset.k}(س ${preset.sign} ${preset.inner}) = ${preset.right}
+lab/TwoStepEqLab.tsx:67: ${preset.k}س ${distributedConst >= 0 ? "+" : "−"} ${Math.abs(distributedConst)} = ${preset.right}
