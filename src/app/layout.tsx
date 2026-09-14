@@ -4,6 +4,7 @@ import { Providers } from "@/components/Providers";
 import { ClientBody } from "@/components/ClientBody";
 import { BottomNav, SiteFooter, TopBar } from "@/components/layout/Chrome";
 import { RegisterSW } from "@/components/RegisterSW";
+import { PRODUCTION_SITE_URL } from "@/lib/publicConfig";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -14,6 +15,7 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(PRODUCTION_SITE_URL),
   title: {
     default: "قُدرة — تدريب القسم الكمي",
     template: "%s | قُدرة",

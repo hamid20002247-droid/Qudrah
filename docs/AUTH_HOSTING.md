@@ -1,65 +1,51 @@
 # Auth & hosting (Supabase + Vercel)
 
-قُدرة works without an account (localStorage). Signing in unlocks cloud progress sync across devices.
+Production: **https://qudrah.vercel.app**  
+Same Supabase project for local and production.
 
-## 1. Create a Supabase project
+## What is hardcoded (public)
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** → paste and run [`supabase/schema.sql`](../supabase/schema.sql).
-3. **Project Settings → API**: copy Project URL, `anon` key, and `service_role` key into `.env.local` (see `.env.example`).
+In `src/lib/publicConfig.ts`:
 
-## 2. Auth providers
+- Supabase project URL
+- Supabase **anon** key (public by design; RLS protects rows)
+- Production site URL constant
 
-### Email / password
+OAuth redirect uses `window.location.origin` / request `origin`, so local and prod both work.
 
-**Authentication → Providers → Email**
+## What stays secret (Vercel env only)
 
-- Enable Email.
-- For local testing you can disable “Confirm email”; for production keep it on.
+| Name | Required |
+|------|----------|
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes — server admin / some API routes |
+| `REVIEW_PIN` | Only if you use `/review` |
+| `REVIEW_SESSION_SECRET` | Only if you use `/review` |
+
+Do **not** put `service_role` in the client or in `publicConfig.ts`.
+
+## Supabase Auth URLs
 
 **Authentication → URL Configuration**
 
-| Setting | Local | Production |
-|---------|-------|------------|
-| Site URL | `http://localhost:3000` | `https://qudrah.app` (or your domain) |
-| Redirect URLs | `http://localhost:3000/auth/callback` | `https://qudrah.app/auth/callback` |
+| Setting | Value |
+|---------|--------|
+| Site URL | `https://qudrah.vercel.app` |
+| Redirect URLs | `https://qudrah.vercel.app/auth/callback` |
+| | `http://localhost:3002/auth/callback` |
+| | `http://localhost:3000/auth/callback` |
 
-Add both localhost and production redirect URLs so Google/email confirm work in both places.
+## Google
 
-### Google
+1. Google Cloud → OAuth Web client  
+2. Authorized redirect URI (Supabase, not Vercel):
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → create OAuth client (Web).
-2. Authorized redirect URI must be the **Supabase callback**, not your app:
+   `https://nmfxftxqznewycnyxrrb.supabase.co/auth/v1/callback`
 
-   `https://YOUR_PROJECT.supabase.co/auth/v1/callback`
+3. Optional JS origins: `https://qudrah.vercel.app`, `http://localhost:3002`  
+4. Supabase → Authentication → Providers → Google → enable + Client ID/Secret
 
-3. Supabase → **Authentication → Providers → Google** → paste Client ID + Secret → enable.
-4. App redirect stays `/auth/callback` (configured under URL Configuration above).
+## Vercel
 
-## 3. Vercel
-
-1. Import the repo; set env vars from `.env.example` (never commit real keys).
-2. Mark `SUPABASE_SERVICE_ROLE_KEY` and `REVIEW_*` as sensitive.
-3. Set `NEXT_PUBLIC_SITE_URL` to the production URL.
-4. After the first deploy, add the production Site URL + Redirect URL in Supabase.
-
-## 4. What the schema gives you
-
-| Table | Purpose |
-|-------|---------|
-| `profiles` | Auto-created on signup (name, avatar, email) |
-| `user_progress` | JSON snapshot of Zustand progress (RLS: own row only) |
-| `attempts` | Optional future exam history |
-| `notify_leads` / `questions_audit` | Existing MVP tables |
-
-RLS is enabled: users can only read/write their own profile and progress.
-
-## 5. App routes
-
-| Route | Role |
-|-------|------|
-| `/auth` | Sign in / sign up + Continue with Google |
-| `/auth/callback` | OAuth + email confirm exchange |
-| Top bar **دخول** / avatar | Account menu + sign out |
-
-Guests keep training offline-first; after login, local + cloud progress are merged (best scores kept).
+1. Domain / alias: `qudrah.vercel.app`
+2. Env: only `SUPABASE_SERVICE_ROLE_KEY` (+ review secrets if needed)
+3. Redeploy after adding secrets

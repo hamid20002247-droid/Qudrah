@@ -1,22 +1,22 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  isSupabaseConfigured as configured,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "@/lib/publicConfig";
 
 let browserClient: SupabaseClient | null = null;
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return configured();
 }
 
 /** Browser / client components — cookie session via @supabase/ssr */
 export function createSupabaseBrowser(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  if (!isSupabaseConfigured()) return null;
   if (!browserClient) {
-    browserClient = createBrowserClient(url, key);
+    browserClient = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
   return browserClient;
 }
