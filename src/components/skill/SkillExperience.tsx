@@ -215,41 +215,65 @@ export function SkillExperience({ skill }: { skill: Skill }) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-28 pt-4">
-      <nav className="mb-3 text-xs text-slate-400">
-        <Link href="/skills" className="hover:text-teal-700">
-          المهارات
+    <div className="mx-auto max-w-lg px-4 pb-28 pt-3">
+      <div className="mb-3 flex items-center gap-2">
+        <Link
+          href="/skills"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-2xl bg-white px-3 text-sm font-extrabold text-ink ring-1 ring-slate-200 transition active:scale-[0.98] hover:ring-teal-300"
+          aria-label="رجوع للمهارات"
+        >
+          <span aria-hidden className="text-lg leading-none">
+            →
+          </span>
+          رجوع
         </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-600">
-          {skillIndex + 1} من {ALL_SKILLS.length}
-        </span>
-      </nav>
+        <p className="min-w-0 flex-1 truncate text-center text-[11px] font-bold text-slate-400">
+          {skillIndex + 1} / {ALL_SKILLS.length}
+        </p>
+        <span className="w-[4.5rem]" aria-hidden />
+      </div>
 
-      {phase !== "drill" && phase !== "done" && (
-        <div className="mb-4 flex items-center justify-center gap-1">
-          {PHASES.map((p) => {
-            const active =
-              phase === p.id || (phase === "pick" && p.id === "drill");
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  scrollWindowToTop("auto");
-                  if (p.id === "drill") setPhase("pick");
-                  else setPhase(p.id);
-                }}
-                className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                  active
-                    ? "bg-teal-600 text-white"
-                    : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
+      {phase !== "done" && (
+        <div className="sticky top-14 z-30 -mx-4 mb-4 border-b border-teal-100/80 bg-white/95 px-4 py-2.5 backdrop-blur-md">
+          <div className="grid grid-cols-3 gap-2">
+            {PHASES.map((p, i) => {
+              const active =
+                phase === p.id ||
+                (phase === "pick" && p.id === "drill") ||
+                (phase === "drill" && p.id === "drill");
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    scrollWindowToTop("auto");
+                    if (p.id === "drill") {
+                      if (phase === "drill") return;
+                      setPhase("pick");
+                    } else {
+                      setPhase(p.id);
+                    }
+                  }}
+                  className={`flex min-h-[3.15rem] flex-col items-center justify-center rounded-2xl text-center transition active:scale-[0.98] ${
+                    active
+                      ? "bg-teal-600 text-white shadow-[0_12px_28px_-12px_rgba(13,148,136,0.7)] ring-2 ring-teal-700/30"
+                      : "bg-slate-100 text-slate-600 ring-1 ring-slate-200 hover:bg-teal-50 hover:text-teal-800 hover:ring-teal-200"
+                  }`}
+                >
+                  <span
+                    className={`text-[10px] font-bold ${
+                      active ? "text-teal-100" : "text-slate-400"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="text-sm font-extrabold leading-none">
+                    {p.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -260,12 +284,11 @@ export function SkillExperience({ skill }: { skill: Skill }) {
         <div className="mt-4">
           <div className="flex items-center justify-between gap-2 rounded-2xl bg-teal-50 px-3 py-2.5 ring-1 ring-teal-100">
             <p className="text-[12px] font-bold text-teal-900">
-              مهارة بدون حساب{" "}
-              {freePath.items.findIndex((x) => x.id === skill.id) + 1} من{" "}
-              {freePath.total}
+              بدون حساب {freePath.items.findIndex((x) => x.id === skill.id) + 1}{" "}
+              من {freePath.total}
             </p>
             <p className="text-[11px] font-semibold tabular-nums text-teal-700">
-              {freePath.completedCount}/{freePath.total} مكتملة
+              {freePath.completedCount}/{freePath.total}
             </p>
           </div>
         </div>

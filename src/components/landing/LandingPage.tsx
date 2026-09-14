@@ -5,20 +5,25 @@ import Link from "next/link";
 import { VisualRenderer } from "@/components/visuals/VisualRenderer";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { GuestFreePath } from "@/components/auth/GuestFreePath";
-import { RegisterBanner } from "@/components/auth/RegisterBanner";
 import { HomeDashboard } from "@/components/landing/HomeDashboard";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { LANDING_QUESTION } from "@/content/mock/pool";
 import { track, trackLandingView, identifyDevice } from "@/lib/analytics";
 import { useProgress } from "@/store/progress";
 import { PRODUCT_FACTS } from "@/lib/next-action";
-import { FREE_SKILL_ID } from "@/lib/access";
+import {
+  buildFreePathState,
+  FREE_SKILL_ID,
+  FREE_SKILL_COUNT,
+} from "@/lib/access";
 import { useClientReady } from "@/components/ClientBody";
+import { getSkillById } from "@/content/arithmetic";
 
 export function LandingPage() {
   const ready = useClientReady();
   const { user, loading, configured } = useAuth();
   const deviceId = useProgress((s) => s.deviceId);
+  const getSkillProgress = useProgress((s) => s.getSkillProgress);
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const engaged = useRef(false);
@@ -47,8 +52,17 @@ export function LandingPage() {
   };
 
   const signedIn = ready && configured && !loading && Boolean(user);
+  const guestPath =
+    ready && configured && !loading && !user
+      ? buildFreePathState(getSkillProgress)
+      : null;
+  const startHref = guestPath?.allDone
+    ? "/auth"
+    : guestPath?.nextHref ?? `/skill/${FREE_SKILL_ID}`;
+  const startLabel = guestPath?.allDone
+    ? "ادخل بحساب Google"
+    : guestPath?.ctaLabel ?? "ابدأ الآن";
 
-  // Avoid flashing the guest marketing page for returning users
   if (!ready || (configured && loading)) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-lg items-center justify-center px-4">
@@ -63,78 +77,113 @@ export function LandingPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <section className="relative overflow-hidden px-4 pb-6 pt-5">
+      {/* First viewport — one composition: brand, line, CTA */}
+      <section className="relative overflow-hidden px-4 pb-8 pt-6">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
             background:
-              "radial-gradient(ellipse 80% 55% at 80% -10%, rgba(13,148,136,0.16), transparent), linear-gradient(180deg, #F0FDFA 0%, #F8FAFC 55%, #FFFFFF 100%)",
+              "radial-gradient(ellipse 90% 60% at 70% -20%, rgba(13,148,136,0.22), transparent 55%), linear-gradient(180deg, #ECFDF5 0%, #F8FAFC 48%, #FFFFFF 100%)",
           }}
+          aria-hidden
         />
 
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded-full bg-teal-700 px-3 py-1 text-[11px] font-bold text-white">
-            القسم الكمي
-          </span>
-          <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
-            {PRODUCT_FACTS.skills} مهارة
-          </span>
-        </div>
-
-        <h1 className="mt-4 text-[1.7rem] font-extrabold leading-snug text-ink">
-          قدرات كمي: افهم النمط، وحُلّ أسرع.
+        <p className="font-display text-[2.75rem] font-extrabold leading-none tracking-tight text-teal-800">
+          قُدرة
+        </p>
+        <h1 className="mt-4 max-w-[18rem] text-[1.55rem] font-extrabold leading-snug text-ink">
+          افهم النمط. حُلّ أسرع.
         </h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
-          مسار منظم على أنماط الكمي الأكثر تكراراً — تصوّر، اختصار، تدريب موقوت،
-          ثم محاكاة كاملة بستين سؤالاً.
+        <p className="mt-2 max-w-[20rem] text-[14px] leading-relaxed text-slate-600">
+          {PRODUCT_FACTS.skills} مهارة كمي — تصوّر، اختصار، تدريب.
         </p>
 
-        <ol className="mt-5 grid grid-cols-3 gap-2">
-          {[
-            { n: "1", t: "تصوّر", d: "شاهد الفكرة" },
-            { n: "2", t: "اختصار", d: "احفظ الحيلة" },
-            { n: "3", t: "تدريب", d: "حلّ بسرعة" },
-          ].map((s) => (
-            <li
-              key={s.n}
-              className="rounded-2xl bg-white/90 px-2 py-3 text-center ring-1 ring-teal-100"
-            >
-              <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-[11px] font-bold text-white">
-                {s.n}
-              </span>
-              <p className="mt-1.5 text-sm font-bold text-ink">{s.t}</p>
-              <p className="text-[10px] text-slate-500">{s.d}</p>
-            </li>
-          ))}
-        </ol>
-
-        <div className="mt-5">
-          <GuestFreePath variant="hero" />
-        </div>
-
-        {configured && (
-          <div className="mt-4">
-            <RegisterBanner />
-          </div>
-        )}
-
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
-          قُدرة اسم الأداة · غير تابعة لقياس أو هيئة تقويم التعليم
+        <Link
+          href={startHref}
+          onClick={() => track("cta_start_clicked")}
+          className="mt-7 flex min-h-[3.5rem] w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-[0_16px_40px_-16px_rgba(13,148,136,0.65)] transition active:scale-[0.99]"
+        >
+          {startLabel}
+        </Link>
+        <p className="mt-2.5 text-center text-[11px] text-slate-500">
+          {FREE_SKILL_COUNT} مهارات بدون حساب · الباقي بحساب Google — مجاناً
         </p>
       </section>
 
-      <section className="space-y-6 border-t border-slate-100 px-4 py-8">
+      {/* Compact free path — links only, no essay */}
+      {guestPath && !guestPath.allDone && (
+        <section className="border-t border-slate-100 px-4 py-6">
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h2 className="text-base font-extrabold text-ink">جرّب الآن</h2>
+            <span className="text-[11px] font-bold tabular-nums text-teal-700">
+              {guestPath.completedCount}/{guestPath.total}
+            </span>
+          </div>
+          <ul className="space-y-2">
+            {guestPath.items.map((item) => {
+              const skill = getSkillById(item.id);
+              return (
+                <li key={item.id}>
+                  <Link
+                    href={item.href}
+                    className={`flex min-h-[3.25rem] items-center gap-3 rounded-2xl px-3.5 py-2.5 transition active:scale-[0.99] ${
+                      item.status === "done"
+                        ? "bg-emerald-50 ring-1 ring-emerald-100"
+                        : item.status === "next" || item.status === "current"
+                          ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25"
+                          : "bg-white ring-1 ring-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
+                        item.status === "done"
+                          ? "bg-emerald-500 text-white"
+                          : item.status === "next" || item.status === "current"
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {item.completed ? "✓" : item.order}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block text-sm font-extrabold ${
+                          item.status === "next" || item.status === "current"
+                            ? "text-white"
+                            : "text-ink"
+                        }`}
+                      >
+                        {skill?.title_ar ?? item.title_ar}
+                      </span>
+                    </span>
+                    <span
+                      className={`text-lg ${
+                        item.status === "next" || item.status === "current"
+                          ? "text-white/80"
+                          : "text-teal-700"
+                      }`}
+                    >
+                      ←
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {guestPath?.allDone && (
+        <section className="px-4 pb-4">
+          <GuestFreePath variant="done" />
+        </section>
+      )}
+
+      <section className="space-y-8 border-t border-slate-100 px-4 py-8">
         <div>
-          <p className="text-xs font-bold text-teal-700">المفهوم الأصعب أولاً</p>
-          <h2 className="mt-1 text-xl font-extrabold leading-snug text-ink">
-            لماذا 80→100 = 25٪ وليس 20٪؟
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            حرّك. وش يصير؟
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-slate-600">
-            اسحب المقبض الأسود على العمود الأخضر. راقب النسبة في الصندوق.
-            يمكنك فتح «المصيدة الشائعة».
+          <h2 className="text-lg font-extrabold text-ink">جرّب التصوّر</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            لماذا 80→100 = 25٪ وليس 20٪؟ اسحب وجرّب.
           </p>
           <div className="mt-4">
             <VisualRenderer
@@ -145,38 +194,26 @@ export function LandingPage() {
           </div>
           <Link
             href={`/skill/${FREE_SKILL_ID}`}
-            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-50 font-bold text-teal-800 ring-1 ring-teal-100"
+            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 font-extrabold text-white"
           >
-            افتح المهارة كاملة: التغيّر المئوي
+            افتح المهارة
           </Link>
         </div>
 
         <div>
-          <p className="text-xs font-bold text-teal-700">وبعدها بدون حساب</p>
-          <h2 className="mt-1 text-xl font-extrabold leading-snug text-ink">
-            آلتان للنسب المتتالية + مثلث فيثاغورس
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            كل المهارات مجانية بحساب Google. هذه الثلاث مفتوحة للتجربة الآن —
-            الروابط في أعلى الصفحة.
-          </p>
-          <GuestFreePath variant="panel" className="mt-4" />
-        </div>
-
-        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-          <p className="mb-1 text-xs font-bold text-teal-700">
-            طبّق الآن — سؤال على نمط الاختبار
-          </p>
-          <p className="mb-3 text-lg font-bold leading-snug text-ink">
+          <h2 className="text-lg font-extrabold text-ink">سؤال سريع</h2>
+          <p className="mt-3 text-[15px] font-bold leading-snug text-ink">
             {LANDING_QUESTION.prompt_ar}
           </p>
-          <ChoiceList
-            choices={LANDING_QUESTION.choices_ar}
-            selected={selected}
-            correctIndex={LANDING_QUESTION.correct_index}
-            showResult={revealed}
-            onSelect={answer}
-          />
+          <div className="mt-3">
+            <ChoiceList
+              choices={LANDING_QUESTION.choices_ar}
+              selected={selected}
+              correctIndex={LANDING_QUESTION.correct_index}
+              showResult={revealed}
+              onSelect={answer}
+            />
+          </div>
           {revealed && selected === LANDING_QUESTION.correct_index && (
             <p className="mt-3 text-sm font-semibold text-green-700">تمام.</p>
           )}
@@ -192,42 +229,22 @@ export function LandingPage() {
                 href={`/skill/${FREE_SKILL_ID}`}
                 className="mt-2 inline-block font-bold text-teal-700"
               >
-                افتح التصوّر وجرّب السحب ←
+                افتح التصوّر ←
               </Link>
             </div>
           )}
         </div>
 
-        {configured && <RegisterBanner compact />}
-
-        <div className="rounded-2xl bg-slate-900 p-5 text-white">
-          <p className="text-sm font-bold">
-            {PRODUCT_FACTS.fields} مجالات · {PRODUCT_FACTS.skills} مهارة
+        <div className="rounded-[1.5rem] bg-ink px-5 py-6 text-white">
+          <p className="text-lg font-extrabold">كل المسار مجاني</p>
+          <p className="mt-1.5 text-sm text-slate-300">
+            {PRODUCT_FACTS.skills} مهارة + محاكاة — بحساب Google فقط.
           </p>
-          <ul className="mt-3 space-y-2.5 text-sm text-slate-300">
-            <li>
-              <span className="font-bold text-white">
-                حساب · جبر · هندسة · إحصاء · مقارنات
-              </span>
-            </li>
-            <li>
-              <span className="font-bold text-white">
-                {PRODUCT_FACTS.skillBankQuestions.toLocaleString("ar-SA")} سؤالاً
-              </span>{" "}
-              في بنك المهارات — تدريب موقوت لكل نمط
-            </li>
-            <li>
-              <span className="font-bold text-white">
-                محاكاة {PRODUCT_FACTS.mockQuestions} سؤالاً
-              </span>{" "}
-              · {PRODUCT_FACTS.mockMinutes} دقيقة · أسئلة جديدة كل مرة
-            </li>
-          </ul>
           <Link
             href="/auth"
-            className="mt-4 flex min-h-11 items-center justify-center rounded-xl bg-teal-500 font-bold text-white"
+            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-500 font-extrabold text-white"
           >
-            ادخل بحساب Google — مجاناً
+            ادخل بحساب Google
           </Link>
         </div>
       </section>
