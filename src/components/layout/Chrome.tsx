@@ -75,13 +75,9 @@ const NAV = [
 
 export function BottomNav() {
   const pathname = usePathname() || "/";
-  const ready = useClientReady();
-  const { user, loading, configured } = useAuth();
   if (pathname.startsWith("/review") || pathname.startsWith("/auth")) {
     return null;
   }
-
-  const guest = ready && configured && !loading && !user;
 
   return (
     <nav
@@ -91,12 +87,10 @@ export function BottomNav() {
       <div className="mx-auto grid max-w-lg grid-cols-3">
         {NAV.map((item) => {
           const active = item.match(pathname);
-          const href =
-            guest && item.href === "/mock" ? authHref("/mock") : item.href;
           return (
             <Link
               key={item.href}
-              href={href}
+              href={item.href}
               className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-bold transition ${
                 active ? "text-teal-700" : "text-slate-400"
               }`}
@@ -174,10 +168,7 @@ export function SiteFooter() {
           <Link href="/skills" className="hover:text-teal-700">
             المهارات
           </Link>
-          <Link
-            href={guest ? authHref("/mock") : "/mock"}
-            className="hover:text-teal-700"
-          >
+          <Link href="/mock" className="hover:text-teal-700">
             المحاكاة
           </Link>
           <Link href="/auth" className="hover:text-teal-700">

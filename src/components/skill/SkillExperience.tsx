@@ -35,12 +35,16 @@ import {
   formatGoalClock,
   roundTotalGoalSec,
 } from "@/lib/timing";
+import type { SkillProgress } from "@/lib/types";
 
 const PHASES = [
   { id: "see" as const, label: "تصوّر" },
   { id: "trick" as const, label: "اختصار" },
   { id: "drill" as const, label: "تدريب" },
 ];
+
+/** Stable empty object — `?? {}` in a Zustand selector recreates each snapshot and loops. */
+const EMPTY_ROUNDS: SkillProgress["rounds"] = {};
 
 type AnswerRecord = {
   qid: string;
@@ -57,7 +61,9 @@ export function SkillExperience({ skill }: { skill: Skill }) {
   const startSkill = useProgress((s) => s.startSkill);
   const completeSkill = useProgress((s) => s.completeSkill);
   const getSkillProgress = useProgress((s) => s.getSkillProgress);
-  const rounds = useProgress((s) => s.skills[skill.id]?.rounds ?? {});
+  const rounds = useProgress(
+    (s) => s.skills[skill.id]?.rounds ?? EMPTY_ROUNDS
+  );
 
   const [phase, setPhase] = useState<Phase>("see");
   const [round, setRound] = useState<DrillRound>(1);

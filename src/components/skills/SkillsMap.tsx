@@ -126,25 +126,13 @@ export function SkillsMap({ initialField = null }: Props) {
       </div>
 
       <BottomCta
-        href={
-          !signedIn && !authBusy
-            ? freePath?.allDone
-              ? "/auth"
-              : freePath?.nextHref ?? "/auth"
-            : "/mock"
-        }
-        label={
-          !signedIn && !authBusy
-            ? freePath?.allDone
-              ? "ادخل بحساب Google — مجاناً"
-              : freePath?.ctaLabel ?? "ابدأ بدون حساب"
-            : "المحاكاة الموقوتة — 60 سؤالاً"
-        }
+        href="/mock"
+        label="شوف المحاكاة — 60 سؤالاً"
         secondaryHref={
           !signedIn && !authBusy
             ? freePath?.allDone
-              ? undefined
-              : "/auth"
+              ? "/auth"
+              : freePath?.nextHref ?? "/skills"
             : activeField
               ? "/skills"
               : undefined
@@ -152,8 +140,8 @@ export function SkillsMap({ initialField = null }: Props) {
         secondaryLabel={
           !signedIn && !authBusy
             ? freePath?.allDone
-              ? undefined
-              : "أو ادخل بحساب Google"
+              ? "أو ادخل بحساب Google"
+              : freePath?.ctaLabel ?? "أو جرّب مهارة"
             : activeField
               ? "العودة للمجالات"
               : undefined

@@ -11,11 +11,14 @@ import {
 import { buildNextMockExam, MOCK_EXAM_SIZE } from "@/lib/mock/examEngine";
 import { track } from "@/lib/analytics";
 import { useClientReady } from "@/components/ClientBody";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { authHref } from "@/lib/access";
 import { useProgress } from "@/store/progress";
 
 export function MockExperience() {
   const ready = useClientReady();
   const router = useRouter();
+  const { user, loading, configured } = useAuth();
   const saveMock = useProgress((s) => s.saveMock);
   const recordMockExam = useProgress((s) => s.recordMockExam);
   const deviceId = useProgress((s) => s.deviceId);
@@ -30,7 +33,11 @@ export function MockExperience() {
     slot: number;
   } | null>(null);
 
+  const guestLocked =
+    ready && configured && !loading && !user;
+
   const start = () => {
+    if (guestLocked) return;
     const built = buildNextMockExam(
       mockHistory ?? {
         completedCount: 0,
@@ -162,22 +169,41 @@ export function MockExperience() {
             </li>
           </ul>
 
-          {ready && bestMockScore != null && lastMock && (
-            <p className="mt-5 rounded-2xl bg-white/5 px-4 py-3 text-sm text-teal-100 ring-1 ring-white/10">
-              أفضل نتيجة لك:{" "}
-              <span className="font-extrabold text-white">
-                {bestMockScore}/{lastMock.total}
-              </span>
+          {guestLocked ? (
+            <p className="mt-5 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm font-bold leading-snug text-amber-100 ring-1 ring-amber-300/30">
+              المحاكاة جاهزة هنا — ادخل بحساب Google لبدء الاختبار (مجاناً).
             </p>
+          ) : (
+            ready &&
+            bestMockScore != null &&
+            lastMock && (
+              <p className="mt-5 rounded-2xl bg-white/5 px-4 py-3 text-sm text-teal-100 ring-1 ring-white/10">
+                أفضل نتيجة لك:{" "}
+                <span className="font-extrabold text-white">
+                  {bestMockScore}/{lastMock.total}
+                </span>
+              </p>
+            )
           )}
 
-          <button
-            type="button"
-            onClick={start}
-            className="mt-7 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99]"
-          >
-            ابدأ اختباراً جديداً
-          </button>
+          {guestLocked ? (
+            <Link
+              href={authHref("/mock")}
+              onClick={() => track("mock_signup_cta")}
+              className="mt-7 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99]"
+            >
+              ادخل بحساب Google وابدأ المحاكاة
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={start}
+              disabled={!ready || loading}
+              className="mt-7 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99] disabled:opacity-60"
+            >
+              ابدأ اختباراً جديداً
+            </button>
+          )}
         </div>
       </div>
 

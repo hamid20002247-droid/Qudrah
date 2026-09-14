@@ -85,6 +85,7 @@ export default function RootLayout({
       lang="ar"
       dir="rtl"
       className={`${tajawal.variable} h-full`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body

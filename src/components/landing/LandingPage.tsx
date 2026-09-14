@@ -105,8 +105,15 @@ export function LandingPage() {
         >
           {startLabel}
         </Link>
+        <Link
+          href="/mock"
+          onClick={() => track("landing_mock_cta")}
+          className="mt-3 flex min-h-[3.25rem] w-full items-center justify-center rounded-2xl bg-ink text-base font-extrabold text-white shadow-[0_14px_36px_-18px_rgba(15,23,42,0.55)] transition active:scale-[0.99]"
+        >
+          المحاكاة الكاملة — 60 سؤالاً
+        </Link>
         <p className="mt-2.5 text-center text-[11px] text-slate-500">
-          {FREE_SKILL_COUNT} مهارات بدون حساب · الباقي بحساب Google — مجاناً
+          {FREE_SKILL_COUNT} مهارات بدون حساب · المحاكاة بحساب Google — مجاناً
         </p>
       </section>
 
@@ -179,6 +186,32 @@ export function LandingPage() {
         </section>
       )}
 
+      {/* Mock CTA early — see the exam exists */}
+      <section className="border-t border-slate-100 px-4 py-6">
+        <div className="overflow-hidden rounded-[1.75rem] bg-ink px-5 py-6 text-white">
+          <p className="text-[11px] font-bold tracking-wide text-teal-300">
+            محاكاة قدرات كمي
+          </p>
+          <h2 className="mt-2 font-display text-xl font-extrabold leading-snug">
+            مثل يوم الاختبار
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">
+            {PRODUCT_FACTS.mockQuestions} سؤالاً · {PRODUCT_FACTS.mockMinutes}{" "}
+            دقيقة · أسئلة جديدة كل مرة.
+          </p>
+          <Link
+            href="/mock"
+            onClick={() => track("landing_mock_cta")}
+            className="mt-5 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99]"
+          >
+            شوف المحاكاة الكاملة
+          </Link>
+          <p className="mt-2.5 text-center text-[11px] text-slate-400">
+            ادخل بحساب Google عند البدء — مجاناً
+          </p>
+        </div>
+      </section>
+
       <section className="space-y-8 border-t border-slate-100 px-4 py-8">
         <div>
           <h2 className="text-lg font-extrabold text-ink">جرّب التصوّر</h2>
@@ -235,14 +268,14 @@ export function LandingPage() {
           )}
         </div>
 
-        <div className="rounded-[1.5rem] bg-ink px-5 py-6 text-white">
-          <p className="text-lg font-extrabold">كل المسار مجاني</p>
-          <p className="mt-1.5 text-sm text-slate-300">
+        <div className="rounded-[1.5rem] bg-white px-5 py-5 ring-1 ring-slate-200">
+          <p className="text-base font-extrabold text-ink">كل المسار مجاني</p>
+          <p className="mt-1 text-sm text-slate-600">
             {PRODUCT_FACTS.skills} مهارة + محاكاة — بحساب Google فقط.
           </p>
           <Link
             href="/auth"
-            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-500 font-extrabold text-white"
+            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 font-extrabold text-white"
           >
             ادخل بحساب Google
           </Link>
