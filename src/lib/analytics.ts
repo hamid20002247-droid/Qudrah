@@ -11,6 +11,7 @@ export type AnalyticsProps = Record<
 let initialized = false;
 let attempted = false;
 let pending: Array<{ event: string; props?: AnalyticsProps }> = [];
+let pendingIdentity: Array<() => void> = [];
 
 function trafficSource(): string {
   if (typeof window === "undefined") return "unknown";
@@ -93,34 +94,46 @@ export function initAnalytics() {
         auth_state: sessionKind(),
         traffic_source: trafficSource(),
       });
+      ph.opt_in_capturing();
+      initialized = true;
+      for (const identify of pendingIdentity) identify();
+      pendingIdentity = [];
+      for (const item of pending) {
+        ph.capture(item.event, enrich(item.props));
+      }
+      pending = [];
     },
   });
-
-  initialized = true;
-  for (const item of pending) {
-    posthog.capture(item.event, enrich(item.props));
-  }
-  pending = [];
 }
 
 export function identifyGuest(deviceId: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem("qudrah_auth_kind", "guest");
-  if (!initialized) return;
-  posthog.register({ auth_state: "guest", device_id: deviceId });
-  posthog.setPersonProperties({
-    auth_state: "guest",
-    device_id: deviceId,
-  });
-  const lastSeen = localStorage.getItem("qudrah_last_seen");
-  const now = Date.now();
-  if (lastSeen) {
-    const days = Math.floor((now - Number(lastSeen)) / (1000 * 60 * 60 * 24));
-    if (days >= 1) {
-      track("returned_session", { days_since_last: days, auth_state: "guest" });
+  const run = () => {
+    posthog.identify(deviceId, {
+      auth_state: "guest",
+      device_id: deviceId,
+    });
+    posthog.register({ auth_state: "guest", device_id: deviceId });
+    posthog.setPersonProperties({
+      auth_state: "guest",
+      device_id: deviceId,
+    });
+    const lastSeen = localStorage.getItem("qudrah_last_seen");
+    const now = Date.now();
+    if (lastSeen) {
+      const days = Math.floor((now - Number(lastSeen)) / (1000 * 60 * 60 * 24));
+      if (days >= 1) {
+        track("returned_session", { days_since_last: days, auth_state: "guest" });
+      }
     }
+    localStorage.setItem("qudrah_last_seen", String(now));
+  };
+  if (!initialized) {
+    pendingIdentity.push(run);
+    return;
   }
-  localStorage.setItem("qudrah_last_seen", String(now));
+  run();
 }
 
 /** Merge anonymous guest into the signed-in person. */
@@ -134,20 +147,26 @@ export function identifyUser(
 ) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem("qudrah_auth_kind", "signed_in");
-  if (!initialized) return;
-  const seenKey = `qudrah_user_${userId}`;
-  const firstTimeHere = !localStorage.getItem(seenKey);
-  localStorage.setItem(seenKey, "1");
-  posthog.identify(userId, {
-    email: traits?.email ?? undefined,
-    name: traits?.name ?? undefined,
-    auth_provider: traits?.provider ?? undefined,
-    auth_state: "signed_in",
-  });
-  posthog.register({ auth_state: "signed_in" });
-  track(firstTimeHere ? "auth_signed_in" : "auth_session_resumed", {
-    provider: traits?.provider ?? "unknown",
-  });
+  const run = () => {
+    const seenKey = `qudrah_user_${userId}`;
+    const firstTimeHere = !localStorage.getItem(seenKey);
+    localStorage.setItem(seenKey, "1");
+    posthog.identify(userId, {
+      email: traits?.email ?? undefined,
+      name: traits?.name ?? undefined,
+      auth_provider: traits?.provider ?? undefined,
+      auth_state: "signed_in",
+    });
+    posthog.register({ auth_state: "signed_in" });
+    track(firstTimeHere ? "auth_signed_in" : "auth_session_resumed", {
+      provider: traits?.provider ?? "unknown",
+    });
+  };
+  if (!initialized) {
+    pendingIdentity.push(run);
+    return;
+  }
+  run();
 }
 
 export function resetAnalyticsToGuest(deviceId: string) {

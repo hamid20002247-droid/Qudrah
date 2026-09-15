@@ -1,5 +1,5 @@
 /* Minimal offline shell for قُدرة PWA — bump CACHE when icons/assets change */
-const CACHE = "qudrah-v3";
+const CACHE = "qudrah-v4";
 const PRECACHE = ["/", "/skills", "/manifest.webmanifest"];
 
 function shouldBypassCache(url) {
@@ -8,7 +8,8 @@ function shouldBypassCache(url) {
     path === "/favicon.ico" ||
     path.startsWith("/icons/") ||
     path.endsWith(".webmanifest") ||
-    path.startsWith("/_next/")
+    path.startsWith("/_next/") ||
+    path.startsWith("/ingest")
   );
 }
 
