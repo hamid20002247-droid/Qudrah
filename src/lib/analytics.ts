@@ -62,11 +62,11 @@ export function initAnalytics() {
   posthog.init(key, {
     api_host: host,
     ui_host: "https://us.posthog.com",
-    defaults: "2026-05-30",
+    defaults: "2025-11-30",
     person_profiles: "always",
     persistence: "localStorage",
     persistence_name: "ph_qudrah",
-    capture_pageview: false,
+    capture_pageview: "history_change",
     capture_pageleave: true,
     autocapture: true,
     capture_heatmaps: true,
@@ -78,6 +78,9 @@ export function initAnalytics() {
       maskTextSelector: "input, textarea",
       recordCrossOriginIframes: false,
     },
+    request_batching: false,
+    disable_compression: true,
+    opt_out_useragent_filter: true,
     respect_dnt: false,
     opt_out_capturing_by_default: false,
     disable_surveys: true,
@@ -94,14 +97,17 @@ export function initAnalytics() {
         auth_state: sessionKind(),
         traffic_source: trafficSource(),
       });
-      ph.opt_in_capturing();
-      initialized = true;
-      for (const identify of pendingIdentity) identify();
-      pendingIdentity = [];
-      for (const item of pending) {
-        ph.capture(item.event, enrich(item.props));
-      }
-      pending = [];
+      // `loaded` runs before the SDK enables its send queue. Flush on the next tick.
+      window.setTimeout(() => {
+        ph.opt_in_capturing();
+        initialized = true;
+        for (const identify of pendingIdentity) identify();
+        pendingIdentity = [];
+        for (const item of pending) {
+          ph.capture(item.event, enrich(item.props), { send_instantly: true });
+        }
+        pending = [];
+      }, 0);
     },
   });
 }
@@ -192,7 +198,7 @@ export function track(event: string, props?: AnalyticsProps) {
     }
     return;
   }
-  posthog.capture(event, payload);
+  posthog.capture(event, payload, { send_instantly: true });
 }
 
 export function trackPageView(pathname: string, search = "") {
