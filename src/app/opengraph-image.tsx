@@ -1,10 +1,14 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "قُدرة — تدريب القسم الكمي في القدرات";
+export const alt = "قُدرة — اختبار قدرات كمي";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function OpenGraphImage() {
+/**
+ * Latin-only layout — Satori (next/og) cannot shape Arabic GSUB
+ * (lookupType 5 / substFormat 3), which broke Vercel prerender.
+ */
+export default function OpenGraphImage() {
   return new ImageResponse(
     (
       <div
@@ -18,6 +22,7 @@ export default async function OpenGraphImage() {
           background:
             "linear-gradient(135deg, #0F766E 0%, #115E59 42%, #0F172A 100%)",
           color: "white",
+          fontFamily: "sans-serif",
         }}
       >
         <div
@@ -25,31 +30,31 @@ export default async function OpenGraphImage() {
             fontSize: 28,
             color: "#5EEAD4",
             fontWeight: 700,
-            letterSpacing: 2,
+            letterSpacing: 4,
           }}
         >
           QUDRAH
         </div>
-        <div style={{ fontSize: 84, fontWeight: 800, marginTop: 16 }}>
-          قُدرة
+        <div style={{ fontSize: 72, fontWeight: 800, marginTop: 20 }}>
+          Quantitative Qudurat Exam
         </div>
-        <div style={{ fontSize: 34, marginTop: 18, color: "#CCFBF1" }}>
-          تدريب القسم الكمي في القدرات
+        <div style={{ fontSize: 32, marginTop: 20, color: "#CCFBF1" }}>
+          Full timed exam + skill training
         </div>
         <div
           style={{
             display: "flex",
-            marginTop: 36,
-            fontSize: 24,
+            marginTop: 40,
+            fontSize: 26,
             color: "#99F6E4",
             gap: 24,
           }}
         >
-          <span>60 مهارة</span>
+          <span>60 skills</span>
           <span>·</span>
-          <span>60 سؤال</span>
+          <span>60 questions</span>
           <span>·</span>
-          <span>60 دقيقة</span>
+          <span>60 minutes</span>
         </div>
       </div>
     ),
