@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Question } from "@/lib/types";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { MathText } from "@/components/ui/MathText";
+import { track } from "@/lib/analytics";
 import { formatCountdown } from "@/components/ui/ProgressRing";
 import { finalExamTotalSec } from "@/lib/timing";
 import { scrollWindowToTop } from "@/lib/scroll";
@@ -22,6 +23,8 @@ type Props = {
   onExit: () => void;
   /** Kept for callers; exam is always full-screen chrome now. */
   flushChrome?: boolean;
+  /** Preview behind a gate — freeze timer and block answers. */
+  paused?: boolean;
 };
 
 export function FinalExam({
@@ -29,6 +32,7 @@ export function FinalExam({
   questions,
   onComplete,
   onExit,
+  paused = false,
 }: Props) {
   const totalSec = finalExamTotalSec(questions.length);
   const [index, setIndex] = useState(0);
@@ -78,10 +82,16 @@ export function FinalExam({
       };
     });
     onCompleteRef.current(records, totalTimeMs);
+    track("exam_submitted", {
+      answered: records.filter((r) => r.chosen >= 0).length,
+      total: qs.length,
+      total_time: totalTimeMs,
+    });
   };
 
   // Stable countdown — never reset by parent re-renders
   useEffect(() => {
+    if (paused) return;
     const id = window.setInterval(() => {
       setRemaining((r) => {
         if (r <= 1) {
@@ -92,25 +102,32 @@ export function FinalExam({
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [paused]);
 
   useEffect(() => {
+    if (paused) return;
     if (remaining === 0) finish();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- finish via refs
-  }, [remaining]);
+  }, [remaining, paused]);
 
   useEffect(() => {
+    if (paused) return;
     const onLeave = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", onLeave);
     return () => window.removeEventListener("beforeunload", onLeave);
-  }, []);
+  }, [paused]);
 
   const goTo = (next: number) => {
+    if (paused) return;
     if (next < 0 || next >= questions.length || next === index) return;
     timeSpent.current[index] += Date.now() - qEnter.current;
+    track("exam_question_navigated", {
+      from: index + 1,
+      to: next + 1,
+    });
     setIndex(next);
     qEnter.current = Date.now();
     setMapOpen(false);
@@ -118,10 +135,15 @@ export function FinalExam({
   };
 
   const select = (choice: number) => {
+    if (paused) return;
     setAnswers((prev) => {
       const next = [...prev];
       next[index] = choice;
       return next;
+    });
+    track("exam_answer_selected", {
+      question_index: index + 1,
+      total: questions.length,
     });
   };
 
@@ -133,7 +155,12 @@ export function FinalExam({
   if (!q) return null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pb-[8.75rem] pt-3 lg:pb-12 lg:pt-6">
+    <div
+      className={`mx-auto w-full max-w-5xl px-4 pb-[8.75rem] pt-3 lg:pb-12 lg:pt-6 ${
+        paused ? "pointer-events-none select-none" : ""
+      }`}
+      aria-hidden={paused || undefined}
+    >
       {/* ════ Mobile header — roomy, LTR counters ════ */}
       <header className="sticky top-0 z-40 -mx-4 border-b border-slate-200/80 bg-white/95 shadow-[0_8px_24px_-18px_rgba(15,23,42,0.35)] backdrop-blur-md lg:hidden">
         <div className="px-4 pb-2.5 pt-3">
@@ -149,7 +176,10 @@ export function FinalExam({
 
             <button
               type="button"
-              onClick={() => setMapOpen(true)}
+              onClick={() => {
+                track("exam_map_opened");
+                setMapOpen(true);
+              }}
               className="flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-2xl bg-teal-50 px-3 ring-1 ring-teal-100 active:scale-[0.99]"
             >
               <span className="text-[10px] font-bold text-teal-700/80">
@@ -308,6 +338,7 @@ export function FinalExam({
               choices={q.choices_ar}
               selected={answers[index]}
               onSelect={select}
+              disabled={paused}
             />
           </div>
           <p className="mt-6 hidden text-[12px] text-slate-400 lg:block">
@@ -351,7 +382,10 @@ export function FinalExam({
             </button>
             <button
               type="button"
-              onClick={() => setMapOpen(true)}
+              onClick={() => {
+                track("exam_map_opened");
+                setMapOpen(true);
+              }}
               className="relative flex h-14 min-w-[4.25rem] shrink-0 flex-col items-center justify-center rounded-2xl bg-ink px-2 text-white ring-1 ring-slate-800 active:scale-[0.97]"
             >
               <span className="text-[12px] font-extrabold leading-none">

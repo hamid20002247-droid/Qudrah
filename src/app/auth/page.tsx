@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 
 export const metadata: Metadata = {
-  title: "تسجيل الدخول",
-  description: "ادخل بحساب Google واحفظ تقدّمك في قُدرة.",
+  title: "حفظ التقدّم",
+  description: "احفظ درجتك ومسارك في قُدرة بحساب Google.",
+  robots: { index: false, follow: false },
 };
 
 export default function AuthPage() {

@@ -57,7 +57,7 @@ export function LandingPage() {
   return (
     <div className="mx-auto max-w-lg">
       {/* First 5 seconds — brand + what this is + two doors */}
-      <section className="relative overflow-hidden px-4 pb-9 pt-5">
+      <section className="relative overflow-hidden px-4 pb-28 pt-5">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
@@ -138,8 +138,7 @@ export function LandingPage() {
             {skillLabel}
           </Link>
           <p className="pt-0.5 text-center text-[11px] font-semibold text-slate-500">
-            {FREE_SKILL_COUNT} مهارات فوراً · الاختبار والمسار بـ Google —
-            مجاناً
+            {FREE_SKILL_COUNT} مهارات مفتوحة للتجربة الآن
           </p>
         </div>
       </section>
@@ -240,16 +239,17 @@ export function LandingPage() {
         </section>
       )}
 
-      {/* Soft close — no essay */}
+      {/* Soft close — save only after they have seen the product */}
       <section className="border-t border-slate-100 px-4 py-8">
         <p className="text-center text-sm font-bold text-slate-600">
-          كل شيء مجاني — احفظ تقدّمك بحساب Google
+          أعجبك المسار؟ احفظ تقدّمك على كل أجهزتك
         </p>
         <Link
           href="/auth"
+          onClick={() => track("landing_save_progress_cta")}
           className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-slate-950 font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99]"
         >
-          ادخل بحساب Google
+          احفظ تقدّمي
         </Link>
       </section>
     </div>

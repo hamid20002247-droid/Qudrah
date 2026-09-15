@@ -23,7 +23,7 @@ export function ChoiceList({
   onSelect,
 }: Props) {
   return (
-    <div className="flex flex-col gap-3" role="listbox">
+    <div className="flex flex-col gap-3 pb-2" role="listbox">
       {choices.map((c, i) => {
         let styles =
           "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300 active:scale-[0.99]";
@@ -67,7 +67,7 @@ export function ChoiceList({
             type="button"
             disabled={disabled || showResult}
             onClick={() => onSelect(i)}
-            className={`flex min-h-[52px] w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-start text-[17px] font-semibold transition ${styles} disabled:cursor-default`}
+            className={`flex min-h-[52px] w-full scroll-mb-[7.5rem] items-center gap-3 rounded-2xl px-4 py-3.5 text-start text-[17px] font-semibold transition ${styles} disabled:cursor-default`}
           >
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold tabular-nums ${badge}`}

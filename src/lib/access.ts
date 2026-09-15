@@ -83,10 +83,10 @@ export function buildFreePathState(
 
   const completedCount = items.filter((x) => x.completed).length;
   const allDone = completedCount >= FREE_SKILL_COUNT;
-  const nextHref = nextId ? `/skill/${nextId}` : "/auth";
+  const nextHref = nextId ? `/skill/${nextId}` : "/skills";
 
   let ctaLabel = "ابدأ بدون حساب";
-  if (allDone) ctaLabel = "كل شيء مجاني — ادخل بحساب Google";
+  if (allDone) ctaLabel = "خريطة المهارات";
   else if (nextId && getProgress(nextId).started) {
     ctaLabel = `كمّل: ${items.find((x) => x.id === nextId)?.title_ar ?? ""}`;
   } else if (completedCount > 0 && nextId) {
@@ -125,6 +125,8 @@ export function isPublicPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "") return true;
   if (pathname.startsWith("/auth")) return true;
   if (pathname.startsWith("/about")) return true;
+  if (pathname.startsWith("/mock")) return true;
+  if (pathname.startsWith("/result")) return true;
   for (const id of FREE_SKILL_IDS) {
     if (pathname === `/skill/${id}` || pathname.startsWith(`/skill/${id}/`)) {
       return true;

@@ -60,14 +60,13 @@ export function GuestFreePath({
           أكملت تجربة بدون حساب
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-          الـ {PRODUCT_FACTS.skills} مهارة والاختبار كلها مجانية — فقط ادخل
-          بحساب Google وافتح المسار كامل واحفظ تقدّمك.
+          جاهز للاختبار الكامل؟ ادخل 60 سؤالاً الآن، واحفظ درجتك بعد التسليم.
         </p>
         <Link
-          href="/auth"
+          href="/mock"
           className="mt-5 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400"
         >
-          ادخل بحساب Google — مجاناً
+          ادخل الاختبار
         </Link>
       </div>
     );
@@ -97,7 +96,7 @@ export function GuestFreePath({
           افتح المهارة التالية
         </Link>
         <p className="mt-3 text-center text-[11px] text-teal-100/80">
-          الباقي كله مجاني بحساب Google
+          باقي المهارات تُفتح بعد ما تحفظ تقدّمك
         </p>
         <FreeSteps path={path} tone="onDark" className="mt-3" />
       </div>
@@ -110,7 +109,7 @@ export function GuestFreePath({
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold tracking-[0.14em] text-teal-700">
-              كل شيء مجاني · Google فقط
+              تجربة بدون حساب
             </p>
             <h2 className="mt-1 font-display text-xl font-extrabold text-ink">
               ابدأ بـ {FREE_SKILL_COUNT} بدون حساب
@@ -121,12 +120,11 @@ export function GuestFreePath({
           </span>
         </div>
         <p className="mb-3 text-[12px] leading-relaxed text-slate-600">
-          الـ {PRODUCT_FACTS.skills} مهارة كلها مجانية. جرّب هذه الثلاث الآن،
-          وافتح الباقي بحساب Google — بلا اشتراك.
+          جرّب هذه الثلاث الآن. باقي المهارات تُفتح لما تحفظ تقدّمك.
         </p>
         <FreeSteps path={path} tone="light" />
         <Link
-          href={path.allDone ? "/auth" : path.nextHref}
+          href={path.allDone ? "/mock" : path.nextHref}
           onClick={() => {
             if (!path.allDone) track("cta_start_clicked");
           }}
@@ -136,11 +134,11 @@ export function GuestFreePath({
         </Link>
         {path.allDone ? (
           <p className="mt-2 text-center text-[11px] text-slate-500">
-            ادخل بحساب Google وافتح كل المهارات مجاناً
+            جاهز للاختبار؟ ادخل 60 سؤالاً الآن
           </p>
         ) : (
           <p className="mt-2 text-center text-[11px] text-slate-500">
-            الروابط مباشرة — والباقي مجاني بحساب Google
+            الروابط مباشرة — بدون حساب
           </p>
         )}
       </div>
@@ -156,13 +154,11 @@ export function GuestFreePath({
         <div>
           <p className="text-[11px] font-bold text-teal-700">
             {path.allDone
-              ? "كل شيء مجاني بحساب Google"
+              ? "التجربة بدون حساب اكتملت"
               : `بدون حساب · ${path.completedCount} من ${path.total}`}
           </p>
           <p className="mt-0.5 text-base font-extrabold text-ink">
-            {path.allDone
-              ? "ادخل وافتح المسار كامل"
-              : "جرّب هذه المهارات الآن"}
+            {path.allDone ? "ادخل الاختبار الآن" : "جرّب هذه المهارات الآن"}
           </p>
         </div>
         <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-600 text-sm font-black text-white">
@@ -170,11 +166,13 @@ export function GuestFreePath({
         </span>
       </div>
       <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-        {PRODUCT_FACTS.skills} مهارة كلها مجانية — الباقي بعد حساب Google فقط.
+        {path.allDone
+          ? "الاختبار 60 سؤالاً مفتوح للتجربة — احفظ درجتك بعد التسليم."
+          : `${PRODUCT_FACTS.skills} مهارة في المسار — ابدأ بهذه الثلاث.`}
       </p>
       <FreeSteps path={path} tone="light" className="mt-3" />
       <Link
-        href={path.allDone ? "/auth" : path.nextHref}
+        href={path.allDone ? "/mock" : path.nextHref}
         className={`mt-3 flex min-h-11 items-center justify-center rounded-2xl text-sm font-extrabold ${
           path.allDone
             ? "bg-ink text-white"

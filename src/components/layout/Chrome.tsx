@@ -6,6 +6,8 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { authHref } from "@/lib/access";
 import { useClientReady } from "@/components/ClientBody";
+import { LtrNum } from "@/components/ui/LtrNum";
+import { track } from "@/lib/analytics";
 import { useProgress } from "@/store/progress";
 
 const ICON = "/icons/icon.svg?v=4";
@@ -41,7 +43,13 @@ export function TopBar() {
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {days !== null && days >= 0 && (
             <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-200">
-              {days === 0 ? "اختبارك اليوم" : `${days} يوماً لاختبارك`}
+              {days === 0 ? (
+                "اختبارك اليوم"
+              ) : (
+                <>
+                  <LtrNum>{days}</LtrNum> يوماً لاختبارك
+                </>
+              )}
             </span>
           )}
           {streak > 1 && (
@@ -49,7 +57,7 @@ export function TopBar() {
               className="rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-800 ring-1 ring-teal-100"
               title="أيام متتالية تدرّبت فيها"
             >
-              استمرار {streak} أيام
+              استمرار <LtrNum>{streak}</LtrNum> أيام
             </span>
           )}
           <AccountMenu />
@@ -193,7 +201,11 @@ function IconMock({ active }: { active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname() || "/";
-  if (pathname.startsWith("/review") || pathname.startsWith("/auth")) {
+  if (
+    pathname.startsWith("/review") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/skill/")
+  ) {
     return null;
   }
 
@@ -214,6 +226,9 @@ export function BottomNav() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  onClick={() =>
+                    track("nav_clicked", { href: item.href, label: item.label })
+                  }
                   className={`relative flex min-h-[3.65rem] flex-col items-center justify-center gap-1 rounded-[1.05rem] px-1 transition active:scale-[0.97] ${
                     active
                       ? "bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-100"
@@ -292,12 +307,13 @@ export function SiteFooter() {
   const ready = useClientReady();
   const { user, loading, configured } = useAuth();
   const authPage = pathname.startsWith("/auth");
+  const skillPage = pathname.startsWith("/skill/");
   const guest = ready && configured && !loading && !user;
 
   return (
     <footer
       className={`mt-auto border-t border-slate-100 pt-8 ${
-        authPage ? "pb-8" : "pb-28"
+        authPage || skillPage ? "pb-8" : "pb-28"
       }`}
     >
       <div className="mx-auto max-w-lg space-y-3 px-4 text-center text-xs text-slate-400">

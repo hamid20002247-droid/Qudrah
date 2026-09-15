@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useClientReady } from "@/components/ClientBody";
+import { track } from "@/lib/analytics";
 
 export function nameInitial(name: string): string {
   const t = name.trim();
@@ -41,6 +42,7 @@ export function AccountMenu() {
     return (
       <Link
         href="/auth"
+        onClick={() => track("account_menu_login_clicked")}
         className="rounded-full bg-teal-600 px-3.5 py-1.5 text-[12px] font-bold text-white shadow-sm shadow-teal-600/20 transition hover:bg-teal-700"
       >
         دخول
@@ -90,6 +92,7 @@ export function AccountMenu() {
             className="flex w-full px-3 py-2.5 text-start text-sm font-semibold text-rose-700 hover:bg-rose-50"
             onClick={async () => {
               setOpen(false);
+              track("account_menu_sign_out");
               await signOut();
             }}
           >

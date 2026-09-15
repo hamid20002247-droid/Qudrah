@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Tajawal } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { ClientBody } from "@/components/ClientBody";
 import { BottomNav, SiteFooter, TopBar } from "@/components/layout/Chrome";
 import { RegisterSW } from "@/components/RegisterSW";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { PostHogPageView } from "@/components/analytics/PostHogPageView";
 import { PRODUCTION_SITE_URL } from "@/lib/publicConfig";
 import "./globals.css";
 
@@ -14,16 +17,33 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
+const TITLE = "قُدرة — تدريب القسم الكمي في القدرات";
+const DESCRIPTION =
+  "تدريب مستقل على القسم الكمي في اختبار القدرات: 60 مهارة بتصوّر تفاعلي، واختبار موقوت 60 سؤالاً. ليست تابعة لقياس.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_SITE_URL),
   title: {
-    default: "قُدرة — اختبار قدرات كمي",
+    default: TITLE,
     template: "%s | قُدرة",
   },
-  description:
-    "ادخل اختبار قدرات كمي (60 سؤال · 60 دقيقة) + تدرّب على المهارات لرفع درجتك — مجاناً.",
+  description: DESCRIPTION,
   applicationName: "قُدرة",
+  keywords: [
+    "قدرات",
+    "كمي",
+    "اختبار القدرات",
+    "تدريب قدرات",
+    "القسم الكمي",
+    "محاكاة قدرات",
+    "قياس كمي",
+  ],
   manifest: "/manifest.webmanifest",
+  alternates: { canonical: PRODUCTION_SITE_URL },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       { url: "/icons/icon.svg?v=4", type: "image/svg+xml" },
@@ -43,25 +63,17 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   openGraph: {
-    title: "قُدرة — اختبار قدرات كمي",
-    description:
-      "ادخل الاختبار الكامل: 60 سؤال · تدريب مهارات كمي لرفع درجتك.",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: PRODUCTION_SITE_URL,
+    siteName: "قُدرة",
     locale: "ar_SA",
     type: "website",
-    images: [
-      {
-        url: "/icons/icon-512.png",
-        width: 512,
-        height: 512,
-        alt: "قُدرة",
-      },
-    ],
   },
   twitter: {
-    card: "summary",
-    title: "قُدرة — اختبار قدرات كمي",
-    description: "ادخل الاختبار الكامل + مهارات ترفع درجتك.",
-    images: ["/icons/icon-512.png"],
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
   },
   other: {
     "format-detection": "telephone=no",
@@ -71,7 +83,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#0D9488",
 };
 
@@ -92,11 +105,15 @@ export default function RootLayout({
         className="flex min-h-full flex-col bg-[#F8FAFC] font-sans text-ink antialiased"
         suppressHydrationWarning
       >
+        <JsonLd />
         <Providers>
+          <Suspense fallback={null}>
+            <PostHogPageView />
+          </Suspense>
           <ClientBody>
             <RegisterSW />
             <TopBar />
-            <main className="flex-1 pb-4">{children}</main>
+            <main className="flex-1">{children}</main>
             <SiteFooter />
             <BottomNav />
           </ClientBody>

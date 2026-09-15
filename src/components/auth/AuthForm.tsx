@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { track } from "@/lib/analytics";
 
 function GoogleIcon() {
   return (
@@ -33,13 +34,21 @@ export function AuthForm() {
   const router = useRouter();
   const search = useSearchParams();
   const next = search.get("next") || "/";
+  const savingResult = next.startsWith("/result");
+  const openingSkill = next.startsWith("/skill/");
+  const startingMock = next.startsWith("/mock");
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    track("auth_page_view", { next });
+  }, [next]);
+
+  useEffect(() => {
     if (search.get("error") === "auth") {
       setError("ما اكتمل تسجيل الدخول. جرّب مرة ثانية.");
+      track("auth_callback_error");
     }
   }, [search]);
 
@@ -52,6 +61,7 @@ export function AuthForm() {
   async function onGoogle() {
     setError(null);
     setBusy(true);
+    track("auth_google_clicked", { next });
     try {
       const err = await signInWithGoogle(next);
       if (err) setError(err);
@@ -104,10 +114,20 @@ export function AuthForm() {
             قُدرة
           </p>
           <h1 className="mt-3 text-2xl font-extrabold leading-snug">
-            ادخل بحساب Google
+            {savingResult
+              ? "احفظ درجتك"
+              : startingMock
+                ? "ابدأ الاختبار"
+                : openingSkill
+                  ? "افتح المهارة واحفظ تقدّمك"
+                  : "احفظ تقدّمك"}
           </h1>
           <p className="mt-2 max-w-[17rem] text-sm leading-relaxed text-teal-50/90">
-            كل المهارات مجانية. حساب Google فقط لفتح المسار كامل وحفظ تقدّمك.
+            {savingResult
+              ? "درجتك على هذا الجهاز الآن. احفظها بحساب Google عشان ترجع لها من أي مكان."
+              : startingMock
+                ? "حساب Google يبدأ الاختبار ويحفظ درجتك — مجاناً، ثواني."
+                : "حساب Google يحفظ مسار التدريب والنتيجة — مجاناً، ثواني."}
           </p>
         </div>
       </div>
@@ -122,7 +142,7 @@ export function AuthForm() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
             <GoogleIcon />
           </span>
-          {busy ? "لحظة…" : "المتابعة مع Google"}
+          {busy ? "لحظة…" : savingResult ? "احفظ درجتي مع Google" : "المتابعة مع Google"}
         </button>
 
         {error && (

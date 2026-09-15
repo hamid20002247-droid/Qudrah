@@ -7,6 +7,7 @@ import type { Question, Skill } from "@/lib/types";
 import { VisualRenderer } from "@/components/visuals/VisualRenderer";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { MathText } from "@/components/ui/MathText";
+import { LtrNum } from "@/components/ui/LtrNum";
 import { formatMs } from "@/components/ui/ProgressRing";
 import { QuestionTimerBar, TimeGoalBoard } from "@/components/ui/TimeGoal";
 import { TrainingHub } from "@/components/skill/TrainingHub";
@@ -224,7 +225,7 @@ export function SkillExperience({ skill }: { skill: Skill }) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-28 pt-3">
+    <div className="mx-auto max-w-lg px-4 pb-8 pt-3">
       <div className="mb-3 flex items-center gap-2">
         <Link
           href="/skills"
@@ -237,19 +238,19 @@ export function SkillExperience({ skill }: { skill: Skill }) {
           رجوع
         </Link>
         <p className="min-w-0 flex-1 truncate text-center text-[11px] font-bold text-slate-400">
-          {skillIndex + 1} / {ALL_SKILLS.length}
+          <LtrNum>
+            {skillIndex + 1} / {ALL_SKILLS.length}
+          </LtrNum>
         </p>
         <span className="w-[4.5rem]" aria-hidden />
       </div>
 
-      {phase !== "done" && (
+      {phase !== "done" && phase !== "drill" && (
         <div className="sticky top-14 z-30 -mx-4 mb-4 border-b border-teal-100/80 bg-white/95 px-4 py-2.5 backdrop-blur-md">
           <div className="grid grid-cols-3 gap-2">
             {PHASES.map((p, i) => {
               const active =
-                phase === p.id ||
-                (phase === "pick" && p.id === "drill") ||
-                (phase === "drill" && p.id === "drill");
+                phase === p.id || (phase === "pick" && p.id === "drill");
               return (
                 <button
                   key={p.id}
@@ -257,7 +258,6 @@ export function SkillExperience({ skill }: { skill: Skill }) {
                   onClick={() => {
                     scrollWindowToTop("auto");
                     if (p.id === "drill") {
-                      if (phase === "drill") return;
                       setPhase("pick");
                     } else {
                       setPhase(p.id);
@@ -395,8 +395,10 @@ export function SkillExperience({ skill }: { skill: Skill }) {
               <p className="truncate text-[12px] font-black text-ink">
                 {meta.title}
               </p>
-              <span className="shrink-0 text-[11px] font-bold tabular-nums text-slate-500">
-                {qIndex + 1}/{deck.length}
+              <span className="shrink-0 text-[11px] font-bold text-slate-500">
+                <LtrNum>
+                  {qIndex + 1}/{deck.length}
+                </LtrNum>
               </span>
             </div>
             <QuestionTimerBar
@@ -434,6 +436,7 @@ export function SkillExperience({ skill }: { skill: Skill }) {
             revealCorrect={false}
             onSelect={answer}
           />
+          <div className="h-28" aria-hidden />
           {revealed && (
             <>
               <div

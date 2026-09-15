@@ -27,6 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: live.title_ar,
       description: live.hook_ar,
+      alternates: { canonical: `/skill/${id}` },
+      openGraph: {
+        title: `${live.title_ar} | قُدرة`,
+        description: live.hook_ar,
+      },
     };
   }
   const catalog = getCatalogSkill(id);
@@ -34,6 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: `${catalog.skill.title_ar} — قريباً`,
       description: catalog.skill.hook_ar,
+      robots: { index: false, follow: true },
     };
   }
   return { title: "مهارة" };

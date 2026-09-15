@@ -14,17 +14,14 @@ import {
   type SkillField,
 } from "@/content/catalog/fields";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { RegisterBanner } from "@/components/auth/RegisterBanner";
-import { BottomCta } from "@/components/layout/Chrome";
+import { GuestFreePath } from "@/components/auth/GuestFreePath";
 import {
-  authHrefForSkill,
-  buildFreePathState,
   isSkillOpenWithoutAuth,
 } from "@/lib/access";
 import { useProgress } from "@/store/progress";
 import { scrollWindowToTop } from "@/lib/scroll";
 import { useClientReady } from "@/components/ClientBody";
-import { GuestFreePath } from "@/components/auth/GuestFreePath";
+import { track } from "@/lib/analytics";
 
 type Props = {
   initialField?: string | null;
@@ -68,12 +65,9 @@ export function SkillsMap({ initialField = null }: Props) {
   const activeField = activeFieldId ? getFieldById(activeFieldId) : null;
   const liveTotal = totalLiveSkills();
   const catalogTotal = totalCatalogSkills();
-  const freePath =
-    ready && configured && !loading && !user
-      ? buildFreePathState(getSkillProgress)
-      : null;
 
   function openField(id: FieldId) {
+    track("skills_field_opened", { field_id: id });
     setActiveFieldId(id);
     scrollWindowToTop("auto");
     startTransition(() => {
@@ -91,7 +85,7 @@ export function SkillsMap({ initialField = null }: Props) {
 
   return (
     <>
-      <div className="relative mx-auto max-w-lg overflow-hidden px-4 pb-36 pt-5">
+      <div className="relative mx-auto max-w-lg overflow-hidden px-4 pb-28 pt-5">
         <div
           className="pointer-events-none absolute -start-24 top-8 h-56 w-56 rounded-full bg-teal-400/15 blur-3xl"
           aria-hidden
@@ -124,29 +118,6 @@ export function SkillsMap({ initialField = null }: Props) {
           />
         )}
       </div>
-
-      <BottomCta
-        href="/mock"
-        label="ادخل الاختبار — 60 سؤالاً"
-        secondaryHref={
-          !signedIn && !authBusy
-            ? freePath?.allDone
-              ? "/auth"
-              : freePath?.nextHref ?? "/skills"
-            : activeField
-              ? "/skills"
-              : undefined
-        }
-        secondaryLabel={
-          !signedIn && !authBusy
-            ? freePath?.allDone
-              ? "أو ادخل بحساب Google"
-              : freePath?.ctaLabel ?? "أو جرّب مهارة"
-            : activeField
-              ? "العودة للمجالات"
-              : undefined
-        }
-      />
     </>
   );
 }
@@ -184,6 +155,14 @@ function FieldsView({
         نفس النمط.
       </p>
 
+      <Link
+        href="/mock"
+        onClick={() => track("skills_map_mock_cta")}
+        className="mt-5 flex min-h-12 w-full items-center justify-center rounded-2xl bg-ink text-sm font-extrabold text-white transition active:scale-[0.99]"
+      >
+        ادخل الاختبار — 60 سؤالاً
+      </Link>
+
       {!signedIn && !loading && (
         <div className="mt-5">
           <GuestFreePath variant="panel" />
@@ -201,18 +180,7 @@ function FieldsView({
         ) : (
           <span className="text-slate-500">المسار مكتمل للتدريب</span>
         )}
-        {!signedIn && !loading && (
-          <span className="rounded-full bg-amber-50 px-3 py-1 font-bold text-amber-900 ring-1 ring-amber-100">
-            الكل مجاني بحساب Google
-          </span>
-        )}
       </div>
-
-      {!signedIn && !loading && (
-        <div className="mt-5">
-          <RegisterBanner />
-        </div>
-      )}
 
       <ul className="mt-7 space-y-3">
         {SKILL_FIELDS.map((field, i) => {
@@ -368,9 +336,8 @@ function FieldSkillsView({
       </div>
 
       {!signedIn && !loading && (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4">
           <GuestFreePath variant="panel" />
-          <RegisterBanner />
         </div>
       )}
 
@@ -389,12 +356,11 @@ function FieldSkillsView({
             !freeOpen;
 
           let href = `/skill/${skill.id}`;
-          if (locked) href = authHrefForSkill(skill.id);
 
           const chip = !liveSkill
             ? { label: "قريباً", cls: "bg-slate-900/90 text-white" }
             : locked
-              ? { label: "بحساب Google", cls: "bg-slate-900 text-white" }
+              ? { label: "قفل", cls: "bg-slate-900 text-white" }
               : p.completed
                 ? { label: "مكتملة", cls: "bg-green-100 text-green-800" }
                 : p.started
@@ -460,11 +426,9 @@ function FieldSkillsView({
                     </span>
                   </div>
                   <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">
-                    {locked
-                      ? "مجانية بالكامل — ادخل بحساب Google لفتحها"
-                      : liveSkill
-                        ? skill.hook_ar
-                        : "نجهّز تصوّراً واختصاراً وتدريباً خاصاً بهذا العنوان فقط"}
+                    {liveSkill
+                      ? skill.hook_ar
+                      : "نجهّز تصوّراً واختصاراً وتدريباً خاصاً بهذا العنوان فقط"}
                   </p>
                 </div>
                 <span

@@ -1,6 +1,6 @@
 # Auth & hosting (Supabase + Vercel)
 
-Production: **https://qudrah.vercel.app**  
+Production: **https://qodrah.vercel.app**  
 Same Supabase project for local and production.
 
 ## What is hardcoded (public)
@@ -9,7 +9,8 @@ In `src/lib/publicConfig.ts`:
 
 - Supabase project URL
 - Supabase **anon** key (public by design; RLS protects rows)
-- Production site URL constant
+- PostHog project API key (public by design; init is production-only)
+- Production site URL constant (`https://qodrah.vercel.app`)
 
 OAuth redirect uses `window.location.origin` / request `origin`, so local and prod both work.
 
@@ -23,14 +24,16 @@ OAuth redirect uses `window.location.origin` / request `origin`, so local and pr
 
 Do **not** put `service_role` in the client or in `publicConfig.ts`.
 
+PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add localhost as an authorized domain. The app reverse-proxies through `/ingest`. Persistence is **localStorage only** — no tracking cookies and no cookie banner.
+
 ## Supabase Auth URLs
 
 **Authentication → URL Configuration**
 
 | Setting | Value |
 |---------|--------|
-| Site URL | `https://qudrah.vercel.app` |
-| Redirect URLs | `https://qudrah.vercel.app/auth/callback` |
+| Site URL | `https://qodrah.vercel.app` |
+| Redirect URLs | `https://qodrah.vercel.app/auth/callback` |
 | | `http://localhost:3002/auth/callback` |
 | | `http://localhost:3000/auth/callback` |
 
@@ -41,11 +44,11 @@ Do **not** put `service_role` in the client or in `publicConfig.ts`.
 
    `https://nmfxftxqznewycnyxrrb.supabase.co/auth/v1/callback`
 
-3. Optional JS origins: `https://qudrah.vercel.app`, `http://localhost:3002`  
+3. Optional JS origins: `https://qodrah.vercel.app`, `http://localhost:3002`  
 4. Supabase → Authentication → Providers → Google → enable + Client ID/Secret
 
 ## Vercel
 
-1. Domain / alias: `qudrah.vercel.app`
-2. Env: only `SUPABASE_SERVICE_ROLE_KEY` (+ review secrets if needed)
+1. Domain / alias: `qodrah.vercel.app`
+2. Env: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_SITE_URL=https://qodrah.vercel.app`
 3. Redeploy after adding secrets

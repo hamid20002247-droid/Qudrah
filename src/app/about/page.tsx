@@ -4,6 +4,9 @@ import { PRODUCT_FACTS } from "@/lib/next-action";
 
 export const metadata: Metadata = {
   title: "عن قُدرة",
+  description:
+    "قُدرة أداة تدريب مستقلة للقسم الكمي في اختبار القدرات. غير تابعة لهيئة تقويم التعليم والتدريب أو قياس.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {
@@ -35,7 +38,7 @@ export default function AboutPage() {
             · الاختبار الكامل: {PRODUCT_FACTS.mockQuestions} سؤالاً في{" "}
             {PRODUCT_FACTS.mockMinutes} دقيقة، بأسئلة وترتيب جديد في كل محاولة
           </li>
-          <li>· كلها مجانية — حساب Google فقط، بلا اشتراك</li>
+          <li>· التدريب مجاني — احفظ تقدّمك متى ما جاهز</li>
         </ul>
       </div>
 

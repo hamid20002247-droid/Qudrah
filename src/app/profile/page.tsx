@@ -5,6 +5,7 @@ import { RequireAuth } from "@/components/auth/RequireAuth";
 export const metadata: Metadata = {
   title: "صفحتي",
   description: "تقدّمك في قُدرة: الدرجات، الاستمرار، ويوم الاختبار.",
+  robots: { index: false, follow: false },
 };
 
 export default function ProfileRoute() {

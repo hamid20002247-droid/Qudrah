@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -12,6 +13,7 @@ import { useClientReady } from "@/components/ClientBody";
 import { useProgress } from "@/store/progress";
 import { GuestFreePath } from "@/components/auth/GuestFreePath";
 import { PRODUCT_FACTS } from "@/lib/next-action";
+import { track } from "@/lib/analytics";
 
 /** Blocks locked skills for guests; preview skills + signed-in users pass through. */
 export function SkillAccessGate({
@@ -24,6 +26,16 @@ export function SkillAccessGate({
   const ready = useClientReady();
   const { user, loading, configured } = useAuth();
   const getSkillProgress = useProgress((s) => s.getSkillProgress);
+  const locked =
+    configured &&
+    ready &&
+    !loading &&
+    !user &&
+    !isSkillOpenWithoutAuth(skillId);
+
+  useEffect(() => {
+    if (locked) track("skill_locked_view", { skill_id: skillId });
+  }, [locked, skillId]);
 
   if (!configured || isSkillOpenWithoutAuth(skillId)) {
     return <>{children}</>;
@@ -49,27 +61,31 @@ export function SkillAccessGate({
       />
       <div className="overflow-hidden rounded-[2rem] bg-ink px-6 py-9 text-white shadow-2xl shadow-teal-900/20">
         <p className="text-xs font-bold tracking-wide text-teal-300">
-          كل شيء مجاني
+          احفظ تقدّمك
         </p>
         <h1 className="mt-3 font-display text-3xl font-extrabold leading-snug">
-          افتح هذه المهارة بحساب Google
+          افتح هذه المهارة واحفظ مسارك
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-300">
-          الـ {PRODUCT_FACTS.skills} مهارة كلها مجانية — بلا اشتراك. حساب Google
-          فقط لفتح المسار كامل وحفظ تقدّمك.
+          الـ {PRODUCT_FACTS.skills} مهارة كلها مجانية. حساب Google يحفظ تقدّمك
+          على كل الأجهزة.
           {!path.allDone
             ? ` يمكنك أيضاً تجريب ${FREE_SKILL_COUNT} مهارات بدون حساب الآن.`
             : ""}
         </p>
         <Link
           href={authHrefForSkill(skillId)}
+          onClick={() =>
+            track("skill_gate_google_clicked", { skill_id: skillId })
+          }
           className="mt-7 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400"
         >
-          المتابعة مع Google — مجاناً
+          افتح بحساب Google — مجاناً
         </Link>
         {!path.allDone && path.nextId && (
           <Link
             href={path.nextHref}
+            onClick={() => track("skill_gate_try_free", { skill_id: skillId })}
             className="mt-3 flex min-h-11 items-center justify-center text-sm font-semibold text-slate-400 hover:text-white"
           >
             أو جرّب مهارة بدون حساب

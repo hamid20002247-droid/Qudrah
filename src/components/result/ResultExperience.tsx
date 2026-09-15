@@ -8,6 +8,10 @@ import { skillIdForSubPattern } from "@/content/arithmetic";
 import { MathText } from "@/components/ui/MathText";
 import { formatMs } from "@/components/ui/ProgressRing";
 import { track } from "@/lib/analytics";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useClientReady } from "@/components/ClientBody";
+import { authHref } from "@/lib/access";
+import { LtrNum } from "@/components/ui/LtrNum";
 import { useProgress } from "@/store/progress";
 
 function messageFor(score: number, total: number): string {
@@ -19,6 +23,8 @@ function messageFor(score: number, total: number): string {
 }
 
 export function ResultExperience() {
+  const ready = useClientReady();
+  const { user, loading, configured } = useAuth();
   const lastMock = useProgress((s) => s.lastMock);
   const bestMockScore = useProgress((s) => s.bestMockScore);
   const setTestDate = useProgress((s) => s.setTestDate);
@@ -40,7 +46,7 @@ export function ResultExperience() {
       }
     }
     setAttempt(data);
-    if (data) track("result_view", { score: data.score });
+    if (data) track("result_view", { score: data.score, total: data.total });
 
     try {
       const rawReview = sessionStorage.getItem("qudrah_last_mock_review");
@@ -110,14 +116,17 @@ export function ResultExperience() {
   })();
   const isNewBest =
     bestMockScore !== null && bestMockScore === attempt.score;
+  const guest = ready && configured && !loading && !user;
 
   return (
     <div className="mx-auto max-w-lg px-4 pb-16 pt-6">
       <p className="text-center text-sm font-semibold text-teal-700">
         نتيجة الاختبار
       </p>
-      <p className="mt-2 text-center text-5xl font-extrabold tabular-nums text-ink">
-        {attempt.score} / {attempt.total}
+      <p className="mt-2 text-center text-5xl font-extrabold text-ink">
+        <LtrNum>
+          {attempt.score} / {attempt.total}
+        </LtrNum>
       </p>
       <p className="mt-3 text-center text-base font-medium leading-relaxed text-slate-700">
         {messageFor(attempt.score, attempt.total)}
@@ -129,8 +138,38 @@ export function ResultExperience() {
       )}
       {bestMockScore !== null && bestMockScore > attempt.score && (
         <p className="mt-1 text-center text-xs text-slate-500">
-          أفضل نتيجة سابقة: {bestMockScore}/{attempt.total} — حاول تجاوزها
+          أفضل نتيجة سابقة:{" "}
+          <LtrNum>
+            {bestMockScore}/{attempt.total}
+          </LtrNum>{" "}
+          — حاول تجاوزها
         </p>
+      )}
+
+      {guest && (
+        <div className="mt-6 overflow-hidden rounded-[1.75rem] bg-ink p-5 text-white shadow-lg shadow-teal-900/20">
+          <p className="text-[11px] font-bold tracking-wide text-teal-300">
+            احفظ درجتك
+          </p>
+          <p className="mt-1.5 text-lg font-extrabold leading-snug">
+            النتيجة على هذا الجهاز فقط
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-300">
+            احفظها بحساب Google عشان ما تضيع — مجاناً، ثواني.
+          </p>
+          <Link
+            href={authHref("/result")}
+            onClick={() =>
+              track("result_save_cta_clicked", {
+                score: attempt.score,
+                total: attempt.total,
+              })
+            }
+            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-500 text-sm font-extrabold text-white transition hover:bg-teal-400"
+          >
+            احفظ درجتي
+          </Link>
+        </div>
       )}
 
       {topWeak && topWeak.pct < 0.8 && topWeak.skillId && (
@@ -142,10 +181,19 @@ export function ResultExperience() {
             تدرّب على: {SUB_PATTERN_LABELS[topWeak.sub] ?? topWeak.sub}
           </p>
           <p className="mt-1 text-sm text-teal-100">
-            أضعف نقطة في هذا الاختبار ({topWeak.correct}/{topWeak.total})
+            أضعف نقطة في هذا الاختبار (
+            <LtrNum>
+              {topWeak.correct}/{topWeak.total}
+            </LtrNum>
+            )
           </p>
           <Link
             href={`/skill/${topWeak.skillId}`}
+            onClick={() =>
+              track("result_weak_skill_clicked", {
+                skill_id: topWeak.skillId,
+              })
+            }
             className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-white font-bold text-teal-800"
           >
             افتح المهارة الآن
@@ -164,7 +212,7 @@ export function ResultExperience() {
                   <span className="font-semibold">
                     {DOMAIN_LABELS[domain] ?? domain}
                   </span>
-                  <span className="tabular-nums text-slate-500">
+                  <span className="tabular-nums text-slate-500" dir="ltr">
                     {correct}/{total}
                   </span>
                 </div>
@@ -254,6 +302,7 @@ export function ResultExperience() {
       <div className="mt-6 flex flex-col gap-3">
         <Link
           href="/mock"
+          onClick={() => track("result_retake_clicked")}
           className="flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 font-bold text-white"
         >
           أعد الاختبار
@@ -283,6 +332,7 @@ export function ResultExperience() {
             onClick={() => {
               setTestDate(dateInput || null);
               setDateSaved(true);
+              track("test_date_set", { has_date: Boolean(dateInput) });
             }}
             className="min-h-11 rounded-xl bg-ink px-4 text-sm font-bold text-white"
           >
