@@ -211,12 +211,15 @@ export function SkillExperience({ skill }: { skill: Skill }) {
 
   if (phase === "drill" && round === 4 && deck.length > 0) {
     return (
-      <FinalExam
-        title={meta.title}
-        questions={deck}
-        onComplete={finishFinal}
-        onExit={() => setPhase("pick")}
-      />
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
+        <FinalExam
+          title={meta.title}
+          questions={deck}
+          onComplete={finishFinal}
+          onExit={() => setPhase("pick")}
+          flushChrome
+        />
+      </div>
     );
   }
 
