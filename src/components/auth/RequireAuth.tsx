@@ -45,7 +45,7 @@ export function RequireAuth({
 
   const path = buildFreePathState(getSkillProgress);
   const defaultBody = path.allDone
-    ? `كل شيء مجاني: الـ ${PRODUCT_FACTS.skills} مهارة والمحاكاة. ادخل بحساب Google فقط.`
+    ? `كل شيء مجاني: الـ ${PRODUCT_FACTS.skills} مهارة والاختبار. ادخل بحساب Google فقط.`
     : `كل شيء مجاني بحساب Google. لديك ${FREE_SKILL_COUNT} مهارات للتجربة بدون حساب الآن.`;
 
   return (

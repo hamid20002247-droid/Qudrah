@@ -12,8 +12,8 @@ export default function AboutPage() {
       <p className="text-xs font-bold text-teal-700">عن الأداة</p>
       <h1 className="mt-1 text-2xl font-extrabold text-ink">قُدرة</h1>
       <p className="mt-4 text-base leading-relaxed text-slate-700">
-        قُدرة أداة تدريب للقسم الكمي في اختبار القدرات: مهارة واحدة في كل مرة —
-        تصوّر تفاعلي، اختصار تحت الوقت، ثم تدريب واختبار نهائي على نفس النمط.
+        قُدرة لاختبار القدرات الكمي: ادخل الاختبار الكامل، أو تدرّب مهارة
+        بمهارة — تصوّر، اختصار، ثم تدريب واختبار نهائي على نفس النمط.
       </p>
       <p className="mt-4 text-sm leading-relaxed text-slate-600">
         الاسم «قُدرة» يعني القدرة، وهو مختلف عن اسم الاختبار «قدرات». الأداة
@@ -32,7 +32,7 @@ export default function AboutPage() {
             داخل المهارات — بنك تدريب لكل مهارة
           </li>
           <li>
-            · محاكاة موقوتة: {PRODUCT_FACTS.mockQuestions} سؤالاً في{" "}
+            · الاختبار الكامل: {PRODUCT_FACTS.mockQuestions} سؤالاً في{" "}
             {PRODUCT_FACTS.mockMinutes} دقيقة، بأسئلة وترتيب جديد في كل محاولة
           </li>
           <li>· كلها مجانية — حساب Google فقط، بلا اشتراك</li>

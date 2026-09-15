@@ -60,7 +60,7 @@ export function GuestFreePath({
           أكملت تجربة بدون حساب
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-300">
-          الـ {PRODUCT_FACTS.skills} مهارة والمحاكاة كلها مجانية — فقط ادخل
+          الـ {PRODUCT_FACTS.skills} مهارة والاختبار كلها مجانية — فقط ادخل
           بحساب Google وافتح المسار كامل واحفظ تقدّمك.
         </p>
         <Link

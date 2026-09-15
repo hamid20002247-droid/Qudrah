@@ -27,7 +27,7 @@ export function recommendNextSkill(
   }
   return {
     id: "mock",
-    title_ar: "المحاكاة الموقوتة",
+    title_ar: "الاختبار الكامل",
     reason: "أتممت المهارات — اختبر نفسك الآن",
   };
 }

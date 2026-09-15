@@ -269,7 +269,7 @@ export function ProfilePage() {
         >
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold text-teal-700">المحاكاة</p>
+              <p className="text-xs font-bold text-teal-700">الاختبار</p>
               <h2 className="mt-1 text-lg font-extrabold text-ink">
                 تحت الوقت
               </h2>
@@ -293,7 +293,7 @@ export function ProfilePage() {
             href="/mock"
             className="mt-4 flex min-h-11 items-center justify-center rounded-2xl bg-teal-50 text-sm font-bold text-teal-900 ring-1 ring-teal-100"
           >
-            {bestMockScore != null ? "حاول تتفوّق على درجتك" : "جرّب المحاكاة"}
+            {bestMockScore != null ? "حاول تتفوّق على درجتك" : "ادخل الاختبار"}
           </Link>
         </section>
 

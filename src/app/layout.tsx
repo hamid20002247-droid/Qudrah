@@ -17,11 +17,11 @@ const tajawal = Tajawal({
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_SITE_URL),
   title: {
-    default: "قُدرة — تدريب القسم الكمي",
+    default: "قُدرة — اختبار قدرات كمي",
     template: "%s | قُدرة",
   },
   description:
-    "تدريب على القسم الكمي في اختبار القدرات: 60 مهارة، بنك أسئلة داخل كل مهارة، وتصوّر واختصار وتدريب موقوت — مع محاكاة 60 سؤالاً.",
+    "ادخل اختبار قدرات كمي (60 سؤال · 60 دقيقة) + تدرّب على المهارات لرفع درجتك — مجاناً.",
   applicationName: "قُدرة",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
   },
   openGraph: {
-    title: "قُدرة — تدريب القسم الكمي",
+    title: "قُدرة — اختبار قدرات كمي",
     description:
-      "60 مهارة كمي · بنك أسئلة داخل المهارات · محاكاة موقوتة 60 دقيقة.",
+      "ادخل الاختبار الكامل: 60 سؤال · تدريب مهارات كمي لرفع درجتك.",
     locale: "ar_SA",
     type: "website",
     images: [
@@ -59,8 +59,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "قُدرة — تدريب القسم الكمي",
-    description: "مسار كمي منظم: تصوّر، اختصار، تدريب، ومحاكاة.",
+    title: "قُدرة — اختبار قدرات كمي",
+    description: "ادخل الاختبار الكامل + مهارات ترفع درجتك.",
     images: ["/icons/icon-512.png"],
   },
   other: {

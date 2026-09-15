@@ -13,9 +13,9 @@ import { useProgress } from "@/store/progress";
 function messageFor(score: number, total: number): string {
   const pct = score / total;
   if (pct >= 0.85) return "نتيجة عالية — راجع الوقت لتزيد سرعتك.";
-  if (pct >= 0.6) return "نتيجة متوسطة — ركّز على أضعف مهارة ثم أعد المحاكاة.";
-  if (pct >= 0.4) return "نتيجة منخفضة نسبياً — ابدأ بأضعف مهارة ثم أعد المحاكاة.";
-  return "ابدأ بأضعف مهارة في المسار ثم أعد المحاكاة.";
+  if (pct >= 0.6) return "نتيجة متوسطة — ركّز على أضعف مهارة ثم أعد الاختبار.";
+  if (pct >= 0.4) return "نتيجة منخفضة نسبياً — ابدأ بأضعف مهارة ثم أعد الاختبار.";
+  return "ابدأ بأضعف مهارة في المسار ثم أعد الاختبار.";
 }
 
 export function ResultExperience() {
@@ -75,14 +75,14 @@ export function ResultExperience() {
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-lg font-bold text-ink">لا توجد نتيجة بعد</p>
         <p className="mt-2 text-sm text-slate-600">
-          أكمل محاكاة موقوتة أولاً، ثم تظهر درجتك هنا.
+          أكمل اختباراً أولاً، ثم تظهر درجتك هنا.
         </p>
         <div className="mt-6 flex flex-col gap-3">
           <Link
             href="/mock"
             className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 px-6 font-bold text-white"
           >
-            ابدأ المحاكاة
+            ادخل الاختبار
           </Link>
           <Link
             href="/skills"
@@ -114,7 +114,7 @@ export function ResultExperience() {
   return (
     <div className="mx-auto max-w-lg px-4 pb-16 pt-6">
       <p className="text-center text-sm font-semibold text-teal-700">
-        نتيجة المحاكاة
+        نتيجة الاختبار
       </p>
       <p className="mt-2 text-center text-5xl font-extrabold tabular-nums text-ink">
         {attempt.score} / {attempt.total}
@@ -142,7 +142,7 @@ export function ResultExperience() {
             تدرّب على: {SUB_PATTERN_LABELS[topWeak.sub] ?? topWeak.sub}
           </p>
           <p className="mt-1 text-sm text-teal-100">
-            أضعف نقطة في هذه المحاكاة ({topWeak.correct}/{topWeak.total})
+            أضعف نقطة في هذا الاختبار ({topWeak.correct}/{topWeak.total})
           </p>
           <Link
             href={`/skill/${topWeak.skillId}`}
@@ -256,7 +256,7 @@ export function ResultExperience() {
           href="/mock"
           className="flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 font-bold text-white"
         >
-          إعادة المحاكاة
+          أعد الاختبار
         </Link>
         <Link
           href="/skills"

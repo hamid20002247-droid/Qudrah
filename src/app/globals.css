@@ -65,6 +65,20 @@ body {
   animation: fade-up 0.45s ease-out both;
 }
 
+@keyframes exam-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(45, 212, 191, 0);
+  }
+}
+
+.exam-pulse {
+  animation: exam-pulse 2.4s ease-out infinite;
+}
+
 @keyframes field-shimmer {
   from {
     transform: translateX(-40%) rotate(8deg);

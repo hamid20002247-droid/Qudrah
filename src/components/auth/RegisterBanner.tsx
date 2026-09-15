@@ -42,7 +42,7 @@ export function RegisterBanner({ compact = false }: { compact?: boolean }) {
           ادخل بحساب Google وافتح المسار
         </p>
         <p className="mt-1.5 text-sm text-slate-300">
-          الـ {PRODUCT_FACTS.skills} مهارة والمحاكاة مجانية بالكامل — بلا اشتراك.
+          الـ {PRODUCT_FACTS.skills} مهارة والاختبار مجانيان بالكامل — بلا اشتراك.
           حساب Google فقط.
         </p>
         <Link

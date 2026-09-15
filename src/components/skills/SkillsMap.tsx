@@ -127,7 +127,7 @@ export function SkillsMap({ initialField = null }: Props) {
 
       <BottomCta
         href="/mock"
-        label="شوف المحاكاة — 60 سؤالاً"
+        label="ادخل الاختبار — 60 سؤالاً"
         secondaryHref={
           !signedIn && !authBusy
             ? freePath?.allDone

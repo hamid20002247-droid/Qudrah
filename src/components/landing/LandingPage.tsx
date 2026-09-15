@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { VisualRenderer } from "@/components/visuals/VisualRenderer";
-import { ChoiceList } from "@/components/ui/ChoiceList";
 import { GuestFreePath } from "@/components/auth/GuestFreePath";
 import { HomeDashboard } from "@/components/landing/HomeDashboard";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { LANDING_QUESTION } from "@/content/mock/pool";
 import { track, trackLandingView, identifyDevice } from "@/lib/analytics";
 import { useProgress } from "@/store/progress";
 import { PRODUCT_FACTS } from "@/lib/next-action";
@@ -24,9 +21,6 @@ export function LandingPage() {
   const { user, loading, configured } = useAuth();
   const deviceId = useProgress((s) => s.deviceId);
   const getSkillProgress = useProgress((s) => s.getSkillProgress);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const engaged = useRef(false);
   const viewed = useRef(false);
 
   useEffect(() => {
@@ -36,32 +30,17 @@ export function LandingPage() {
     trackLandingView();
   }, [ready, deviceId]);
 
-  const onVisual = () => {
-    if (engaged.current) return;
-    engaged.current = true;
-    track("interactive_engaged");
-  };
-
-  const answer = (i: number) => {
-    if (revealed) return;
-    setSelected(i);
-    setRevealed(true);
-    track("landing_question_answered", {
-      correct: i === LANDING_QUESTION.correct_index,
-    });
-  };
-
   const signedIn = ready && configured && !loading && Boolean(user);
   const guestPath =
     ready && configured && !loading && !user
       ? buildFreePathState(getSkillProgress)
       : null;
-  const startHref = guestPath?.allDone
-    ? "/auth"
+  const skillHref = guestPath?.allDone
+    ? "/skills"
     : guestPath?.nextHref ?? `/skill/${FREE_SKILL_ID}`;
-  const startLabel = guestPath?.allDone
-    ? "ادخل بحساب Google"
-    : guestPath?.ctaLabel ?? "ابدأ الآن";
+  const skillLabel = guestPath?.allDone
+    ? "خريطة المهارات"
+    : guestPath?.ctaLabel ?? "تدرّب على مهارة";
 
   if (!ready || (configured && loading)) {
     return (
@@ -77,66 +56,151 @@ export function LandingPage() {
 
   return (
     <div className="mx-auto max-w-lg">
-      {/* First viewport — one composition: brand, line, CTA */}
-      <section className="relative overflow-hidden px-4 pb-8 pt-6">
+      {/* First 5 seconds — brand + what this is + two doors */}
+      <section className="relative overflow-hidden px-4 pb-9 pt-5">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
             background:
-              "radial-gradient(ellipse 90% 60% at 70% -20%, rgba(13,148,136,0.22), transparent 55%), linear-gradient(180deg, #ECFDF5 0%, #F8FAFC 48%, #FFFFFF 100%)",
+              "radial-gradient(ellipse 100% 70% at 50% -10%, rgba(13,148,136,0.28), transparent 55%), linear-gradient(180deg, #0F766E 0%, #115E59 28%, #F0FDFA 58%, #F8FAFC 100%)",
           }}
           aria-hidden
         />
 
-        <p className="font-display text-[2.75rem] font-extrabold leading-none tracking-tight text-teal-800">
-          قُدرة
-        </p>
-        <h1 className="mt-4 max-w-[18rem] text-[1.55rem] font-extrabold leading-snug text-ink">
-          افهم النمط. حُلّ أسرع.
-        </h1>
-        <p className="mt-2 max-w-[20rem] text-[14px] leading-relaxed text-slate-600">
-          {PRODUCT_FACTS.skills} مهارة كمي — تصوّر، اختصار، تدريب.
-        </p>
+        <div className="animate-fade-up">
+          <p className="font-display text-[2.85rem] font-extrabold leading-none tracking-tight text-white drop-shadow-sm">
+            قُدرة
+          </p>
+          <h1 className="mt-3 max-w-[17rem] text-[1.65rem] font-extrabold leading-snug text-white">
+            اختبار قدرات كمي
+          </h1>
+          <p className="mt-2 max-w-[19rem] text-[14px] leading-relaxed text-teal-50/90">
+            ادخل الاختبار الآن — أو تدرّب مهارة بمهارة لرفع درجتك.
+          </p>
+        </div>
 
-        <Link
-          href={startHref}
-          onClick={() => track("cta_start_clicked")}
-          className="mt-7 flex min-h-[3.5rem] w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-[0_16px_40px_-16px_rgba(13,148,136,0.65)] transition active:scale-[0.99]"
+        {/* Product visual: the exam itself */}
+        <div
+          className="animate-fade-up mt-6 overflow-hidden rounded-[1.75rem] bg-ink px-5 py-6 text-white shadow-[0_28px_60px_-28px_rgba(15,23,42,0.7)] ring-1 ring-white/10"
+          style={{ animationDelay: "80ms" }}
         >
-          {startLabel}
-        </Link>
-        <Link
-          href="/mock"
-          onClick={() => track("landing_mock_cta")}
-          className="mt-3 flex min-h-[3.25rem] w-full items-center justify-center rounded-2xl bg-ink text-base font-extrabold text-white shadow-[0_14px_36px_-18px_rgba(15,23,42,0.55)] transition active:scale-[0.99]"
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold tracking-wide text-teal-300">
+                الاختبار الكامل
+              </p>
+              <p className="mt-1 font-display text-2xl font-extrabold leading-none tabular-nums" dir="ltr">
+                {PRODUCT_FACTS.mockQuestions}
+                <span className="text-base font-bold text-slate-400">
+                  {" "}
+                  سؤال
+                </span>
+              </p>
+            </div>
+            <div className="exam-pulse flex h-[4.75rem] w-[4.75rem] flex-col items-center justify-center rounded-full bg-teal-500/15 ring-2 ring-teal-400/50">
+              <span className="text-[10px] font-bold text-teal-200">الوقت</span>
+              <span
+                className="font-display text-xl font-extrabold tabular-nums leading-none text-white"
+                dir="ltr"
+              >
+                {PRODUCT_FACTS.mockMinutes}:00
+              </span>
+            </div>
+          </div>
+          <p className="mt-4 text-sm font-semibold text-slate-300">
+            أسئلة جديدة كل مرة · مؤقت واحد للاختبار كله
+          </p>
+        </div>
+
+        {/* Always two CTAs — exam first (what students seek) */}
+        <div
+          className="animate-fade-up mt-5 space-y-2.5"
+          style={{ animationDelay: "140ms" }}
         >
-          المحاكاة الكاملة — 60 سؤالاً
-        </Link>
-        <p className="mt-2.5 text-center text-[11px] text-slate-500">
-          {FREE_SKILL_COUNT} مهارات بدون حساب · المحاكاة بحساب Google — مجاناً
-        </p>
+          <Link
+            href="/mock"
+            onClick={() => track("landing_mock_cta")}
+            className="flex min-h-[3.6rem] w-full flex-col items-center justify-center rounded-2xl bg-teal-500 text-white shadow-[0_18px_40px_-16px_rgba(20,184,166,0.75)] transition hover:bg-teal-400 active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold leading-none">
+              ادخل الاختبار
+            </span>
+            <span className="mt-1 text-[11px] font-bold text-teal-50/90" dir="ltr">
+              {PRODUCT_FACTS.mockQuestions} سؤال · {PRODUCT_FACTS.mockMinutes}{" "}
+              دقيقة
+            </span>
+          </Link>
+          <Link
+            href={skillHref}
+            onClick={() => track("cta_start_clicked")}
+            className="flex min-h-[3.35rem] w-full items-center justify-center rounded-2xl bg-white text-base font-extrabold text-ink shadow-sm ring-1 ring-slate-200/90 transition active:scale-[0.99]"
+          >
+            {skillLabel}
+          </Link>
+          <p className="pt-0.5 text-center text-[11px] font-semibold text-slate-500">
+            {FREE_SKILL_COUNT} مهارات فوراً · الاختبار والمسار بـ Google —
+            مجاناً
+          </p>
+        </div>
       </section>
 
-      {/* Compact free path — links only, no essay */}
+      {/* One glance — two jobs of the product */}
+      <section className="px-4 pb-2">
+        <div className="grid grid-cols-2 gap-2.5">
+          <Link
+            href="/mock"
+            onClick={() => track("landing_mock_cta")}
+            className="flex min-h-[7.5rem] flex-col justify-between rounded-[1.35rem] bg-ink p-4 text-white transition active:scale-[0.99]"
+          >
+            <span className="text-[11px] font-bold text-teal-300">الاختبار</span>
+            <span>
+              <span className="block font-display text-lg font-extrabold leading-snug">
+                ادخل الآن
+              </span>
+              <span className="mt-1 block text-[11px] font-semibold text-slate-400">
+                60 سؤال موقوت
+              </span>
+            </span>
+          </Link>
+          <Link
+            href="/skills"
+            className="flex min-h-[7.5rem] flex-col justify-between rounded-[1.35rem] bg-teal-700 p-4 text-white transition active:scale-[0.99]"
+          >
+            <span className="text-[11px] font-bold text-teal-200">المهارات</span>
+            <span>
+              <span className="block font-display text-lg font-extrabold leading-snug">
+                ارفع درجتك
+              </span>
+              <span className="mt-1 block text-[11px] font-semibold text-teal-100/80">
+                {PRODUCT_FACTS.skills} مهارة حيّة
+              </span>
+            </span>
+          </Link>
+        </div>
+      </section>
+
+      {/* Compact free trail — action only */}
       {guestPath && !guestPath.allDone && (
-        <section className="border-t border-slate-100 px-4 py-6">
+        <section className="px-4 py-7">
           <div className="mb-3 flex items-baseline justify-between gap-2">
-            <h2 className="text-base font-extrabold text-ink">جرّب الآن</h2>
-            <span className="text-[11px] font-bold tabular-nums text-teal-700">
+            <h2 className="text-base font-extrabold text-ink">جرّب بدون حساب</h2>
+            <span className="text-[11px] font-bold tabular-nums text-teal-700" dir="ltr">
               {guestPath.completedCount}/{guestPath.total}
             </span>
           </div>
           <ul className="space-y-2">
             {guestPath.items.map((item) => {
               const skill = getSkillById(item.id);
+              const hot =
+                item.status === "next" || item.status === "current";
               return (
                 <li key={item.id}>
                   <Link
                     href={item.href}
-                    className={`flex min-h-[3.25rem] items-center gap-3 rounded-2xl px-3.5 py-2.5 transition active:scale-[0.99] ${
+                    className={`flex min-h-[3.15rem] items-center gap-3 rounded-2xl px-3.5 py-2.5 transition active:scale-[0.99] ${
                       item.status === "done"
                         ? "bg-emerald-50 ring-1 ring-emerald-100"
-                        : item.status === "next" || item.status === "current"
+                        : hot
                           ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25"
                           : "bg-white ring-1 ring-slate-200"
                     }`}
@@ -145,31 +209,21 @@ export function LandingPage() {
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
                         item.status === "done"
                           ? "bg-emerald-500 text-white"
-                          : item.status === "next" || item.status === "current"
+                          : hot
                             ? "bg-white/20 text-white"
                             : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {item.completed ? "✓" : item.order}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className={`block text-sm font-extrabold ${
-                          item.status === "next" || item.status === "current"
-                            ? "text-white"
-                            : "text-ink"
-                        }`}
-                      >
-                        {skill?.title_ar ?? item.title_ar}
-                      </span>
-                    </span>
                     <span
-                      className={`text-lg ${
-                        item.status === "next" || item.status === "current"
-                          ? "text-white/80"
-                          : "text-teal-700"
+                      className={`min-w-0 flex-1 truncate text-sm font-extrabold ${
+                        hot ? "text-white" : "text-ink"
                       }`}
                     >
+                      {skill?.title_ar ?? item.title_ar}
+                    </span>
+                    <span className={hot ? "text-white/80" : "text-teal-700"}>
                       ←
                     </span>
                   </Link>
@@ -181,105 +235,22 @@ export function LandingPage() {
       )}
 
       {guestPath?.allDone && (
-        <section className="px-4 pb-4">
+        <section className="px-4 py-6">
           <GuestFreePath variant="done" />
         </section>
       )}
 
-      {/* Mock CTA early — see the exam exists */}
-      <section className="border-t border-slate-100 px-4 py-6">
-        <div className="overflow-hidden rounded-[1.75rem] bg-ink px-5 py-6 text-white">
-          <p className="text-[11px] font-bold tracking-wide text-teal-300">
-            محاكاة قدرات كمي
-          </p>
-          <h2 className="mt-2 font-display text-xl font-extrabold leading-snug">
-            مثل يوم الاختبار
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-300">
-            {PRODUCT_FACTS.mockQuestions} سؤالاً · {PRODUCT_FACTS.mockMinutes}{" "}
-            دقيقة · أسئلة جديدة كل مرة.
-          </p>
-          <Link
-            href="/mock"
-            onClick={() => track("landing_mock_cta")}
-            className="mt-5 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99]"
-          >
-            شوف المحاكاة الكاملة
-          </Link>
-          <p className="mt-2.5 text-center text-[11px] text-slate-400">
-            ادخل بحساب Google عند البدء — مجاناً
-          </p>
-        </div>
-      </section>
-
-      <section className="space-y-8 border-t border-slate-100 px-4 py-8">
-        <div>
-          <h2 className="text-lg font-extrabold text-ink">جرّب التصوّر</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            لماذا 80→100 = 25٪ وليس 20٪؟ اسحب وجرّب.
-          </p>
-          <div className="mt-4">
-            <VisualRenderer
-              spec={{ kind: "custom", component: "percent-change-lab" }}
-              onInteract={onVisual}
-              compact
-            />
-          </div>
-          <Link
-            href={`/skill/${FREE_SKILL_ID}`}
-            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 font-extrabold text-white"
-          >
-            افتح المهارة
-          </Link>
-        </div>
-
-        <div>
-          <h2 className="text-lg font-extrabold text-ink">سؤال سريع</h2>
-          <p className="mt-3 text-[15px] font-bold leading-snug text-ink">
-            {LANDING_QUESTION.prompt_ar}
-          </p>
-          <div className="mt-3">
-            <ChoiceList
-              choices={LANDING_QUESTION.choices_ar}
-              selected={selected}
-              correctIndex={LANDING_QUESTION.correct_index}
-              showResult={revealed}
-              onSelect={answer}
-            />
-          </div>
-          {revealed && selected === LANDING_QUESTION.correct_index && (
-            <p className="mt-3 text-sm font-semibold text-green-700">تمام.</p>
-          )}
-          {revealed && selected !== LANDING_QUESTION.correct_index && (
-            <div className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-950 ring-1 ring-rose-100">
-              <p className="font-bold">خطأ</p>
-              <p className="mt-1 leading-relaxed">
-                {selected !== null
-                  ? LANDING_QUESTION.trap_explanations_ar[selected]
-                  : ""}
-              </p>
-              <Link
-                href={`/skill/${FREE_SKILL_ID}`}
-                className="mt-2 inline-block font-bold text-teal-700"
-              >
-                افتح التصوّر ←
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-[1.5rem] bg-white px-5 py-5 ring-1 ring-slate-200">
-          <p className="text-base font-extrabold text-ink">كل المسار مجاني</p>
-          <p className="mt-1 text-sm text-slate-600">
-            {PRODUCT_FACTS.skills} مهارة + محاكاة — بحساب Google فقط.
-          </p>
-          <Link
-            href="/auth"
-            className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 font-extrabold text-white"
-          >
-            ادخل بحساب Google
-          </Link>
-        </div>
+      {/* Soft close — no essay */}
+      <section className="border-t border-slate-100 px-4 py-8">
+        <p className="text-center text-sm font-bold text-slate-600">
+          كل شيء مجاني — احفظ تقدّمك بحساب Google
+        </p>
+        <Link
+          href="/auth"
+          className="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-slate-950 font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99]"
+        >
+          ادخل بحساب Google
+        </Link>
       </section>
     </div>
   );

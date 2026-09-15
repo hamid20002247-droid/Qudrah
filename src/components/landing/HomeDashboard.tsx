@@ -41,94 +41,142 @@ export function HomeDashboard() {
       ? Math.round((plan.stats.completed / plan.stats.total) * 100)
       : 0;
 
+  const primaryIsMock = plan.primaryHref.startsWith("/mock");
+  const skillHref = primaryIsMock
+    ? plan.secondaryHref ?? "/skills"
+    : plan.primaryHref;
+  const skillLabel = primaryIsMock
+    ? plan.secondaryLabel ?? "تدرّب على مهارة"
+    : plan.primaryLabel;
+  const mockLabel =
+    plan.stats.bestMockScore != null ? "اختبار جديد" : "ادخل الاختبار";
+
   return (
     <div className="mx-auto max-w-lg">
-      {/* Hero — one job: tell them the next move */}
+      {/* First 5 seconds — same product story + two doors */}
       <section className="relative overflow-hidden px-4 pb-8 pt-5">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
             background:
-              "radial-gradient(ellipse 90% 60% at 100% -20%, rgba(13,148,136,0.22), transparent), linear-gradient(180deg, #ECFDF8 0%, #F8FAFC 50%, #FFFFFF 100%)",
+              "radial-gradient(ellipse 100% 65% at 50% -15%, rgba(13,148,136,0.26), transparent 55%), linear-gradient(180deg, #ECFDF8 0%, #F8FAFC 52%, #FFFFFF 100%)",
           }}
+          aria-hidden
         />
 
-        <p className="text-[13px] font-semibold text-slate-500">
-          {name ? `مرحباً، ${name}` : "مرحباً بك"}
-        </p>
-        <p className="mt-3 text-[11px] font-bold tracking-wide text-teal-700">
-          {plan.eyebrow}
-        </p>
-        <h1 className="mt-1.5 font-display text-[1.85rem] font-extrabold leading-snug text-ink">
-          {plan.headline}
-        </h1>
-        <p className="mt-2 max-w-[22rem] text-[15px] leading-relaxed text-slate-600">
-          {plan.support}
-        </p>
-
-        <Link
-          href={plan.primaryHref}
-          onClick={() =>
-            track("home_primary_cta", { stage: plan.stage, href: plan.primaryHref })
-          }
-          className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-xl shadow-teal-600/25 transition hover:bg-teal-700 active:scale-[0.99]"
-        >
-          {plan.primaryLabel}
-        </Link>
-        {plan.secondaryHref && plan.secondaryLabel && (
-          <Link
-            href={plan.secondaryHref}
-            className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-bold text-teal-800"
-          >
-            {plan.secondaryLabel}
-          </Link>
-        )}
-
-        {/* Compact progress — not a dashboard strip of noise */}
-        <div className="mt-7 grid grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-white/90 px-3 py-3 text-center ring-1 ring-slate-100">
-            <p className="font-display text-xl font-extrabold tabular-nums text-ink">
-              {plan.stats.completed}
-              <span className="text-sm font-bold text-slate-400">
-                /{plan.stats.total}
-              </span>
-            </p>
-            <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
-              مهارة مكتملة
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/90 px-3 py-3 text-center ring-1 ring-slate-100">
-            <p className="font-display text-xl font-extrabold tabular-nums text-ink">
-              {pct}٪
-            </p>
-            <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
-              تقدّم المسار
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/90 px-3 py-3 text-center ring-1 ring-slate-100">
-            <p className="font-display text-xl font-extrabold tabular-nums text-ink">
-              {plan.stats.daysToExam != null && plan.stats.daysToExam >= 0
-                ? plan.stats.daysToExam
-                : plan.stats.streakDays || "—"}
-            </p>
-            <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
-              {plan.stats.daysToExam != null && plan.stats.daysToExam >= 0
-                ? "يوماً للاختبار"
-                : "أيام استمرار"}
-            </p>
-          </div>
+        <div className="animate-fade-up">
+          <p className="text-[13px] font-semibold text-slate-500">
+            {name ? `مرحباً، ${name}` : "مرحباً بك"}
+          </p>
+          <p className="mt-2 font-display text-[2.35rem] font-extrabold leading-none tracking-tight text-teal-800">
+            قُدرة
+          </p>
+          <h1 className="mt-2.5 text-[1.45rem] font-extrabold leading-snug text-ink">
+            اختبار قدرات كمي
+          </h1>
+          <p className="mt-1.5 max-w-[21rem] text-[14px] leading-relaxed text-slate-600">
+            {plan.support}
+          </p>
         </div>
 
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-gradient-to-l from-teal-500 to-teal-700 transition-[width] duration-500"
-            style={{ width: `${pct}%` }}
-          />
+        {/* Always: mock + skills — mock emphasized (what students seek) */}
+        <div
+          className="animate-fade-up mt-6 space-y-2.5"
+          style={{ animationDelay: "90ms" }}
+        >
+          <Link
+            href="/mock"
+            onClick={() =>
+              track("home_primary_cta", { stage: plan.stage, href: "/mock" })
+            }
+            className="flex min-h-[3.6rem] w-full flex-col items-center justify-center rounded-2xl bg-ink text-white shadow-[0_18px_44px_-20px_rgba(15,23,42,0.55)] transition hover:bg-slate-800 active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold leading-none">
+              {mockLabel}
+            </span>
+            <span
+              className="mt-1 text-[11px] font-bold text-slate-400"
+              dir="ltr"
+            >
+              {plan.stats.bestMockScore != null
+                ? `أفضل نتيجة ${plan.stats.bestMockScore}/${plan.stats.lastMockTotal ?? 60}`
+                : `${PRODUCT_FACTS.mockQuestions} سؤال · ${PRODUCT_FACTS.mockMinutes} دقيقة`}
+            </span>
+          </Link>
+          <Link
+            href={skillHref}
+            onClick={() =>
+              track("home_primary_cta", {
+                stage: plan.stage,
+                href: skillHref,
+              })
+            }
+            className="flex min-h-[3.35rem] w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-lg shadow-teal-600/25 transition hover:bg-teal-700 active:scale-[0.99]"
+          >
+            {skillLabel}
+          </Link>
+        </div>
+
+        {/* One quiet progress line — not a stats dashboard */}
+        <div
+          className="animate-fade-up mt-6"
+          style={{ animationDelay: "140ms" }}
+        >
+          <div className="mb-1.5 flex items-center justify-between text-[11px] font-bold">
+            <span className="text-slate-500">مسار المهارات</span>
+            <span className="tabular-nums text-teal-700" dir="ltr">
+              {plan.stats.completed}/{plan.stats.total} · {pct}٪
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-l from-teal-500 to-teal-700 transition-[width] duration-500"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          {plan.stats.daysToExam != null && plan.stats.daysToExam >= 0 && (
+            <p className="mt-2 text-center text-[11px] font-semibold text-amber-800">
+              {plan.stats.daysToExam === 0
+                ? "اختبارك اليوم — ادخل الاختبار أولاً"
+                : `${plan.stats.daysToExam} يوماً لاختبارك`}
+            </p>
+          )}
         </div>
       </section>
 
-      <section className="space-y-5 border-t border-slate-100 px-4 py-8">
-        {/* Upcoming path — orientation, not the same promo skill */}
+      <section className="space-y-6 border-t border-slate-100 px-4 py-8">
+        {/* Twin doors again — scannable */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <Link
+            href="/mock"
+            className="flex min-h-[6.75rem] flex-col justify-between rounded-[1.35rem] bg-ink p-4 text-white transition active:scale-[0.99]"
+          >
+            <span className="text-[11px] font-bold text-teal-300">الاختبار</span>
+            <span>
+              <span className="block font-display text-base font-extrabold leading-snug">
+                ادخل الآن
+              </span>
+              <span className="mt-1 block text-[11px] font-semibold text-slate-400">
+                أسئلة جديدة كل مرة
+              </span>
+            </span>
+          </Link>
+          <Link
+            href="/skills"
+            className="flex min-h-[6.75rem] flex-col justify-between rounded-[1.35rem] bg-teal-700 p-4 text-white transition active:scale-[0.99]"
+          >
+            <span className="text-[11px] font-bold text-teal-200">المهارات</span>
+            <span>
+              <span className="block font-display text-base font-extrabold leading-snug">
+                ارفع درجتك
+              </span>
+              <span className="mt-1 block text-[11px] font-semibold text-teal-100/80">
+                {PRODUCT_FACTS.skills} مهارة · {PRODUCT_FACTS.fields} مجالات
+              </span>
+            </span>
+          </Link>
+        </div>
+
         {plan.upcoming.length > 0 && (
           <div>
             <p className="text-xs font-bold text-teal-700">بعدها في المسار</p>
@@ -149,9 +197,6 @@ export function HomeDashboard() {
                       <span className="block truncate font-bold text-ink">
                         {s.title_ar}
                       </span>
-                      <span className="mt-0.5 block truncate text-xs text-slate-500">
-                        {s.hook_ar}
-                      </span>
                     </span>
                     <span className="text-teal-600" aria-hidden>
                       ←
@@ -163,42 +208,10 @@ export function HomeDashboard() {
           </div>
         )}
 
-        {/* Mock card — always clear place on home */}
-        <div className="overflow-hidden rounded-[1.75rem] bg-ink p-5 text-white shadow-[0_24px_50px_-28px_rgba(15,118,110,0.45)]">
-          <p className="text-[11px] font-bold tracking-wide text-teal-300">
-            محاكاة كمي
-          </p>
-          <p className="mt-1 font-display text-xl font-extrabold leading-snug">
-            {plan.stats.bestMockScore != null
-              ? `أفضل نتيجة: ${plan.stats.bestMockScore}/${plan.stats.lastMockTotal ?? 60}`
-              : "اختبر مستواك بستين سؤالاً"}
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-            كل محاولة = اختبار جديد بأسئلة جديدة
-          </p>
-          <Link
-            href="/mock"
-            className="mt-4 flex min-h-12 items-center justify-center rounded-xl bg-teal-500 font-bold text-white transition hover:bg-teal-400"
-          >
-            {plan.stats.bestMockScore != null
-              ? "محاكاة جديدة"
-              : "ابدأ المحاكاة"}
-          </Link>
-        </div>
-
-        {/* Fields — browse without repeating the free-skill lab */}
         <div>
           <div className="flex items-end justify-between gap-2">
-            <div>
-              <p className="text-xs font-bold text-teal-700">المجالات</p>
-              <p className="mt-0.5 text-sm text-slate-500">
-                {PRODUCT_FACTS.fields} مجالات · {PRODUCT_FACTS.skills} مهارة
-              </p>
-            </div>
-            <Link
-              href="/skills"
-              className="text-sm font-bold text-teal-700"
-            >
+            <p className="text-xs font-bold text-teal-700">المجالات</p>
+            <Link href="/skills" className="text-sm font-bold text-teal-700">
               الكل ←
             </Link>
           </div>

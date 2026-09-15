@@ -188,12 +188,12 @@ export function buildHomePlan(input: {
       return {
         stage: "mock_improve",
         eyebrow: "ارفع درجتك",
-        headline: `قوِّ «${weak.title_ar}» ثم أعد المحاكاة`,
+        headline: `قوِّ «${weak.title_ar}» ثم أعد الاختبار`,
         support: `أضعف نقطة في آخر محاولة: ${weak.correct}/${weak.total}`,
         primaryHref: `/skill/${weak.skillId}`,
         primaryLabel: "تدرّب على النقطة الضعيفة",
         secondaryHref: "/mock",
-        secondaryLabel: "أو ابدأ محاكاة جديدة",
+        secondaryLabel: "أو ادخل اختباراً جديداً",
         upcoming: [],
         stats,
       };
@@ -202,13 +202,13 @@ export function buildHomePlan(input: {
       stage: "all_clear",
       eyebrow: "المسار مكتمل",
       headline: lastMock
-        ? "أعد محاكاة كاملة وثبّت مستواك"
-        : "اختبر نفسك بمحاكاة 60 سؤالاً",
+        ? "أعد الاختبار وثبّت مستواك"
+        : "ادخل الاختبار — 60 سؤالاً",
       support: lastMock
         ? `آخر نتيجة: ${lastMock.score}/${lastMock.total} — كل محاولة بأسئلة جديدة`
-        : "مؤقت واحد، جوّ يوم الاختبار، وأسئلة جديدة كل مرة",
+        : "مؤقت واحد · أسئلة جديدة كل مرة",
       primaryHref: "/mock",
-      primaryLabel: lastMock ? "محاكاة جديدة" : "ابدأ المحاكاة",
+      primaryLabel: lastMock ? "اختبار جديد" : "ادخل الاختبار",
       secondaryHref: "/skills",
       secondaryLabel: "راجع مهارة",
       upcoming: [],
@@ -220,7 +220,7 @@ export function buildHomePlan(input: {
   if (completed >= 3 && weak && mockPct != null && mockPct < 0.7) {
     return {
       stage: "weak_focus",
-      eyebrow: "من آخر محاكاة",
+      eyebrow: "من آخر اختبار",
       headline: `حسّن: ${weak.title_ar}`,
       support: `ضعفت هنا (${weak.correct}/${weak.total}) — ثبّت النمط ثم كمّل المسار`,
       primaryHref: `/skill/${weak.skillId}`,
@@ -246,7 +246,7 @@ export function buildHomePlan(input: {
       primaryLabel: "ابدأ هذه المهارة",
       secondaryHref: offerMock ? "/mock" : "/skills",
       secondaryLabel: offerMock
-        ? "أو جرّب محاكاة الآن"
+        ? "أو ادخل الاختبار الآن"
         : "خريطة المهارات",
       upcoming: upcomingAfter(nextFresh.id, getProgress),
       stats,
@@ -257,10 +257,10 @@ export function buildHomePlan(input: {
   return {
     stage: "path_ready_for_mock",
     eyebrow: "خطوتك الآن",
-    headline: "المحاكاة الموقوتة",
-    support: "أتممت المهارات المتاحة — اختبر نفسك بستين سؤالاً",
+    headline: "الاختبار الكامل",
+    support: "أتممت المهارات المتاحة — ادخل الاختبار بستين سؤالاً",
     primaryHref: "/mock",
-    primaryLabel: "ابدأ المحاكاة",
+    primaryLabel: "ادخل الاختبار",
     secondaryHref: "/skills",
     secondaryLabel: "خريطة المهارات",
     upcoming: [],

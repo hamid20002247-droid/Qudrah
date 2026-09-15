@@ -108,7 +108,7 @@ export function MockExperience() {
     return (
       <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
         <FinalExam
-          title="محاكاة قدرات كمي"
+          title="اختبار قدرات كمي"
           questions={questions}
           onComplete={finish}
           onExit={() => {
@@ -141,21 +141,21 @@ export function MockExperience() {
             aria-hidden
           />
           <p className="text-[11px] font-bold tracking-wide text-teal-300">
-            محاكاة كمي كاملة
+            الاختبار الكامل
           </p>
           <h1 className="mt-2 font-display text-[1.85rem] font-extrabold leading-snug">
-            مثل يوم الاختبار
+            اختبار قدرات كمي
             <br />
             حساب · جبر · هندسة · إحصاء · مقارنات
           </h1>
           <p className="mt-3 max-w-[21rem] text-sm leading-relaxed text-slate-300">
-            {MOCK_EXAM_SIZE} سؤالاً في {MOCK_EXAM_SIZE} دقيقة — مزيج قريب من
-            القسم الكمي: حوالي 40٪ حساب، 24٪ هندسة، 23٪ جبر، 13٪ إحصاء، مع
-            مقارنات داخل الأسئلة.
+            {MOCK_EXAM_SIZE} سؤالاً في {MOCK_EXAM_SIZE} دقيقة — مزيج القسم
+            الكمي: حوالي 40٪ حساب، 24٪ هندسة، 23٪ جبر، 13٪ إحصاء، مع مقارنات
+            داخل الأسئلة.
           </p>
 
           <p className="mt-5 rounded-2xl bg-teal-500/15 px-4 py-3 text-sm font-bold leading-snug text-teal-100 ring-1 ring-teal-400/25">
-            كل مرة اختبار جديد بأسئلة جديدة — تجربة مختلفة في كل محاولة
+            كل مرة اختبار جديد بأسئلة جديدة
           </p>
 
           <ul className="mt-4 space-y-2 text-sm text-slate-400">
@@ -165,13 +165,13 @@ export function MockExperience() {
             </li>
             <li className="flex gap-2">
               <span className="text-teal-400">●</span>
-              تراجع إجاباتك بعد التسليم — كما في جوّ يوم الاختبار
+              تراجع إجاباتك بعد التسليم
             </li>
           </ul>
 
           {guestLocked ? (
             <p className="mt-5 rounded-2xl bg-amber-400/15 px-4 py-3 text-sm font-bold leading-snug text-amber-100 ring-1 ring-amber-300/30">
-              المحاكاة جاهزة هنا — ادخل بحساب Google لبدء الاختبار (مجاناً).
+              الاختبار جاهز — ادخل بحساب Google وابدأ الآن (مجاناً).
             </p>
           ) : (
             ready &&
@@ -192,7 +192,7 @@ export function MockExperience() {
               onClick={() => track("mock_signup_cta")}
               className="mt-7 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99]"
             >
-              ادخل بحساب Google وابدأ المحاكاة
+              ادخل بحساب Google وابدأ الاختبار
             </Link>
           ) : (
             <button
@@ -201,7 +201,7 @@ export function MockExperience() {
               disabled={!ready || loading}
               className="mt-7 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400 active:scale-[0.99] disabled:opacity-60"
             >
-              ابدأ اختباراً جديداً
+              ادخل الاختبار
             </button>
           )}
         </div>

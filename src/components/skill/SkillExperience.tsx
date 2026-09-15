@@ -612,7 +612,7 @@ export function SkillExperience({ skill }: { skill: Skill }) {
                 href="/mock"
                 className="flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 font-bold text-white"
               >
-                المحاكاة الموقوتة
+                ادخل الاختبار
               </Link>
             )}
             <Link
@@ -645,7 +645,7 @@ function DrillResultDock({
   if (!mounted) return null;
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 z-[45] px-4 pb-2 pt-2 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]">
+    <div className="pointer-events-none fixed inset-x-0 z-[45] px-4 pb-2 pt-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))]">
       <div className="pointer-events-auto mx-auto flex max-w-lg flex-col gap-2.5 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-[0_-12px_40px_-16px_rgba(15,23,42,0.35)] backdrop-blur-md">
         {ok ? (
           <p
