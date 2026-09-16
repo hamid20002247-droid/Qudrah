@@ -432,22 +432,9 @@ export function SkillExperience({ skill }: { skill: Skill }) {
           <div className="h-28" aria-hidden />
           {revealed && (
             <>
-              <div
-                className={
-                  selected !== null && selected !== q.correct_index
-                    ? "h-52"
-                    : "h-32"
-                }
-                aria-hidden
-              />
+              <div className="h-32" aria-hidden />
               <DrillResultDock
                 ok={selected === q.correct_index}
-                explanation={
-                  selected !== null && selected !== q.correct_index
-                    ? (q.trap_explanations_ar[selected] ??
-                      "راجع الاختصار ثم أعد المحاولة في الجولة التالية.")
-                    : null
-                }
                 nextLabel={
                   qIndex + 1 >= deck.length ? "عرض الملخص" : "التالي"
                 }
@@ -627,12 +614,10 @@ export function SkillExperience({ skill }: { skill: Skill }) {
 /** Portal to body so `fixed` is never trapped by ancestor transforms/animations. */
 function DrillResultDock({
   ok,
-  explanation,
   nextLabel,
   onNext,
 }: {
   ok: boolean;
-  explanation: string | null;
   nextLabel: string;
   onNext: () => void;
 }) {
@@ -643,24 +628,14 @@ function DrillResultDock({
   return createPortal(
     <div className="pointer-events-none fixed inset-x-0 z-[45] px-4 pb-2 pt-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))]">
       <div className="pointer-events-auto mx-auto flex max-w-lg flex-col gap-2.5 rounded-2xl border border-slate-100 bg-white/95 p-3 shadow-[0_-12px_40px_-16px_rgba(15,23,42,0.35)] backdrop-blur-md">
-        {ok ? (
-          <p
-            className="text-center text-sm font-black tracking-wide text-teal-700"
-            aria-live="polite"
-          >
-            صحيح
-          </p>
-        ) : (
-          <p
-            className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm leading-relaxed text-rose-950 ring-1 ring-rose-100"
-            aria-live="polite"
-          >
-            <span className="font-black text-rose-700">خطأ</span>
-            {explanation ? (
-              <span className="mt-0.5 block text-rose-950/90">{explanation}</span>
-            ) : null}
-          </p>
-        )}
+        <p
+          className={`text-center text-sm font-black tracking-wide ${
+            ok ? "text-teal-700" : "text-rose-700"
+          }`}
+          aria-live="polite"
+        >
+          {ok ? "صحيح" : "خطأ"}
+        </p>
         <button
           type="button"
           onClick={onNext}

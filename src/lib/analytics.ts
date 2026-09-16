@@ -58,8 +58,9 @@ export function initAnalytics() {
   const key = POSTHOG_KEY;
   if (!key) return;
 
-  // Direct US ingest — Vercel /ingest proxies corrupt gzip-js bodies (400).
-  // Override with NEXT_PUBLIC_POSTHOG_HOST=/ingest only after a proven proxy.
+  // Direct US ingest — Vercel /ingest proxies corrupt bodies.
+  // disable_compression: posthog-js 1.43x sends gzip without ?compression=gzip-js,
+  // and US ingest then returns 400 "missing event name".
   const host =
     process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
@@ -78,6 +79,7 @@ export function initAnalytics() {
     capture_performance: false,
     disable_session_recording: true,
     disable_surveys: true,
+    disable_compression: true,
     opt_out_useragent_filter: true,
     respect_dnt: false,
     opt_out_capturing_by_default: false,
