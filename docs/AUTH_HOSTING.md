@@ -24,7 +24,7 @@ OAuth redirect uses `window.location.origin` / request `origin`, so local and pr
 
 Do **not** put `service_role` in the client or in `publicConfig.ts`.
 
-PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add localhost as an authorized domain. Capture is proxied through `src/app/ingest/[...path]/route.ts` (Node). Persistence is **localStorage only** — no tracking cookies, no cookie banner, no session replay (saves free-tier quota). Every event includes `auth_state` (`guest` | `signed_in`). No PostHog env vars are required on Vercel.
+PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add localhost as an authorized domain. The SDK sends to **`https://us.i.posthog.com` directly** (Vercel `/ingest` proxies corrupt gzip capture bodies and return 400). Persistence is **localStorage only** — no tracking cookies, no cookie banner, no session replay (saves free-tier quota). Every event includes `auth_state` (`guest` | `signed_in`). No PostHog env vars are required on Vercel.
 
 ## Supabase Auth URLs
 

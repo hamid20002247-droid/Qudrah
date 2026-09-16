@@ -49,6 +49,7 @@ function enrich(props?: AnalyticsProps): AnalyticsProps {
  * - Named funnel events + pageviews only (no session replay / heatmaps / autoclick spam)
  * - Guests and signed-in share the same events; `auth_state` is on every event
  * - Exam timer stays in-app only — we send totals on submit, not per-second ticks
+ * - Default api_host is PostHog US direct (Vercel /ingest proxies corrupt gzip bodies)
  */
 export function initAnalytics() {
   if (typeof window === "undefined" || initialized || attempted) return;
@@ -57,7 +58,10 @@ export function initAnalytics() {
   const key = POSTHOG_KEY;
   if (!key) return;
 
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
+  // Direct US ingest — Vercel /ingest proxies corrupt gzip-js bodies (400).
+  // Override with NEXT_PUBLIC_POSTHOG_HOST=/ingest only after a proven proxy.
+  const host =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
   posthog.init(key, {
     api_host: host,
