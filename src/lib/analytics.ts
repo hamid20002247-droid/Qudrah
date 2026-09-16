@@ -46,7 +46,7 @@ function enrich(props?: AnalyticsProps): AnalyticsProps {
 
 /**
  * No cookie banner — persistence is localStorage only (no tracking cookies).
- * Reverse-proxied through /ingest so ad-blockers miss most of it.
+ * Reverse-proxied through /ingest (proxy.ts sets Host) so ad-blockers miss most of it.
  * Guests are people too (`person_profiles: always`); Google identify() merges them.
  */
 export function initAnalytics() {
@@ -78,8 +78,7 @@ export function initAnalytics() {
       maskTextSelector: "input, textarea",
       recordCrossOriginIframes: false,
     },
-    request_batching: false,
-    disable_compression: true,
+    // Automation / embedded browsers set navigator.webdriver — still capture teens on phones.
     opt_out_useragent_filter: true,
     respect_dnt: false,
     opt_out_capturing_by_default: false,

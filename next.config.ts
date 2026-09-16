@@ -3,23 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // PostHog capture uses trailing slashes (`/e/`, `/i/v0/e/`). Without this,
+  // Next redirects them and breaks ingestion.
   skipTrailingSlashRedirect: true,
-  async rewrites() {
-    return [
-      {
-        source: "/ingest/static/:path*",
-        destination: "https://us-assets.i.posthog.com/static/:path*",
-      },
-      {
-        source: "/ingest/array/:path*",
-        destination: "https://us-assets.i.posthog.com/array/:path*",
-      },
-      {
-        source: "/ingest/:path*",
-        destination: "https://us.i.posthog.com/:path*",
-      },
-    ];
-  },
 };
 
 export default nextConfig;
