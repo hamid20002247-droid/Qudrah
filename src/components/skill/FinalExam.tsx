@@ -124,10 +124,6 @@ export function FinalExam({
     if (paused) return;
     if (next < 0 || next >= questions.length || next === index) return;
     timeSpent.current[index] += Date.now() - qEnter.current;
-    track("exam_question_navigated", {
-      from: index + 1,
-      to: next + 1,
-    });
     setIndex(next);
     qEnter.current = Date.now();
     setMapOpen(false);
@@ -140,10 +136,6 @@ export function FinalExam({
       const next = [...prev];
       next[index] = choice;
       return next;
-    });
-    track("exam_answer_selected", {
-      question_index: index + 1,
-      total: questions.length,
     });
   };
 

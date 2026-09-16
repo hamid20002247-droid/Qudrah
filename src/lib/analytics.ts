@@ -45,14 +45,14 @@ function enrich(props?: AnalyticsProps): AnalyticsProps {
 }
 
 /**
- * No cookie banner — persistence is localStorage only (no tracking cookies).
- * Reverse-proxied through /ingest (proxy.ts sets Host) so ad-blockers miss most of it.
- * Guests are people too (`person_profiles: always`); Google identify() merges them.
+ * Lean free-tier PostHog:
+ * - Named funnel events + pageviews only (no session replay / heatmaps / autoclick spam)
+ * - Guests and signed-in share the same events; `auth_state` is on every event
+ * - Exam timer stays in-app only — we send totals on submit, not per-second ticks
  */
 export function initAnalytics() {
   if (typeof window === "undefined" || initialized || attempted) return;
   attempted = true;
-  // Production only — local traffic must not pollute the live funnel.
   if (process.env.NODE_ENV !== "production") return;
   const key = POSTHOG_KEY;
   if (!key) return;
@@ -66,23 +66,17 @@ export function initAnalytics() {
     person_profiles: "always",
     persistence: "localStorage",
     persistence_name: "ph_qudrah",
-    capture_pageview: "history_change",
+    capture_pageview: false,
     capture_pageleave: true,
-    autocapture: true,
-    capture_heatmaps: true,
-    capture_dead_clicks: true,
-    capture_performance: true,
-    disable_session_recording: false,
-    session_recording: {
-      maskAllInputs: true,
-      maskTextSelector: "input, textarea",
-      recordCrossOriginIframes: false,
-    },
-    // Automation / embedded browsers set navigator.webdriver — still capture teens on phones.
+    autocapture: false,
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
+    capture_performance: false,
+    disable_session_recording: true,
+    disable_surveys: true,
     opt_out_useragent_filter: true,
     respect_dnt: false,
     opt_out_capturing_by_default: false,
-    disable_surveys: true,
     sanitize_properties: (props) => {
       const next = { ...props };
       delete next.password;
@@ -96,7 +90,6 @@ export function initAnalytics() {
         auth_state: sessionKind(),
         traffic_source: trafficSource(),
       });
-      // `loaded` runs before the SDK enables its send queue. Flush on the next tick.
       window.setTimeout(() => {
         ph.opt_in_capturing();
         initialized = true;

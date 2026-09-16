@@ -168,13 +168,6 @@ export function SkillExperience({ skill }: { skill: Skill }) {
       ...prev,
       { qid: q.id, chosen: index, correct: ok, timeMs },
     ]);
-    track("drill_question_answered", {
-      skill_id: skill.id,
-      q_id: q.id,
-      correct: ok,
-      time_ms: timeMs,
-      round,
-    });
     // Keep the chosen option visible above the result dock
     requestAnimationFrame(() => {
       const buttons = document.querySelectorAll('[role="listbox"] button');

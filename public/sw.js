@@ -1,5 +1,5 @@
 /* Minimal offline shell for قُدرة PWA — bump CACHE when icons/assets change */
-const CACHE = "qudrah-v7";
+const CACHE = "qudrah-v8";
 const PRECACHE = ["/", "/skills", "/manifest.webmanifest"];
 
 function shouldBypassCache(url) {
