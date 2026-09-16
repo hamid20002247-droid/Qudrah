@@ -85,8 +85,12 @@ export function initAnalytics() {
     opt_out_capturing_by_default: false,
     sanitize_properties: (props) => {
       const next = { ...props };
+      // Never delete `token` — PostHog puts the project API key there and
+      // needs it to build api_key on the capture payload.
       delete next.password;
-      delete next.token;
+      delete next.access_token;
+      delete next.refresh_token;
+      delete next.authorization;
       return next;
     },
     loaded: (ph) => {
