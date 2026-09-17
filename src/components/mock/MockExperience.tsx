@@ -286,7 +286,7 @@ export function MockExperience() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-[75vh] w-full max-w-lg flex-col justify-center overflow-x-hidden px-4 py-10 pb-28">
+    <div className="relative mx-auto flex min-h-[75vh] w-full max-w-lg flex-col justify-center overflow-x-hidden px-4 py-10 pb-32">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.2),_transparent_65%)]"
         aria-hidden
@@ -337,25 +337,24 @@ export function MockExperience() {
               </span>
             </p>
           )}
+
+          <button
+            type="button"
+            onClick={() => start({ gate: guest })}
+            disabled={!ready || loading}
+            className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white shadow-lg shadow-teal-600/25 transition hover:bg-teal-400 active:scale-[0.99] disabled:opacity-60"
+          >
+            ادخل الاختبار
+          </button>
         </div>
       </div>
 
-      <div className="sticky bottom-[5.75rem] z-30 -mx-4 mt-5 bg-gradient-to-t from-[#F8FAFC] from-60% to-transparent px-4 pb-2 pt-5">
-        <button
-          type="button"
-          onClick={() => start({ gate: guest })}
-          disabled={!ready || loading}
-          className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white shadow-lg shadow-teal-600/25 transition hover:bg-teal-400 active:scale-[0.99] disabled:opacity-60"
-        >
-          ادخل الاختبار
-        </button>
-        <Link
-          href="/skills"
-          className="mt-2 flex min-h-11 items-center justify-center text-sm font-semibold text-teal-800"
-        >
-          أفضّل إكمال مهارة أولاً
-        </Link>
-      </div>
+      <Link
+        href="/skills"
+        className="mt-4 flex min-h-11 items-center justify-center text-sm font-semibold text-teal-800"
+      >
+        أفضّل إكمال مهارة أولاً
+      </Link>
     </div>
   );
 }

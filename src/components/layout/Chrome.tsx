@@ -15,15 +15,12 @@ const ICON = "/icons/icon.svg?v=4";
 export function TopBar() {
   const ready = useClientReady();
   const daysUntilTest = useProgress((s) => s.daysUntilTest);
-  const streakDays = useProgress((s) => s.streakDays);
   const days = ready ? daysUntilTest() : null;
-  const streak = ready ? streakDays : 0;
   const showExam = days !== null && days >= 0;
-  const showStreak = streak > 1;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-14 w-full max-w-lg items-center gap-2 overflow-hidden px-3 sm:px-4">
+      <div className="mx-auto flex h-14 w-full max-w-lg items-center gap-2 px-3 sm:gap-3 sm:px-4">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-1.5 text-teal-700 sm:gap-2"
@@ -43,38 +40,19 @@ export function TopBar() {
           </span>
         </Link>
 
-        <div className="ms-auto flex min-w-0 items-center justify-end gap-1 sm:gap-1.5">
+        <div className="ms-auto flex shrink-0 items-center gap-2">
           {showExam && (
-            <span
-              className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold tabular-nums text-amber-900 ring-1 ring-amber-200 sm:px-2.5 sm:text-[11px]"
-              title={
-                days === 0 ? "اختبارك اليوم" : `${days} يوماً لاختبارك`
-              }
-            >
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-200">
               {days === 0 ? (
-                "اليوم"
+                "اختبارك اليوم"
               ) : (
                 <>
-                  <LtrNum>{days}</LtrNum>
-                  <span className="ms-0.5">يوم</span>
+                  <LtrNum>{days}</LtrNum> يوماً لاختبارك
                 </>
               )}
             </span>
           )}
-          {showStreak && (
-            <span
-              className={`shrink-0 rounded-full bg-teal-50 px-2 py-1 text-[10px] font-semibold tabular-nums text-teal-800 ring-1 ring-teal-100 sm:px-2.5 sm:text-[11px] ${
-                showExam ? "max-[359px]:hidden" : ""
-              }`}
-              title={`استمرار ${streak} أيام`}
-            >
-              <LtrNum>{streak}</LtrNum>
-              <span className="ms-0.5">يوم</span>
-            </span>
-          )}
-          <div className="shrink-0">
-            <AccountMenu />
-          </div>
+          <AccountMenu />
         </div>
       </div>
     </header>

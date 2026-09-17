@@ -208,7 +208,7 @@ export function buildHomePlan(input: {
         ? `آخر نتيجة: ${lastMock.score}/${lastMock.total} — كل محاولة بأسئلة جديدة`
         : "مؤقت واحد · أسئلة جديدة كل مرة",
       primaryHref: "/mock",
-      primaryLabel: lastMock ? "اختبار جديد" : "ادخل الاختبار",
+      primaryLabel: lastMock ? "ابدأ اختباراً جديداً" : "ادخل الاختبار",
       secondaryHref: "/skills",
       secondaryLabel: "راجع مهارة",
       upcoming: [],

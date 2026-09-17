@@ -303,14 +303,9 @@ export function ResultExperience() {
         <Link
           href="/mock"
           onClick={() => track("result_retake_clicked")}
-          className="flex min-h-14 flex-col items-center justify-center rounded-2xl bg-slate-900 px-4 text-white transition hover:bg-slate-800 active:scale-[0.99]"
+          className="flex min-h-12 items-center justify-center rounded-2xl bg-slate-900 font-bold text-white transition hover:bg-slate-800 active:scale-[0.99]"
         >
-          <span className="text-base font-extrabold leading-none">
-            ابدأ اختباراً جديداً
-          </span>
-          <span className="mt-1 text-[11px] font-bold text-slate-300">
-            أسئلة وترتيب مختلف هذه المرة
-          </span>
+          ابدأ اختباراً جديداً
         </Link>
         <Link
           href="/skills"

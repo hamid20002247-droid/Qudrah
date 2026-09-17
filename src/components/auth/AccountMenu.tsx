@@ -68,7 +68,7 @@ export function AccountMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute end-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10"
+          className="absolute end-0 top-[calc(100%+0.5rem)] z-[60] w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10"
         >
           <div className="border-b border-slate-100 px-3 py-2.5">
             <p className="truncate text-sm font-bold text-slate-900">

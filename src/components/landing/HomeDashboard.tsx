@@ -49,7 +49,7 @@ export function HomeDashboard() {
     ? plan.secondaryLabel ?? "تدرّب على مهارة"
     : plan.primaryLabel;
   const mockLabel =
-    plan.stats.bestMockScore != null ? "اختبار جديد" : "ادخل الاختبار";
+    plan.stats.bestMockScore != null ? "ابدأ اختباراً جديداً" : "ادخل الاختبار";
 
   return (
     <div className="mx-auto w-full max-w-lg overflow-x-hidden">

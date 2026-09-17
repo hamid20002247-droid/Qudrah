@@ -159,10 +159,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const supabase = createSupabaseBrowser();
     if (!supabase) return "خدمة الحسابات غير مفعّلة حالياً.";
     const origin = window.location.origin;
+    // Keep redirectTo path-only. Query strings often fail Supabase allow-list
+    // matching and fall back to Site URL (production) — killing localhost login.
+    const safe =
+      next.startsWith("/") && !next.startsWith("//") ? next : "/";
+    try {
+      sessionStorage.setItem("qudrah_auth_next", safe);
+      sessionStorage.setItem("qudrah_auth_pending", "1");
+    } catch {
+      /* private mode */
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${origin}/auth/callback`,
       },
     });
     return error ? authErrorMessage(error) : null;

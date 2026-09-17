@@ -36,7 +36,7 @@ export default function AboutPage() {
           </li>
           <li>
             · الاختبار الكامل: {PRODUCT_FACTS.mockQuestions} سؤالاً في{" "}
-            {PRODUCT_FACTS.mockMinutes} دقيقة، بأسئلة وترتيب جديد في كل محاولة
+            {PRODUCT_FACTS.mockMinutes} دقيقة، بأسئلة جديدة في كل محاولة
           </li>
           <li>· التدريب مجاني — احفظ تقدّمك متى ما جاهز</li>
         </ul>

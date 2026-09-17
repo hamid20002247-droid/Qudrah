@@ -473,7 +473,7 @@ export function SkillExperience({ skill }: { skill: Skill }) {
               onClick={() => startRound(round)}
               className="flex min-h-12 items-center justify-center rounded-2xl bg-teal-600 font-bold text-white"
             >
-              أعد هذه الجولة (ترتيب جديد)
+              أعد هذه الجولة
             </button>
             {round < 3 && (
               <button

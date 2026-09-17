@@ -12,7 +12,10 @@ In `src/lib/publicConfig.ts`:
 - PostHog project API key (public by design; init is production-only)
 - Production site URL constant (`https://qodrah.vercel.app`)
 
-OAuth redirect uses `window.location.origin` / request `origin`, so local and prod both work.
+OAuth redirect uses `window.location.origin` with a path-only callback
+(`…/auth/callback`). The post-login destination is kept in `sessionStorage`
+so we never put `?next=` on the Supabase allow-list (that mismatch used to
+fall back to Site URL = production and break localhost login).
 
 ## What stays secret (Vercel env only)
 
@@ -36,6 +39,10 @@ PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add l
 | Redirect URLs | `https://qodrah.vercel.app/auth/callback` |
 | | `http://localhost:3002/auth/callback` |
 | | `http://localhost:3000/auth/callback` |
+| | `http://localhost:3002/**` |
+| | `http://localhost:3000/**` |
+
+Also add `https://qodrah.vercel.app/**` if you use preview query paths.
 
 ## Google
 
@@ -44,7 +51,9 @@ PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add l
 
    `https://nmfxftxqznewycnyxrrb.supabase.co/auth/v1/callback`
 
-3. Optional JS origins: `https://qodrah.vercel.app`, `http://localhost:3002`  
+3. Authorized JavaScript origins (exact host spelling):
+   - `https://qodrah.vercel.app` (not `qudrah`)
+   - `http://localhost:3002`
 4. Supabase → Authentication → Providers → Google → enable + Client ID/Secret
 
 ## Vercel
