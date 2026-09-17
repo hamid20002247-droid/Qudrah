@@ -101,8 +101,8 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <body
-        className="flex min-h-full flex-col bg-[#F8FAFC] font-sans text-ink antialiased"
+        <body
+        className="flex min-h-full max-w-[100vw] flex-col overflow-x-hidden bg-[#F8FAFC] font-sans text-ink antialiased"
         suppressHydrationWarning
       >
         <JsonLd />

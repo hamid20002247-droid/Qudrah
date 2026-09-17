@@ -55,7 +55,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto w-full max-w-lg overflow-x-hidden">
       {/* First 5 seconds — brand + what this is + two doors */}
       <section className="relative overflow-hidden px-4 pb-28 pt-5">
         <div

@@ -52,7 +52,7 @@ export function HomeDashboard() {
     plan.stats.bestMockScore != null ? "اختبار جديد" : "ادخل الاختبار";
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto w-full max-w-lg overflow-x-hidden">
       {/* First 5 seconds — same product story + two doors */}
       <section className="relative overflow-hidden px-4 pb-8 pt-5">
         <div

@@ -126,10 +126,10 @@ export function ProfilePage() {
   const examLabel = formatDayAr(testDate);
 
   return (
-    <div className="relative pb-28">
+    <div className="relative overflow-x-hidden pb-28">
       {/* Atmosphere */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem]"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[28rem] overflow-hidden"
         aria-hidden
       >
         <div className="absolute inset-0 bg-gradient-to-b from-[#0f766e] via-[#0d9488] to-transparent opacity-[0.97]" />
@@ -145,7 +145,7 @@ export function ProfilePage() {
         />
       </div>
 
-      <div className="mx-auto max-w-lg px-4 pt-8">
+      <div className="mx-auto w-full max-w-lg px-4 pt-8">
         {/* Identity hero */}
         <header className="animate-fade-up text-center text-white">
           <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white/15 text-4xl font-extrabold shadow-inner ring-2 ring-white/30 backdrop-blur-sm">
@@ -154,24 +154,24 @@ export function ProfilePage() {
           <p className="mt-5 font-display text-sm font-bold tracking-wide text-teal-100">
             صفحتي في قُدرة
           </p>
-          <h1 className="mt-1 font-display text-3xl font-extrabold tracking-tight">
+          <h1 className="mt-1 break-words font-display text-3xl font-extrabold tracking-tight">
             {displayName}
           </h1>
-          <p className="mt-1 text-sm text-teal-50/80" dir="ltr">
+          <p className="mx-auto mt-1 max-w-full truncate text-sm text-teal-50/80" dir="ltr">
             {user.email}
           </p>
         </header>
 
         {/* Display name */}
         <section
-          className="animate-fade-up mt-6 overflow-hidden rounded-[1.75rem] bg-white/95 p-5 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur"
+          className="animate-fade-up mt-6 overflow-hidden rounded-[1.75rem] bg-white/95 p-4 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur sm:p-5"
           style={{ animationDelay: "40ms" }}
         >
           <p className="text-xs font-bold text-teal-700">اسمك المعروض</p>
           <p className="mt-1 text-sm text-slate-500">
             يظهر في الشريط العلوي والصفحة الرئيسية.
           </p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <div className="mt-4 flex flex-col gap-2">
             <input
               type="text"
               value={nameInput}
@@ -183,7 +183,7 @@ export function ProfilePage() {
               maxLength={40}
               autoComplete="name"
               placeholder="مثال: أحمد"
-              className="min-h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-base font-bold text-ink outline-none ring-teal-500/30 focus:ring-2"
+              className="min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-base font-bold text-ink outline-none ring-teal-500/30 focus:ring-2"
             />
             <button
               type="button"
@@ -193,7 +193,7 @@ export function ProfilePage() {
                 !nameInput.trim() ||
                 nameInput.trim() === displayName
               }
-              className="min-h-12 rounded-2xl bg-teal-600 px-5 text-sm font-extrabold text-white transition hover:bg-teal-700 disabled:opacity-50"
+              className="flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-600 text-sm font-extrabold text-white transition hover:bg-teal-700 disabled:opacity-50"
             >
               {savingName ? "…" : "حفظ الاسم"}
             </button>
@@ -208,34 +208,36 @@ export function ProfilePage() {
 
         {/* Pulse metrics — one composition */}
         <section
-          className="animate-fade-up mt-4 overflow-hidden rounded-[1.75rem] bg-white/95 p-5 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur"
+          className="animate-fade-up mt-4 overflow-hidden rounded-[1.75rem] bg-white/95 p-4 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur sm:p-5"
           style={{ animationDelay: "80ms" }}
         >
           <p className="text-xs font-bold text-teal-700">نبضك الآن</p>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="font-display text-3xl font-extrabold tabular-nums text-ink">
+          <div className="mt-4 grid grid-cols-3 gap-1 text-center sm:gap-2">
+            <div className="min-w-0 px-0.5">
+              <p className="font-display text-2xl font-extrabold tabular-nums text-ink sm:text-3xl">
                 {formatPct(avgBest)}
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                متوسط أفضل درجاتك
+              <p className="mt-1 text-[10px] font-semibold leading-snug text-slate-500 sm:text-[11px]">
+                أفضل معدل
               </p>
             </div>
-            <div className="border-x border-slate-100">
-              <p className="font-display text-3xl font-extrabold tabular-nums text-ink">
+            <div className="min-w-0 border-x border-slate-100 px-0.5">
+              <p className="font-display text-2xl font-extrabold tabular-nums text-ink sm:text-3xl">
                 {streakDays || 0}
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-500">
+              <p className="mt-1 text-[10px] font-semibold leading-snug text-slate-500 sm:text-[11px]">
                 أيام استمرار
               </p>
             </div>
-            <div>
-              <p className="font-display text-3xl font-extrabold tabular-nums text-ink">
+            <div className="min-w-0 px-0.5">
+              <p className="font-display text-2xl font-extrabold tabular-nums text-ink sm:text-3xl">
                 {completedCount}
-                <span className="text-lg text-slate-400">/{skills.length}</span>
+                <span className="text-base text-slate-400 sm:text-lg">
+                  /{skills.length}
+                </span>
               </p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                مهارات أتممتها
+              <p className="mt-1 text-[10px] font-semibold leading-snug text-slate-500 sm:text-[11px]">
+                مهارات مكتملة
               </p>
             </div>
           </div>

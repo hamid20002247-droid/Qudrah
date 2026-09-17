@@ -18,7 +18,7 @@ export function ComingSoonSkill({ field, skill }: Props) {
   const cta = nextInField ?? firstLive;
 
   return (
-    <div className="relative mx-auto max-w-lg overflow-hidden px-4 pb-28 pt-6">
+    <div className="relative mx-auto w-full max-w-lg overflow-x-hidden px-4 pb-28 pt-6">
       <div
         className="pointer-events-none absolute -start-20 top-10 h-52 w-52 rounded-full blur-3xl"
         style={{ background: `${field.accent.from}22` }}

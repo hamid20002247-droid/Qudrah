@@ -218,7 +218,7 @@ export function SkillExperience({ skill }: { skill: Skill }) {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-8 pt-3">
+    <div className="mx-auto w-full max-w-lg overflow-x-hidden px-4 pb-8 pt-3">
       <div className="mb-3 flex items-center gap-2">
         <Link
           href="/skills"

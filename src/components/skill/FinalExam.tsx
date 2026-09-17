@@ -197,11 +197,25 @@ export function FinalExam({
             />
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px] font-bold">
-            <span className="truncate text-slate-500">{title}</span>
-            <span className="shrink-0 tabular-nums text-teal-700" dir="ltr">
-              مجاب {answeredCount}/{questions.length}
-            </span>
+          <div className="mt-2.5 flex items-center gap-2.5">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-bold text-slate-500">
+                {title}
+              </p>
+              <p
+                className="mt-0.5 text-[11px] font-bold tabular-nums text-teal-700"
+                dir="ltr"
+              >
+                مجاب {answeredCount}/{questions.length}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmSubmit(true)}
+              className="flex h-10 shrink-0 items-center justify-center rounded-xl bg-ink px-3.5 text-[13px] font-extrabold text-white ring-1 ring-slate-800 active:scale-[0.97]"
+            >
+              تسليم
+            </button>
           </div>
           <div className="mt-2">
             <ProgressLine progress={progress} urgent={urgent} warn={warn} />
@@ -409,7 +423,7 @@ export function FinalExam({
                 {answeredCount}/{questions.length}
               </p>
             </div>
-            <div className="grid max-h-[50vh] grid-cols-5 gap-2 overflow-y-auto">
+            <div className="grid max-h-[45vh] grid-cols-5 gap-2 overflow-y-auto">
               {questions.map((_, i) => (
                 <NavChip
                   key={i}
@@ -420,13 +434,32 @@ export function FinalExam({
                 />
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setMapOpen(false)}
-              className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-700"
-            >
-              إغلاق
-            </button>
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMapOpen(false);
+                  setConfirmSubmit(true);
+                }}
+                className="flex h-12 w-full flex-col items-center justify-center rounded-2xl bg-ink text-white active:scale-[0.99]"
+              >
+                <span className="text-sm font-extrabold leading-none">
+                  تسليم الاختبار
+                </span>
+                {unanswered > 0 && (
+                  <span className="mt-1 text-[10px] font-bold text-slate-300">
+                    باقي {unanswered} بلا إجابة
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMapOpen(false)}
+                className="flex h-11 w-full items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-700"
+              >
+                متابعة الحل
+              </button>
+            </div>
           </div>
         </div>
       )}

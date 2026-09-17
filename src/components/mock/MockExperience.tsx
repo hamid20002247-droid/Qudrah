@@ -286,7 +286,7 @@ export function MockExperience() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-[75vh] max-w-lg flex-col justify-center px-4 py-10 pb-28">
+    <div className="relative mx-auto flex min-h-[75vh] w-full max-w-lg flex-col justify-center overflow-x-hidden px-4 py-10 pb-28">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.2),_transparent_65%)]"
         aria-hidden

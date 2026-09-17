@@ -85,7 +85,7 @@ export function SkillsMap({ initialField = null }: Props) {
 
   return (
     <>
-      <div className="relative mx-auto max-w-lg overflow-hidden px-4 pb-28 pt-5">
+    <div className="relative mx-auto w-full max-w-lg overflow-x-hidden px-4 pb-28 pt-5">
         <div
           className="pointer-events-none absolute -start-24 top-8 h-56 w-56 rounded-full bg-teal-400/15 blur-3xl"
           aria-hidden

@@ -18,13 +18,15 @@ export function TopBar() {
   const streakDays = useProgress((s) => s.streakDays);
   const days = ready ? daysUntilTest() : null;
   const streak = ready ? streakDays : 0;
+  const showExam = days !== null && days >= 0;
+  const showStreak = streak > 1;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100/80 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-lg items-center justify-between gap-3 px-4">
+      <div className="mx-auto flex h-14 w-full max-w-lg items-center gap-2 overflow-hidden px-3 sm:px-4">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2 text-teal-700"
+          className="flex shrink-0 items-center gap-1.5 text-teal-700 sm:gap-2"
           aria-label="قُدرة — الرئيسية"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -33,34 +35,46 @@ export function TopBar() {
             alt=""
             width={32}
             height={32}
-            className="h-8 w-8 rounded-[0.55rem] shadow-sm shadow-teal-700/20"
+            className="h-8 w-8 shrink-0 rounded-[0.55rem] shadow-sm shadow-teal-700/20"
             decoding="async"
           />
-          <span className="font-display text-2xl font-extrabold tracking-tight">
+          <span className="font-display text-xl font-extrabold tracking-tight sm:text-2xl">
             قُدرة
           </span>
         </Link>
-        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
-          {days !== null && days >= 0 && (
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-200">
+
+        <div className="ms-auto flex min-w-0 items-center justify-end gap-1 sm:gap-1.5">
+          {showExam && (
+            <span
+              className="shrink-0 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold tabular-nums text-amber-900 ring-1 ring-amber-200 sm:px-2.5 sm:text-[11px]"
+              title={
+                days === 0 ? "اختبارك اليوم" : `${days} يوماً لاختبارك`
+              }
+            >
               {days === 0 ? (
-                "اختبارك اليوم"
+                "اليوم"
               ) : (
                 <>
-                  <LtrNum>{days}</LtrNum> يوماً لاختبارك
+                  <LtrNum>{days}</LtrNum>
+                  <span className="ms-0.5">يوم</span>
                 </>
               )}
             </span>
           )}
-          {streak > 1 && (
+          {showStreak && (
             <span
-              className="rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-800 ring-1 ring-teal-100"
-              title="أيام متتالية تدرّبت فيها"
+              className={`shrink-0 rounded-full bg-teal-50 px-2 py-1 text-[10px] font-semibold tabular-nums text-teal-800 ring-1 ring-teal-100 sm:px-2.5 sm:text-[11px] ${
+                showExam ? "max-[359px]:hidden" : ""
+              }`}
+              title={`استمرار ${streak} أيام`}
             >
-              استمرار <LtrNum>{streak}</LtrNum> أيام
+              <LtrNum>{streak}</LtrNum>
+              <span className="ms-0.5">يوم</span>
             </span>
           )}
-          <AccountMenu />
+          <div className="shrink-0">
+            <AccountMenu />
+          </div>
         </div>
       </div>
     </header>
@@ -211,12 +225,12 @@ export function BottomNav() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(0.55rem,env(safe-area-inset-bottom))]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 w-full pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       aria-label="التنقّل الرئيسي"
     >
-      <div className="pointer-events-auto mx-auto max-w-lg px-3">
-        <div className="rounded-[1.35rem] bg-white/95 p-1.5 shadow-[0_-4px_40px_-8px_rgba(15,23,42,0.28),0_12px_32px_-16px_rgba(15,23,42,0.2)] ring-1 ring-slate-200/90 backdrop-blur-xl">
-          <div className="grid grid-cols-3 gap-1">
+      <div className="pointer-events-auto mx-auto w-full max-w-lg px-2.5 sm:px-3">
+        <div className="w-full rounded-[1.25rem] bg-white/95 p-1 shadow-[0_-4px_40px_-8px_rgba(15,23,42,0.28),0_12px_32px_-16px_rgba(15,23,42,0.2)] ring-1 ring-slate-200/90 backdrop-blur-xl sm:rounded-[1.35rem] sm:p-1.5">
+          <div className="grid w-full grid-cols-3 gap-0.5 sm:gap-1">
             {NAV.map((item) => {
               const active = item.match(pathname);
               const Icon = item.icon;
@@ -229,7 +243,7 @@ export function BottomNav() {
                   onClick={() =>
                     track("nav_clicked", { href: item.href, label: item.label })
                   }
-                  className={`relative flex min-h-[3.65rem] flex-col items-center justify-center gap-1 rounded-[1.05rem] px-1 transition active:scale-[0.97] ${
+                  className={`relative flex min-h-[3.5rem] flex-col items-center justify-center gap-0.5 rounded-[1rem] px-0.5 transition active:scale-[0.97] sm:min-h-[3.65rem] sm:gap-1 sm:rounded-[1.05rem] sm:px-1 ${
                     active
                       ? "bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-100"
                       : emphasize
@@ -245,7 +259,7 @@ export function BottomNav() {
                   )}
                   <Icon active={active} />
                   <span
-                    className={`text-[11px] leading-none ${
+                    className={`text-[10px] leading-none sm:text-[11px] ${
                       active ? "font-extrabold" : "font-bold"
                     }`}
                   >
