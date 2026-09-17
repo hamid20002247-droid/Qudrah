@@ -31,7 +31,8 @@ function formatDayAr(iso: string | null): string | null {
 
 export function ProfilePage() {
   const router = useRouter();
-  const { user, loading, configured, displayName } = useAuth();
+  const { user, loading, configured, displayName, updateDisplayName } =
+    useAuth();
   const getSkillProgress = useProgress((s) => s.getSkillProgress);
   const streakDays = useProgress((s) => s.streakDays);
   const bestMockScore = useProgress((s) => s.bestMockScore);
@@ -43,10 +44,18 @@ export function ProfilePage() {
   const [dateInput, setDateInput] = useState("");
   const [dateSaved, setDateSaved] = useState(false);
   const [savingDate, setSavingDate] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [nameSaved, setNameSaved] = useState(false);
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
     setDateInput(testDate ?? "");
   }, [testDate]);
+
+  useEffect(() => {
+    setNameInput(displayName === "حسابي" ? "" : displayName);
+  }, [displayName]);
 
   useEffect(() => {
     if (!loading && configured && !user) {
@@ -68,6 +77,19 @@ export function ProfilePage() {
     }
     setSavingDate(false);
     setDateSaved(true);
+  }
+
+  async function saveDisplayName() {
+    setSavingName(true);
+    setNameError(null);
+    setNameSaved(false);
+    const err = await updateDisplayName(nameInput);
+    setSavingName(false);
+    if (err) {
+      setNameError(err);
+      return;
+    }
+    setNameSaved(true);
   }
 
   if (!configured || loading || !user) {
@@ -140,9 +162,53 @@ export function ProfilePage() {
           </p>
         </header>
 
+        {/* Display name */}
+        <section
+          className="animate-fade-up mt-6 overflow-hidden rounded-[1.75rem] bg-white/95 p-5 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur"
+          style={{ animationDelay: "40ms" }}
+        >
+          <p className="text-xs font-bold text-teal-700">اسمك المعروض</p>
+          <p className="mt-1 text-sm text-slate-500">
+            يظهر في الشريط العلوي والصفحة الرئيسية.
+          </p>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => {
+                setNameInput(e.target.value);
+                setNameSaved(false);
+                setNameError(null);
+              }}
+              maxLength={40}
+              autoComplete="name"
+              placeholder="مثال: أحمد"
+              className="min-h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-base font-bold text-ink outline-none ring-teal-500/30 focus:ring-2"
+            />
+            <button
+              type="button"
+              onClick={() => void saveDisplayName()}
+              disabled={
+                savingName ||
+                !nameInput.trim() ||
+                nameInput.trim() === displayName
+              }
+              className="min-h-12 rounded-2xl bg-teal-600 px-5 text-sm font-extrabold text-white transition hover:bg-teal-700 disabled:opacity-50"
+            >
+              {savingName ? "…" : "حفظ الاسم"}
+            </button>
+          </div>
+          {nameError && (
+            <p className="mt-2 text-xs font-bold text-rose-600">{nameError}</p>
+          )}
+          {nameSaved && !nameError && (
+            <p className="mt-2 text-xs font-bold text-teal-700">تم حفظ الاسم</p>
+          )}
+        </section>
+
         {/* Pulse metrics — one composition */}
         <section
-          className="animate-fade-up mt-8 overflow-hidden rounded-[1.75rem] bg-white/95 p-5 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur"
+          className="animate-fade-up mt-4 overflow-hidden rounded-[1.75rem] bg-white/95 p-5 shadow-[0_24px_50px_-28px_rgba(15,23,42,0.45)] ring-1 ring-white/60 backdrop-blur"
           style={{ animationDelay: "80ms" }}
         >
           <p className="text-xs font-bold text-teal-700">نبضك الآن</p>

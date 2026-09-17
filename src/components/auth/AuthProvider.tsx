@@ -34,6 +34,7 @@ type AuthContextValue = {
   signInWithGoogle: (next?: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateDisplayName: (name: string) => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -175,6 +176,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
   }, []);
 
+  const updateDisplayName = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim().replace(/\s+/g, " ");
+      if (!trimmed) return "اكتب اسماً يظهر في حسابك.";
+      if (trimmed.length < 2) return "الاسم قصير جداً.";
+      if (trimmed.length > 40) return "الاسم طويل جداً (حدّه ٤٠ حرفاً).";
+
+      const supabase = createSupabaseBrowser();
+      if (!supabase || !user) return "سجّل الدخول أولاً.";
+
+      const { data: authData, error: authErr } = await supabase.auth.updateUser({
+        data: { full_name: trimmed, name: trimmed },
+      });
+      if (authErr) return authErrorMessage(authErr);
+
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .update({
+          display_name: trimmed,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+      if (profileErr) return authErrorMessage(profileErr);
+
+      if (authData.user) setUser(authData.user);
+      setProfile((prev) =>
+        prev
+          ? { ...prev, display_name: trimmed }
+          : {
+              id: user.id,
+              email: user.email ?? null,
+              display_name: trimmed,
+              avatar_url:
+                (user.user_metadata?.avatar_url as string) ?? null,
+              provider: (user.app_metadata?.provider as string) ?? "email",
+            }
+      );
+      return null;
+    },
+    [user]
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -188,6 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signOut,
       refreshProfile,
+      updateDisplayName,
     }),
     [
       user,
@@ -199,6 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signOut,
       refreshProfile,
+      updateDisplayName,
     ]
   );
 
