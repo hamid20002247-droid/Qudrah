@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import {
   isTelegramConfigured,
   resolveSignupLocation,
-  sendTelegramSignupAlert,
+  sendTelegramAuthAlert,
+  type AuthAlertKind,
 } from "@/lib/telegram";
 
 /**
- * Manual smoke test for signup alerts.
+ * Manual smoke test for auth alerts.
  * Requires TELEGRAM_NOTIFY_SECRET header match.
- * POST JSON: { email, display_name, provider }
+ * POST JSON: { email, display_name, provider, kind? }
  */
 export async function POST(request: Request) {
   if (!isTelegramConfigured()) {
@@ -34,8 +35,12 @@ export async function POST(request: Request) {
   const record =
     (body.record as Record<string, unknown> | undefined) ?? body;
   const loc = await resolveSignupLocation(request);
+  const rawKind = String(record.kind ?? body.kind ?? "signup");
+  const kind: AuthAlertKind =
+    rawKind === "signin" ? "signin" : "signup";
 
-  const ok = await sendTelegramSignupAlert({
+  const ok = await sendTelegramAuthAlert({
+    kind,
     email: (record.email as string | undefined) ?? null,
     name: (record.display_name as string | undefined) ?? null,
     provider: (record.provider as string | undefined) ?? "google",
@@ -44,5 +49,5 @@ export async function POST(request: Request) {
     country: loc.country,
   });
 
-  return NextResponse.json({ ok, location: loc });
+  return NextResponse.json({ ok, kind, location: loc });
 }

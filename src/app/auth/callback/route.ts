@@ -3,12 +3,12 @@ import { createSupabaseServer } from "@/lib/supabase/server";
 import {
   isLikelyNewSignup,
   resolveSignupLocation,
-  sendTelegramSignupAlert,
+  sendTelegramAuthAlert,
 } from "@/lib/telegram";
 
 /**
  * OAuth return — exchange code, then hand off to /auth/continue.
- * New signups also fire a free Telegram alert (name, email, city/country).
+ * Every successful login fires a Telegram alert (signup vs sign-in).
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -23,10 +23,14 @@ export async function GET(request: Request) {
           const {
             data: { user },
           } = await supabase.auth.getUser();
-          if (user && isLikelyNewSignup(user.created_at)) {
+          if (user) {
             const meta = user.user_metadata ?? {};
             const loc = await resolveSignupLocation(request);
-            await sendTelegramSignupAlert({
+            const kind = isLikelyNewSignup(user.created_at)
+              ? "signup"
+              : "signin";
+            await sendTelegramAuthAlert({
+              kind,
               email: user.email,
               name:
                 (meta.full_name as string | undefined) ||
@@ -41,7 +45,7 @@ export async function GET(request: Request) {
             });
           }
         } catch (err) {
-          console.error("[telegram] signup alert skipped", err);
+          console.error("[telegram] auth alert skipped", err);
         }
         return NextResponse.redirect(`${origin}/auth/continue`);
       }

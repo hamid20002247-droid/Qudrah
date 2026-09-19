@@ -24,7 +24,7 @@ fall back to Site URL = production and break localhost login).
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes — server admin / some API routes |
 | `REVIEW_PIN` | Only if you use `/review` |
 | `REVIEW_SESSION_SECRET` | Only if you use `/review` |
-| `TELEGRAM_BOT_TOKEN` | Signup alerts — from @BotFather (never commit) |
+| `TELEGRAM_BOT_TOKEN` | Auth alerts (signup + sign-in) — from @BotFather (never commit) |
 | `TELEGRAM_CHAT_ID` | Your Telegram user id |
 | `TELEGRAM_NOTIFY_SECRET` | Optional — protects `/api/telegram/signup` |
 
@@ -62,10 +62,10 @@ Also add `https://qodrah.vercel.app/**` if you use preview query paths.
 ## Vercel
 
 1. Domain / alias: `qodrah.vercel.app`
-2. Env: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_SITE_URL=https://qodrah.vercel.app`, plus Telegram vars if you want signup alerts
+2. Env: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_SITE_URL=https://qodrah.vercel.app`, plus Telegram vars if you want auth alerts
 3. Redeploy after adding secrets
 
-## Telegram signup alerts (100% free)
+## Telegram auth alerts (100% free)
 
 **Never commit the bot token** — GitHub secret scanning will block it. Put secrets on Vercel only.
 
@@ -80,5 +80,5 @@ Also add `https://qodrah.vercel.app/**` if you use preview query paths.
 | `TELEGRAM_CHAT_ID` | `5750891377` |
 | `TELEGRAM_NOTIFY_SECRET` | any long random string |
 
-5. Redeploy. New Google signups send: name, email, city/country.
+5. Redeploy. Every Google login sends: name, email, city/country — labeled **تسجيل جديد** (new account) or **تسجيل دخول** (returning).
 

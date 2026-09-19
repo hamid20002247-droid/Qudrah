@@ -1,5 +1,5 @@
 /**
- * Server-only Telegram signup alerts (Bot API is free).
+ * Server-only Telegram auth alerts (Bot API is free).
  * Do not import this module from client components.
  *
  * Secrets live in Vercel / .env.local only — never commit them:
@@ -12,7 +12,10 @@ function env(name: string): string | null {
   return v || null;
 }
 
-export type SignupAlert = {
+export type AuthAlertKind = "signup" | "signin";
+
+export type AuthAlert = {
+  kind: AuthAlertKind;
   email?: string | null;
   name?: string | null;
   provider?: string | null;
@@ -20,6 +23,9 @@ export type SignupAlert = {
   city?: string | null;
   country?: string | null;
 };
+
+/** @deprecated Use AuthAlert */
+export type SignupAlert = Omit<AuthAlert, "kind"> & { kind?: AuthAlertKind };
 
 export function isTelegramConfigured(): boolean {
   return Boolean(env("TELEGRAM_BOT_TOKEN") && env("TELEGRAM_CHAT_ID"));
@@ -101,8 +107,8 @@ export async function resolveSignupLocation(
   }
 }
 
-export async function sendTelegramSignupAlert(
-  info: SignupAlert
+export async function sendTelegramAuthAlert(
+  info: AuthAlert
 ): Promise<boolean> {
   const token = env("TELEGRAM_BOT_TOKEN");
   const chatId = env("TELEGRAM_CHAT_ID");
@@ -119,8 +125,13 @@ export async function sendTelegramSignupAlert(
       ? `${info.city}, ${info.country}`
       : info.city || info.country || "—";
 
+  const title =
+    info.kind === "signup"
+      ? "🆕 قُدرة — تسجيل جديد"
+      : "🔐 قُدرة — تسجيل دخول";
+
   const lines = [
-    "🆕 قُدرة — تسجيل جديد",
+    title,
     "",
     `الاسم: ${info.name?.trim() || "—"}`,
     `البريد: ${info.email?.trim() || "—"}`,
@@ -150,4 +161,14 @@ export async function sendTelegramSignupAlert(
     console.error("[telegram] send error", err);
     return false;
   }
+}
+
+/** @deprecated Prefer sendTelegramAuthAlert with kind */
+export async function sendTelegramSignupAlert(
+  info: SignupAlert
+): Promise<boolean> {
+  return sendTelegramAuthAlert({
+    ...info,
+    kind: info.kind ?? "signup",
+  });
 }
