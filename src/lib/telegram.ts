@@ -1,11 +1,16 @@
 /**
  * Server-only Telegram signup alerts (Bot API is free).
  * Do not import this module from client components.
+ *
+ * Secrets live in Vercel / .env.local only — never commit them:
+ *   TELEGRAM_BOT_TOKEN
+ *   TELEGRAM_CHAT_ID
  */
 
-const TELEGRAM_BOT_TOKEN =
-  "8895098397:AAHvcLSnR4D9JeKR2Pyutxw1_-KP9s00pdk";
-const TELEGRAM_CHAT_ID = "5750891377";
+function env(name: string): string | null {
+  const v = process.env[name]?.trim();
+  return v || null;
+}
 
 export type SignupAlert = {
   email?: string | null;
@@ -17,7 +22,7 @@ export type SignupAlert = {
 };
 
 export function isTelegramConfigured(): boolean {
-  return Boolean(TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID);
+  return Boolean(env("TELEGRAM_BOT_TOKEN") && env("TELEGRAM_CHAT_ID"));
 }
 
 /** True if the auth user was created in the last few minutes (likely a new signup). */
@@ -99,7 +104,9 @@ export async function resolveSignupLocation(
 export async function sendTelegramSignupAlert(
   info: SignupAlert
 ): Promise<boolean> {
-  if (!isTelegramConfigured()) return false;
+  const token = env("TELEGRAM_BOT_TOKEN");
+  const chatId = env("TELEGRAM_CHAT_ID");
+  if (!token || !chatId) return false;
 
   const when = new Date().toLocaleString("en-GB", {
     timeZone: "Africa/Casablanca",
@@ -122,13 +129,13 @@ export async function sendTelegramSignupAlert(
     `الوقت: ${when}`,
   ];
 
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
+        chat_id: chatId,
         text: lines.join("\n"),
         disable_web_page_preview: true,
       }),

@@ -1,20 +1,26 @@
 import { NextResponse } from "next/server";
 import {
+  isTelegramConfigured,
   resolveSignupLocation,
   sendTelegramSignupAlert,
 } from "@/lib/telegram";
 
-/** Hardcoded gate for the manual test endpoint (not for browsers). */
-const NOTIFY_SECRET = "qudrah-tg-notify-7f3a9c";
-
 /**
  * Manual smoke test for signup alerts.
- * Header: x-telegram-secret: qudrah-tg-notify-7f3a9c
+ * Requires TELEGRAM_NOTIFY_SECRET header match.
  * POST JSON: { email, display_name, provider }
  */
 export async function POST(request: Request) {
+  if (!isTelegramConfigured()) {
+    return NextResponse.json(
+      { ok: false, error: "telegram_not_configured" },
+      { status: 503 }
+    );
+  }
+
+  const secret = process.env.TELEGRAM_NOTIFY_SECRET?.trim();
   const given = request.headers.get("x-telegram-secret")?.trim();
-  if (given !== NOTIFY_SECRET) {
+  if (!secret || given !== secret) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 

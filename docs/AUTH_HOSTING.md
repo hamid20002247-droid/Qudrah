@@ -24,6 +24,9 @@ fall back to Site URL = production and break localhost login).
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes — server admin / some API routes |
 | `REVIEW_PIN` | Only if you use `/review` |
 | `REVIEW_SESSION_SECRET` | Only if you use `/review` |
+| `TELEGRAM_BOT_TOKEN` | Signup alerts — from @BotFather (never commit) |
+| `TELEGRAM_CHAT_ID` | Your Telegram user id |
+| `TELEGRAM_NOTIFY_SECRET` | Optional — protects `/api/telegram/signup` |
 
 Do **not** put `service_role` in the client or in `publicConfig.ts`.
 
@@ -59,27 +62,23 @@ Also add `https://qodrah.vercel.app/**` if you use preview query paths.
 ## Vercel
 
 1. Domain / alias: `qodrah.vercel.app`
-2. Env: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_SITE_URL=https://qodrah.vercel.app`
+2. Env: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_SITE_URL=https://qodrah.vercel.app`, plus Telegram vars if you want signup alerts
 3. Redeploy after adding secrets
 
 ## Telegram signup alerts (100% free)
 
-Hardcoded in `src/lib/telegram.ts` (server-only): bot token + your chat id.
+**Never commit the bot token** — GitHub secret scanning will block it. Put secrets on Vercel only.
 
-On each **new** Google signup you get a Telegram message with:
+1. [@BotFather](https://t.me/BotFather) → `/newbot` (or `/token` / `/revoke` to rotate)
+2. Open your bot → **Start** once
+3. Chat id from userinfobot (yours: `5750891377`)
+4. Vercel → Settings → Environment Variables:
 
-- الاسم (name)
-- البريد (email)
-- الموقع (city, country) — from Vercel geo headers, or free IP lookup
+| Name | Value |
+|------|--------|
+| `TELEGRAM_BOT_TOKEN` | from BotFather |
+| `TELEGRAM_CHAT_ID` | `5750891377` |
+| `TELEGRAM_NOTIFY_SECRET` | any long random string |
 
-Open https://t.me/qodrahbot and press **Start** once so the bot can message you.
-
-Local smoke test (after Start on the bot):
-
-```bash
-curl -X POST http://localhost:3002/api/telegram/signup \
-  -H "content-type: application/json" \
-  -H "x-telegram-secret: qudrah-tg-notify-7f3a9c" \
-  -d "{\"email\":\"test@example.com\",\"display_name\":\"Test User\",\"provider\":\"google\"}"
-```
+5. Redeploy. New Google signups send: name, email, city/country.
 
