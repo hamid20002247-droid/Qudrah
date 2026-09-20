@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/components/auth/AuthProvider";
 import { GuestFreePath } from "@/components/auth/GuestFreePath";
 import {
+  authHrefForSkill,
   isSkillOpenWithoutAuth,
 } from "@/lib/access";
 import { useProgress } from "@/store/progress";
@@ -355,12 +356,15 @@ function FieldSkillsView({
             !user &&
             !freeOpen;
 
-          let href = `/skill/${skill.id}`;
+          // Locked live skills → Arabic auth gate (never a missing route / English 404)
+          const href = locked
+            ? authHrefForSkill(skill.id)
+            : `/skill/${skill.id}`;
 
           const chip = !liveSkill
             ? { label: "قريباً", cls: "bg-slate-900/90 text-white" }
             : locked
-              ? { label: "قفل", cls: "bg-slate-900 text-white" }
+              ? { label: "سجّل", cls: "bg-slate-900 text-white" }
               : p.completed
                 ? { label: "مكتملة", cls: "bg-green-100 text-green-800" }
                 : p.started
@@ -407,7 +411,7 @@ function FieldSkillsView({
                     {skill.order}
                   </span>
                   <span className="leading-none">
-                    {locked ? "دخول" : liveSkill ? "افتح" : "…"}
+                    {locked ? "سجّل" : liveSkill ? "افتح" : "…"}
                   </span>
                 </span>
                 <div className="min-w-0 flex-1">

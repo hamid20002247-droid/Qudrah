@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "حفظ التقدّم",
-  description: "احفظ درجتك ومسارك في قُدرة بحساب Google.",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: "سجّل دخولك",
+  description: "سجّل دخولك بحساب Google واحفظ درجتك ومسارك في قُدرة — مجاناً.",
+  path: "/auth",
+  noIndex: true,
+});
 
 export default function AuthPage() {
   return (

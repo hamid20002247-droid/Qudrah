@@ -8,6 +8,11 @@ import { RegisterSW } from "@/components/RegisterSW";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { PostHogPageView } from "@/components/analytics/PostHogPageView";
 import { PRODUCTION_SITE_URL } from "@/lib/publicConfig";
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+  SITE_NAME,
+} from "@/lib/seo";
 import "./globals.css";
 
 const tajawal = Tajawal({
@@ -17,18 +22,14 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
-const TITLE = "قُدرة — تدريب القسم الكمي في القدرات";
-const DESCRIPTION =
-  "تدريب مستقل على القسم الكمي في اختبار القدرات: 60 مهارة بتصوّر تفاعلي، واختبار موقوت 60 سؤالاً. ليست تابعة لقياس.";
-
 export const metadata: Metadata = {
   metadataBase: new URL(PRODUCTION_SITE_URL),
   title: {
-    default: TITLE,
-    template: "%s | قُدرة",
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: DESCRIPTION,
-  applicationName: "قُدرة",
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "قدرات",
     "كمي",
@@ -37,9 +38,10 @@ export const metadata: Metadata = {
     "القسم الكمي",
     "محاكاة قدرات",
     "قياس كمي",
+    "قُدرة",
   ],
   manifest: "/manifest.webmanifest",
-  alternates: { canonical: PRODUCTION_SITE_URL },
+  alternates: { canonical: "/" },
   robots: {
     index: true,
     follow: true,
@@ -59,21 +61,30 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "قُدرة",
+    title: SITE_NAME,
     statusBarStyle: "default",
   },
   openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
     url: PRODUCTION_SITE_URL,
-    siteName: "قُدرة",
+    siteName: SITE_NAME,
     locale: "ar_SA",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "قُدرة — اختبار قدرات كمي",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: ["/twitter-image"],
   },
   other: {
     "format-detection": "telephone=no",
@@ -101,7 +112,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-        <body
+      <body
         className="flex min-h-full max-w-[100vw] flex-col overflow-x-hidden bg-[#F8FAFC] font-sans text-ink antialiased"
         suppressHydrationWarning
       >

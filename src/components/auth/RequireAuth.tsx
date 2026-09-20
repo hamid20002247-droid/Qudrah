@@ -68,7 +68,7 @@ export function RequireAuth({
           href={authHref(after)}
           className="mt-7 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400"
         >
-          المتابعة مع Google — مجاناً
+          سجّل دخولك مع Google — مجاناً
         </Link>
         {!path.allDone && (
           <Link

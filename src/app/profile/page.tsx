@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { ProfilePage } from "@/components/profile/ProfilePage";
 import { RequireAuth } from "@/components/auth/RequireAuth";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "صفحتي",
   description: "تقدّمك في قُدرة: الدرجات، الاستمرار، ويوم الاختبار.",
-  robots: { index: false, follow: false },
-};
+  path: "/profile",
+  noIndex: true,
+});
 
 export default function ProfileRoute() {
   return (
-    <RequireAuth next="/profile" title="سجّل لفتح صفحتك">
+    <RequireAuth next="/profile" title="سجّل دخولك">
       <ProfilePage />
     </RequireAuth>
   );

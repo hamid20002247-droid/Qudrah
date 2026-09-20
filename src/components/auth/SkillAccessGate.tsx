@@ -15,13 +15,16 @@ import { GuestFreePath } from "@/components/auth/GuestFreePath";
 import { PRODUCT_FACTS } from "@/lib/next-action";
 import { track } from "@/lib/analytics";
 
-/** Blocks locked skills for guests; preview skills + signed-in users pass through. */
+/** Blocks locked skills for guests; free skills + signed-in users pass through. */
 export function SkillAccessGate({
   skillId,
   children,
+  skillTitle,
 }: {
   skillId: string;
   children: React.ReactNode;
+  /** Optional Arabic skill name for the gate headline. */
+  skillTitle?: string;
 }) {
   const ready = useClientReady();
   const { user, loading, configured } = useAuth();
@@ -60,15 +63,17 @@ export function SkillAccessGate({
         aria-hidden
       />
       <div className="overflow-hidden rounded-[2rem] bg-ink px-6 py-9 text-white shadow-2xl shadow-teal-900/20">
-        <p className="text-xs font-bold tracking-wide text-teal-300">
-          احفظ تقدّمك
+        <p className="font-display text-3xl font-extrabold tracking-tight text-teal-300">
+          قُدرة
         </p>
-        <h1 className="mt-3 font-display text-3xl font-extrabold leading-snug">
-          افتح هذه المهارة واحفظ مسارك
+        <h1 className="mt-4 font-display text-3xl font-extrabold leading-snug">
+          سجّل دخولك
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-300">
-          الـ {PRODUCT_FACTS.skills} مهارة كلها مجانية. حساب Google يحفظ تقدّمك
-          على كل الأجهزة.
+          {skillTitle
+            ? `افتح «${skillTitle}» واحفظ مسارك على كل الأجهزة.`
+            : "افتح هذه المهارة واحفظ مسارك على كل الأجهزة."}{" "}
+          الـ {PRODUCT_FACTS.skills} مهارة كلها مجانية بحساب Google.
           {!path.allDone
             ? ` يمكنك أيضاً تجريب ${FREE_SKILL_COUNT} مهارات بدون حساب الآن.`
             : ""}
@@ -80,7 +85,7 @@ export function SkillAccessGate({
           }
           className="mt-7 flex min-h-14 items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white transition hover:bg-teal-400"
         >
-          افتح بحساب Google — مجاناً
+          سجّل دخولك مع Google — مجاناً
         </Link>
         {!path.allDone && path.nextId && (
           <Link

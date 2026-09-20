@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "المهارات",
+export const metadata: Metadata = buildPageMetadata({
+  title: "خريطة المهارات",
   description:
-    "ستون مهارة في القسم الكمي: حساب، جبر، هندسة، إحصاء، ومقارنات. تصوّر تفاعلي ثم تدريب موقوت.",
-  alternates: { canonical: "/skills" },
-};
+    "60 مهارة في القسم الكمي: حساب، جبر، هندسة، إحصاء، ومقارنات — تصوّر تفاعلي ثم تدريب موقوت.",
+  path: "/skills",
+});
 
 export default function SkillsLayout({
   children,

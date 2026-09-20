@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PRODUCT_FACTS } from "@/lib/next-action";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "عن قُدرة",
   description:
     "قُدرة أداة تدريب مستقلة للقسم الكمي في اختبار القدرات. غير تابعة لهيئة تقويم التعليم والتدريب أو قياس.",
-  alternates: { canonical: "/about" },
-};
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

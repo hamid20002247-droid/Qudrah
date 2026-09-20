@@ -117,17 +117,19 @@ export function AuthForm() {
             {savingResult
               ? "احفظ درجتك"
               : startingMock
-                ? "ابدأ الاختبار"
+                ? "سجّل دخولك لبدء الاختبار"
                 : openingSkill
-                  ? "افتح المهارة واحفظ تقدّمك"
-                  : "احفظ تقدّمك"}
+                  ? "سجّل دخولك"
+                  : "سجّل دخولك"}
           </h1>
           <p className="mt-2 max-w-[17rem] text-sm leading-relaxed text-teal-50/90">
             {savingResult
               ? "درجتك على هذا الجهاز الآن. احفظها بحساب Google عشان ترجع لها من أي مكان."
               : startingMock
                 ? "حساب Google يبدأ الاختبار ويحفظ درجتك — مجاناً، ثواني."
-                : "حساب Google يحفظ مسار التدريب والنتيجة — مجاناً، ثواني."}
+                : openingSkill
+                  ? "افتح المهارة واحفظ مسارك على كل الأجهزة — مجاناً، ثواني."
+                  : "حساب Google يحفظ مسار التدريب والنتيجة — مجاناً، ثواني."}
           </p>
         </div>
       </div>
@@ -142,7 +144,11 @@ export function AuthForm() {
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
             <GoogleIcon />
           </span>
-          {busy ? "لحظة…" : savingResult ? "احفظ درجتي مع Google" : "المتابعة مع Google"}
+          {busy
+            ? "لحظة…"
+            : savingResult
+              ? "احفظ درجتي مع Google"
+              : "سجّل دخولك مع Google"}
         </button>
 
         {error && (

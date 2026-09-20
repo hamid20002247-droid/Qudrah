@@ -5,8 +5,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 /**
- * Latin-only layout — Satori (next/og) cannot shape Arabic GSUB
- * (lookupType 5 / substFormat 3), which broke Vercel prerender.
+ * Latin-only layout — Satori (next/og) cannot shape Arabic reliably.
+ * Arabic titles still come from og:title / twitter:title metadata.
  */
 export default function OpenGraphImage() {
   return new ImageResponse(
@@ -17,44 +17,80 @@ export default function OpenGraphImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          padding: 80,
-          background:
-            "linear-gradient(135deg, #0F766E 0%, #115E59 42%, #0F172A 100%)",
+          justifyContent: "space-between",
+          padding: "72px 80px",
+          background: "linear-gradient(145deg, #0F766E 0%, #0F172A 72%)",
           color: "white",
-          fontFamily: "sans-serif",
+          fontFamily: "ui-sans-serif, system-ui, sans-serif",
         }}
       >
         <div
           style={{
-            fontSize: 28,
-            color: "#5EEAD4",
-            fontWeight: 700,
-            letterSpacing: 4,
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
           }}
         >
-          QUDRAH
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              background: "#14B8A6",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: 800,
+            }}
+          >
+            Q
+          </div>
+          <div
+            style={{
+              fontSize: 32,
+              fontWeight: 800,
+              letterSpacing: 1,
+              color: "#99F6E4",
+            }}
+          >
+            Qudrah
+          </div>
         </div>
-        <div style={{ fontSize: 72, fontWeight: 800, marginTop: 20 }}>
-          Quantitative Qudurat Exam
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div
+            style={{
+              fontSize: 64,
+              fontWeight: 800,
+              lineHeight: 1.08,
+              maxWidth: 920,
+            }}
+          >
+            Saudi Qudurat — Quantitative prep
+          </div>
+          <div style={{ fontSize: 30, color: "#CCFBF1", maxWidth: 860 }}>
+            Timed full exam + interactive skill training
+          </div>
         </div>
-        <div style={{ fontSize: 32, marginTop: 20, color: "#CCFBF1" }}>
-          Full timed exam + skill training
-        </div>
+
         <div
           style={{
             display: "flex",
-            marginTop: 40,
-            fontSize: 26,
-            color: "#99F6E4",
-            gap: 24,
+            alignItems: "center",
+            gap: 20,
+            fontSize: 24,
+            fontWeight: 700,
+            color: "#5EEAD4",
           }}
         >
           <span>60 skills</span>
-          <span>·</span>
+          <span style={{ opacity: 0.5 }}>·</span>
           <span>60 questions</span>
-          <span>·</span>
+          <span style={{ opacity: 0.5 }}>·</span>
           <span>60 minutes</span>
+          <span style={{ opacity: 0.5 }}>·</span>
+          <span>Free</span>
         </div>
       </div>
     ),
