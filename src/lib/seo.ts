@@ -6,7 +6,7 @@ export const SITE_NAME_LATIN = "Qudrah";
 
 export const DEFAULT_TITLE = "قُدرة — تدريب القسم الكمي في القدرات";
 export const DEFAULT_DESCRIPTION =
-  "تدريب مستقل على القسم الكمي في اختبار القدرات: 60 مهارة بتصوّر تفاعلي، واختبار موقوت 60 سؤالاً. ليست تابعة لقياس.";
+  "تدريب القسم الكمي مبني على تصوّر تفاعلي: جرّب الفكرة بنفسك عبر 60 مهارة، ثم اختصار وتدريب واختبار موقوت 60 سؤالاً. ليست تابعة لقياس.";
 
 /** Absolute URL for a path (sharing / canonical). */
 export function absoluteUrl(path = "/"): string {
@@ -15,10 +15,10 @@ export function absoluteUrl(path = "/"): string {
 }
 
 const OG_IMAGE = {
-  url: "/opengraph-image",
+  url: "/opengraph-image.png",
   width: 1200,
   height: 630,
-  alt: "قُدرة — اختبار قدرات كمي",
+  alt: "قُدرة — افهم بالتفاعل مو بالحفظ",
 } as const;
 
 type PageMetaInput = {

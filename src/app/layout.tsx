@@ -73,10 +73,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/opengraph-image",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
-        alt: "قُدرة — اختبار قدرات كمي",
+        alt: "قُدرة — افهم بالتفاعل مو بالحفظ",
       },
     ],
   },
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: ["/twitter-image"],
+    images: ["/twitter-image.png"],
   },
   other: {
     "format-detection": "telephone=no",

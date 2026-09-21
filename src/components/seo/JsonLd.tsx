@@ -12,7 +12,7 @@ export function JsonLd() {
     operatingSystem: "Web",
     isAccessibleForFree: true,
     description:
-      "أداة تدريب مستقلة للقسم الكمي في اختبار القدرات العامة: مهارات تفاعلية واختبار موقوت.",
+      "تدريب القسم الكمي مبني على تصوّر تفاعلي: جرّب الفكرة بنفسك، ثم اختصار وتدريب واختبار موقوت.",
     offers: {
       "@type": "Offer",
       price: "0",
