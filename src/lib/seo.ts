@@ -15,7 +15,8 @@ export function absoluteUrl(path = "/"): string {
 }
 
 const OG_IMAGE = {
-  url: "/opengraph-image.png",
+  // Cache-bust so Telegram/WhatsApp pick up new art (they cache og:image hard)
+  url: "/opengraph-image.png?v=2",
   width: 1200,
   height: 630,
   alt: "قُدرة — افهم بالتفاعل مو بالحفظ",

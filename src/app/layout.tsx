@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/opengraph-image.png",
+        url: "/opengraph-image.png?v=2",
         width: 1200,
         height: 630,
         alt: "قُدرة — افهم بالتفاعل مو بالحفظ",
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: ["/twitter-image.png"],
+    images: ["/opengraph-image.png?v=2"],
   },
   other: {
     "format-detection": "telephone=no",
