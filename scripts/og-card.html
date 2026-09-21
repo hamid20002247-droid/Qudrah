@@ -31,12 +31,12 @@
         background:
           radial-gradient(
             ellipse 100% 90% at 85% -10%,
-            rgba(45, 212, 191, 0.4),
+            rgba(45, 212, 191, 0.38),
             transparent 55%
           ),
           radial-gradient(
             ellipse 80% 70% at -5% 110%,
-            rgba(56, 189, 248, 0.22),
+            rgba(56, 189, 248, 0.2),
             transparent 50%
           ),
           linear-gradient(150deg, #0d9488 0%, #0f766e 34%, #134e4a 62%, #0f172a 100%);
@@ -44,12 +44,12 @@
       .grid {
         position: absolute;
         inset: 0;
-        opacity: 0.07;
+        opacity: 0.06;
         background-image:
           linear-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px),
           linear-gradient(90deg, rgba(255, 255, 255, 0.55) 1px, transparent 1px);
         background-size: 48px 48px;
-        mask-image: radial-gradient(circle at 60% 40%, black 20%, transparent 75%);
+        mask-image: radial-gradient(circle at 70% 40%, black 15%, transparent 72%);
       }
       .orb {
         position: absolute;
@@ -58,56 +58,24 @@
         pointer-events: none;
       }
       .orb-a {
-        width: 480px;
-        height: 480px;
-        top: -160px;
-        right: -80px;
-        background: rgba(94, 234, 212, 0.35);
+        width: 440px;
+        height: 440px;
+        top: -150px;
+        right: -70px;
+        background: rgba(94, 234, 212, 0.32);
       }
       .orb-b {
-        width: 380px;
-        height: 380px;
-        bottom: -160px;
-        left: -40px;
-        background: rgba(34, 211, 238, 0.18);
-      }
-      .ring {
-        position: absolute;
-        left: 72px;
-        bottom: 72px;
-        width: 236px;
-        height: 236px;
-        border-radius: 50%;
-        border: 2px solid rgba(153, 246, 228, 0.35);
-        box-shadow:
-          0 0 0 18px rgba(20, 184, 166, 0.07),
-          inset 0 0 60px rgba(45, 212, 191, 0.12);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: radial-gradient(
-          circle at 40% 35%,
-          rgba(45, 212, 191, 0.28),
-          rgba(15, 23, 42, 0.08) 72%
-        );
-      }
-      .ring strong {
-        font-size: 78px;
-        font-weight: 800;
-        line-height: 0.95;
-      }
-      .ring span {
-        margin-top: 4px;
-        font-size: 26px;
-        font-weight: 700;
-        color: #99f6e4;
+        width: 340px;
+        height: 340px;
+        bottom: -140px;
+        left: 40px;
+        background: rgba(34, 211, 238, 0.16);
       }
       .inner {
         position: relative;
         z-index: 2;
         height: 100%;
-        padding: 58px 68px 52px;
+        padding: 52px 60px 48px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -120,80 +88,91 @@
       .brand {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
       }
       .mark {
-        width: 68px;
-        height: 68px;
-        border-radius: 22px;
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
         background: linear-gradient(145deg, #5eead4, #14b8a6);
-        box-shadow: 0 16px 36px rgba(13, 148, 136, 0.5);
+        box-shadow: 0 14px 32px rgba(13, 148, 136, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 36px;
+        font-size: 32px;
         font-weight: 800;
         color: #042f2e;
       }
       .brand-name {
-        font-size: 46px;
+        font-size: 40px;
         font-weight: 800;
         line-height: 1;
       }
       .badge {
-        padding: 12px 24px;
+        padding: 11px 22px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         color: #ecfeff;
       }
-      .mid {
-        max-width: 760px;
-        margin-right: 0;
-        margin-left: auto;
+      .main {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        gap: 36px;
+        flex: 1;
+        margin: 28px 0 18px;
+      }
+      .copy {
+        flex: 1;
+        max-width: 560px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         text-align: right;
       }
       .kicker {
         display: inline-flex;
+        align-self: flex-start;
         padding: 8px 16px;
         border-radius: 999px;
         background: rgba(15, 23, 42, 0.28);
         border: 1px solid rgba(94, 234, 212, 0.35);
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         color: #5eead4;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       }
       .title {
-        font-size: 70px;
+        font-size: 60px;
         font-weight: 800;
-        line-height: 1.16;
+        line-height: 1.15;
         letter-spacing: -0.03em;
         text-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
       }
       .sub {
-        margin-top: 22px;
-        font-size: 28px;
+        margin-top: 18px;
+        font-size: 24px;
         font-weight: 500;
         line-height: 1.55;
         color: rgba(204, 251, 241, 0.95);
-        max-width: 720px;
+        max-width: 520px;
       }
-      .bottom {
+      .pills {
         display: flex;
         align-items: center;
-        gap: 12px;
-        justify-content: flex-start;
-        padding-left: 300px;
+        gap: 10px;
+        margin-top: 22px;
+        flex-wrap: wrap;
       }
       .pill {
-        padding: 13px 20px;
-        border-radius: 16px;
+        padding: 10px 16px;
+        border-radius: 14px;
         background: rgba(15, 23, 42, 0.42);
         border: 1px solid rgba(255, 255, 255, 0.14);
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 700;
         color: #f0fdfa;
         white-space: nowrap;
@@ -202,7 +181,182 @@
         font-style: normal;
         color: #5eead4;
         font-weight: 800;
-        margin-left: 6px;
+        margin-left: 5px;
+      }
+
+      /* Genius example: 80 → 100 trap */
+      .lab {
+        width: 460px;
+        flex-shrink: 0;
+        border-radius: 32px;
+        background: linear-gradient(
+          165deg,
+          rgba(255, 255, 255, 0.16),
+          rgba(15, 23, 42, 0.35)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow:
+          0 30px 60px rgba(0, 0, 0, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        padding: 22px 24px 20px;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(8px);
+      }
+      .lab-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .lab-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #ecfeff;
+      }
+      .lab-tag {
+        font-size: 14px;
+        font-weight: 700;
+        color: #99f6e4;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.35);
+        border: 1px solid rgba(94, 234, 212, 0.3);
+      }
+      .lab-q {
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1.35;
+        margin-bottom: 16px;
+      }
+      .bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 36px;
+        height: 168px;
+        padding: 0 20px 8px;
+        border-radius: 22px;
+        background: rgba(15, 23, 42, 0.28);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        position: relative;
+      }
+      .bar-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+      }
+      .bar {
+        width: 78px;
+        border-radius: 14px 14px 8px 8px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #042f2e;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+      }
+      .bar-old {
+        height: 96px;
+        background: linear-gradient(180deg, #94a3b8, #64748b);
+        color: #f8fafc;
+      }
+      .bar-new {
+        height: 144px;
+        background: linear-gradient(180deg, #5eead4, #14b8a6);
+        position: relative;
+      }
+      .handle {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 44px;
+        height: 22px;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+      .handle i {
+        width: 4px;
+        height: 10px;
+        border-radius: 2px;
+        background: #0f766e;
+        display: block;
+      }
+      .bar-label {
+        font-size: 16px;
+        font-weight: 700;
+        color: #cbd5e1;
+      }
+      .arrow {
+        position: absolute;
+        top: 42%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+        font-weight: 800;
+        color: #5eead4;
+        opacity: 0.85;
+      }
+      .answers {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .ans {
+        flex: 1;
+        border-radius: 16px;
+        padding: 12px 10px;
+        text-align: center;
+        font-weight: 800;
+        font-size: 22px;
+        border: 1px solid transparent;
+      }
+      .ans-wrong {
+        background: rgba(244, 63, 94, 0.18);
+        border-color: rgba(251, 113, 133, 0.35);
+        color: #fecdd3;
+        text-decoration: line-through;
+        text-decoration-thickness: 3px;
+        position: relative;
+      }
+      .ans-wrong small {
+        display: block;
+        margin-top: 4px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        color: #fda4af;
+      }
+      .ans-right {
+        background: rgba(45, 212, 191, 0.22);
+        border-color: rgba(94, 234, 212, 0.55);
+        color: #ccfbf1;
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
+      }
+      .ans-right small {
+        display: block;
+        margin-top: 4px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #5eead4;
+      }
+      .rule {
+        margin-top: 12px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 800;
+        color: #5eead4;
+        letter-spacing: 0.01em;
       }
     </style>
   </head>
@@ -211,10 +365,6 @@
       <div class="grid"></div>
       <div class="orb orb-a"></div>
       <div class="orb orb-b"></div>
-      <div class="ring" aria-hidden="true">
-        <strong>٦٠</strong>
-        <span>دقيقة</span>
-      </div>
       <div class="inner">
         <div class="top">
           <div class="brand">
@@ -223,19 +373,56 @@
           </div>
           <div class="badge">مجاني بالكامل</div>
         </div>
-        <div class="mid">
-          <div class="kicker">اختبار القدرات — القسم الكمي</div>
-          <div class="title">افهم بالتفاعل<br />مو بالحفظ</div>
-          <div class="sub">
-            كل مهارة مبنية على تصوّر تفاعلي — جرّب الفكرة بنفسك، ثم اختصار وتدريب
-            واختبار موقوت
+
+        <div class="main">
+          <div class="copy">
+            <div class="kicker">اختبار القدرات — القسم الكمي</div>
+            <div class="title">افهم بالتفاعل<br />مو بالحفظ</div>
+            <div class="sub">
+              كل مهارة مبنية على تصوّر تفاعلي — جرّب الفكرة بنفسك، ثم اختصار
+              وتدريب واختبار موقوت
+            </div>
+            <div class="pills">
+              <div class="pill">تصوّر تفاعلي</div>
+              <div class="pill"><em>٦٠</em>مهارة</div>
+              <div class="pill"><em>٦٠</em>سؤال</div>
+            </div>
           </div>
-        </div>
-        <div class="bottom">
-          <div class="pill">تصوّر تفاعلي</div>
-          <div class="pill"><em>٦٠</em>مهارة</div>
-          <div class="pill"><em>٦٠</em>سؤال</div>
-          <div class="pill">اختبار كامل</div>
+
+          <div class="lab">
+            <div class="lab-head">
+              <div class="lab-title">مثال حي من المهارة</div>
+              <div class="lab-tag">اسحب الرقم الجديد</div>
+            </div>
+            <div class="lab-q">من ٨٠ إلى ١٠٠… كم نسبة الزيادة؟</div>
+            <div class="bars">
+              <div class="bar-wrap">
+                <div class="bar bar-new">
+                  <div class="handle" aria-hidden="true">
+                    <i></i><i></i><i></i>
+                  </div>
+                  ١٠٠
+                </div>
+                <div class="bar-label">الجديد</div>
+              </div>
+              <div class="arrow">←</div>
+              <div class="bar-wrap">
+                <div class="bar bar-old">٨٠</div>
+                <div class="bar-label">الأصل</div>
+              </div>
+            </div>
+            <div class="answers">
+              <div class="ans ans-wrong">
+                ٢٠٪
+                <small>المصيدة</small>
+              </div>
+              <div class="ans ans-right">
+                ٢٥٪
+                <small>الصحيح</small>
+              </div>
+            </div>
+            <div class="rule">اقسم الفرق على الأصل — لا على الجديد</div>
+          </div>
         </div>
       </div>
     </div>
