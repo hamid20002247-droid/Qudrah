@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 type Fraction = { n: number; d: number };
@@ -25,17 +26,32 @@ function verdict(left: number, right: number) {
   return "متساويتان";
 }
 
-export function CmpFracLab({ onInteract, compact }: Props) {
+export function CmpFracLab({ onInteract, compact, autoDemo }: Props) {
   const [a, setA] = useState<Fraction>({ n: 2, d: 3 });
   const [b, setB] = useState<Fraction>({ n: 3, d: 5 });
   const drag = useRef<"aN" | "aD" | "bN" | "bD" | null>(null);
+  const userTouched = useRef(false);
   const fire = useCallback(() => onInteract?.(), [onInteract]);
+
+  useEffect(() => {
+    if (!autoDemo) return;
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % PRESETS.length;
+      const p = PRESETS[i]!;
+      setA(p.a);
+      setB(p.b);
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
 
   const crossA = a.n * b.d;
   const crossB = b.n * a.d;
   const result = verdict(crossA, crossB);
 
   const bump = (which: "aN" | "aD" | "bN" | "bD", dir: 1 | -1) => {
+    userTouched.current = true;
     if (which === "aN") {
       const i = N_OPTS.indexOf(a.n);
       const next = N_OPTS[Math.max(0, Math.min(N_OPTS.length - 1, i + dir))];
@@ -61,6 +77,7 @@ export function CmpFracLab({ onInteract, compact }: Props) {
     clientX: number,
     el: HTMLDivElement,
   ) => {
+    userTouched.current = true;
     const rect = el.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(0.95, (clientX - rect.left) / rect.width));
     const d = which === "a" ? a.d : b.d;
@@ -163,6 +180,7 @@ export function CmpFracLab({ onInteract, compact }: Props) {
               key={p.label}
               type="button"
               onClick={() => {
+                userTouched.current = true;
                 setA(p.a);
                 setB(p.b);
                 fire();

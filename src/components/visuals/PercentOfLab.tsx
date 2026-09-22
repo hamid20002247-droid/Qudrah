@@ -1,27 +1,42 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 const MIN_PERCENT = 5;
 const MAX_PERCENT = 95;
 const STEP = 5;
 
-export function PercentOfLab({ onInteract, compact }: Props) {
+export function PercentOfLab({ onInteract, compact, autoDemo }: Props) {
   const [base, setBase] = useState(240);
   const [percent, setPercent] = useState(25);
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const userTouched = useRef(false);
 
   const part = (base * percent) / 100;
   const remainder = base - part;
   const fire = useCallback(() => onInteract?.(), [onInteract]);
 
+  useEffect(() => {
+    if (!autoDemo) return;
+    const frames = [25, 40, 10, 50, 75, 25];
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % frames.length;
+      setPercent(frames[i]!);
+    }, 1200);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
+
   const setFromClientX = (clientX: number) => {
+    userTouched.current = true;
     const el = trackRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -185,6 +200,7 @@ export function PercentOfLab({ onInteract, compact }: Props) {
               key={value}
               type="button"
               onClick={() => {
+                userTouched.current = true;
                 setPercent(value);
                 fire();
               }}
@@ -211,6 +227,7 @@ export function PercentOfLab({ onInteract, compact }: Props) {
               key={value}
               type="button"
               onClick={() => {
+                userTouched.current = true;
                 setBase(value);
                 fire();
               }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import type { Question } from "@/lib/types";
 import {
@@ -81,6 +81,7 @@ function LockIcon({ className }: { className?: string }) {
 export function MockExperience() {
   const ready = useClientReady();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, configured, signInWithGoogle } = useAuth();
   const saveMock = useProgress((s) => s.saveMock);
   const recordMockExam = useProgress((s) => s.recordMockExam);
@@ -100,6 +101,7 @@ export function MockExperience() {
   } | null>(null);
   const [pendingSlot, setPendingSlot] = useState<number | null>(null);
   const autoStarted = useRef(false);
+  const urlStarted = useRef(false);
 
   const guest = ready && configured && !loading && !user;
   const signedIn = ready && configured && !loading && Boolean(user);
@@ -120,13 +122,21 @@ export function MockExperience() {
     [exams]
   );
 
-  const beginExam = useCallback(
+  const loadExam = useCallback(
     (slot: number) => {
       const built = buildMockExamAtSlot(slot, history, deviceId);
       setQuestions(built.questions);
       setMeta({ fingerprints: built.fingerprints, slot: built.slot });
       setPendingSlot(slot);
       setPhase("exam");
+      return built;
+    },
+    [history, deviceId]
+  );
+
+  const beginExam = useCallback(
+    (slot: number) => {
+      const built = loadExam(slot);
       setShowGate(false);
       track("mock_started", {
         size: built.questions.length,
@@ -136,10 +146,34 @@ export function MockExperience() {
         exam_number: built.slot + 1,
       });
     },
-    [history, deviceId]
+    [loadExam]
   );
 
-  /** Guests see exams but cannot enter — signup gate only. */
+  /** Guest: open the exam UI, then put the signup sheet on top of it. */
+  const previewExamBehindGate = useCallback(
+    (slot: number) => {
+      const built = loadExam(slot);
+      setShowGate(true);
+      try {
+        sessionStorage.setItem(MOCK_INTENT, "1");
+        sessionStorage.setItem(MOCK_INTENT_SLOT, String(slot));
+      } catch {
+        /* ignore */
+      }
+      track("mock_started", {
+        size: built.questions.length,
+        mode: built.mode,
+        guest: true,
+        gated: true,
+        exam_slot: built.slot,
+        exam_number: built.slot + 1,
+      });
+      track("mock_gate_shown", { exam_slot: slot, over_exam: true });
+    },
+    [loadExam]
+  );
+
+  /** Guests enter the exam behind a signup gate; signed-in students start. */
   const requestExam = useCallback(
     (slot: number) => {
       track("mock_start_clicked", {
@@ -150,23 +184,26 @@ export function MockExperience() {
       });
 
       if (guest) {
-        setPendingSlot(slot);
-        setShowGate(true);
-        try {
-          sessionStorage.setItem(MOCK_INTENT, "1");
-          sessionStorage.setItem(MOCK_INTENT_SLOT, String(slot));
-        } catch {
-          /* ignore */
-        }
-        track("mock_gate_shown", { exam_slot: slot });
+        previewExamBehindGate(slot);
         return;
       }
 
       if (!signedIn && configured) return;
       beginExam(slot);
     },
-    [guest, user, signedIn, configured, beginExam]
+    [guest, user, signedIn, configured, beginExam, previewExamBehindGate]
   );
+
+  useEffect(() => {
+    if (phase === "exam") {
+      document.body.dataset.mockExam = "1";
+    } else {
+      delete document.body.dataset.mockExam;
+    }
+    return () => {
+      delete document.body.dataset.mockExam;
+    };
+  }, [phase]);
 
   useEffect(() => {
     if (!ready || phase !== "lobby") return;
@@ -177,8 +214,52 @@ export function MockExperience() {
     });
   }, [ready, phase, doneCount, guest]);
 
+  // Deep-link / homepage: /mock?start=3 → open exam 3 (gate if guest)
+  useEffect(() => {
+    if (!ready || loading || urlStarted.current) return;
+    const raw = searchParams.get("start");
+    if (!raw) return;
+    const examNo = Number(raw);
+    if (!Number.isFinite(examNo) || examNo < 1 || examNo > MOCK_BANK_SIZE) {
+      return;
+    }
+    urlStarted.current = true;
+    const slot = examNo - 1;
+    if (guest) {
+      previewExamBehindGate(slot);
+      return;
+    }
+    if (signedIn) {
+      autoStarted.current = true;
+      beginExam(slot);
+    }
+  }, [
+    ready,
+    loading,
+    guest,
+    signedIn,
+    searchParams,
+    previewExamBehindGate,
+    beginExam,
+  ]);
+
   useEffect(() => {
     if (!ready || loading || !user || autoStarted.current) return;
+    if (phase === "exam" && questions.length > 0 && showGate) {
+      // Signed in while previewing — lift the gate, keep the same exam
+      autoStarted.current = true;
+      try {
+        sessionStorage.removeItem(MOCK_INTENT);
+        sessionStorage.removeItem(MOCK_INTENT_SLOT);
+      } catch {
+        /* ignore */
+      }
+      setShowGate(false);
+      track("mock_gate_cleared_in_exam", {
+        exam_slot: meta?.slot,
+      });
+      return;
+    }
     if (phase !== "lobby") return;
     try {
       if (sessionStorage.getItem(MOCK_INTENT) !== "1") return;
@@ -193,7 +274,17 @@ export function MockExperience() {
     } catch {
       return;
     }
-  }, [ready, loading, user, beginExam, phase, recommended]);
+  }, [
+    ready,
+    loading,
+    user,
+    beginExam,
+    phase,
+    recommended,
+    questions.length,
+    showGate,
+    meta?.slot,
+  ]);
 
   const closeGate = () => {
     try {
@@ -204,10 +295,15 @@ export function MockExperience() {
     }
     track("mock_gate_dismissed", {
       exam_slot: pendingSlot ?? undefined,
+      had_exam_preview: phase === "exam",
     });
     setShowGate(false);
     setPendingSlot(null);
     setGateError(null);
+    // Back out of the locked preview into the lobby
+    setPhase("lobby");
+    setQuestions([]);
+    setMeta(null);
   };
 
   const onGoogle = async () => {
@@ -293,30 +389,49 @@ export function MockExperience() {
     const examLabel =
       meta != null ? `اختبار ${meta.slot + 1}` : "اختبار قدرات كمي";
     return (
-      <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
-        <FinalExam
-          title={examLabel}
-          questions={questions}
-          onComplete={finish}
-          onExit={() => {
-            track("mock_exit_attempt", {
-              answered: questions.length,
-              exam_slot: meta?.slot,
-            });
-            if (
-              typeof window !== "undefined" &&
-              window.confirm("تبي تطلع؟ بيضيع التقدّم في هذا الاختبار.")
-            ) {
-              track("mock_abandoned", { exam_slot: meta?.slot });
-              setPhase("lobby");
-              setQuestions([]);
-              setMeta(null);
-              setPendingSlot(null);
-            }
-          }}
-          flushChrome
-        />
-      </div>
+      <>
+        <div
+          className={`fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC] ${
+            showGate ? "pointer-events-none select-none" : ""
+          }`}
+          aria-hidden={showGate || undefined}
+        >
+          <FinalExam
+            title={examLabel}
+            questions={questions}
+            onComplete={finish}
+            paused={showGate}
+            onExit={() => {
+              if (showGate) {
+                closeGate();
+                return;
+              }
+              track("mock_exit_attempt", {
+                answered: questions.length,
+                exam_slot: meta?.slot,
+              });
+              if (
+                typeof window !== "undefined" &&
+                window.confirm("تبي تطلع؟ بيضيع التقدّم في هذا الاختبار.")
+              ) {
+                track("mock_abandoned", { exam_slot: meta?.slot });
+                setPhase("lobby");
+                setQuestions([]);
+                setMeta(null);
+                setPendingSlot(null);
+              }
+            }}
+            flushChrome
+          />
+        </div>
+        {showGate && <SignupGateSheet
+          pendingSlot={pendingSlot}
+          busyGoogle={busyGoogle}
+          gateError={gateError}
+          onGoogle={() => void onGoogle()}
+          onClose={closeGate}
+        />}
+      </>
     );
   }
 
@@ -464,63 +579,84 @@ export function MockExperience() {
       </Link>
 
       {showGate && (
-        <div className="fixed inset-0 z-[70] flex flex-col justify-end">
+        <SignupGateSheet
+          pendingSlot={pendingSlot}
+          busyGoogle={busyGoogle}
+          gateError={gateError}
+          onGoogle={() => void onGoogle()}
+          onClose={closeGate}
+        />
+      )}
+    </div>
+  );
+}
+
+function SignupGateSheet({
+  pendingSlot,
+  busyGoogle,
+  gateError,
+  onGoogle,
+  onClose,
+}: {
+  pendingSlot: number | null;
+  busyGoogle: boolean;
+  gateError: string | null;
+  onGoogle: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end">
+      <button
+        type="button"
+        className="absolute inset-0 bg-ink/45 backdrop-blur-[3px]"
+        aria-label="إغلاق"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mock-gate-title"
+        className="relative mx-auto w-full max-w-lg px-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      >
+        <div className="overflow-hidden rounded-[1.75rem] bg-white p-5 shadow-[0_-16px_50px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-200/80">
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
+          <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
+            {pendingSlot != null ? `اختبار ${pendingSlot + 1}` : "الاختبار"}
+          </p>
+          <h2
+            id="mock-gate-title"
+            className="mt-1.5 text-center font-display text-[1.45rem] font-extrabold leading-snug text-ink"
+          >
+            الاختبار جاهز — سجّل لبدء الحل
+          </h2>
+          <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-slate-500">
+            تشوف الأسئلة خلف هذه البطاقة. التسجيل بـ Google مجاني ويحفظ درجتك.
+          </p>
           <button
             type="button"
-            className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
-            aria-label="إغلاق"
-            onClick={closeGate}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="mock-gate-title"
-            className="relative mx-auto w-full max-w-lg px-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+            onClick={onGoogle}
+            disabled={busyGoogle}
+            className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ink text-[15px] font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
           >
-            <div className="overflow-hidden rounded-[1.75rem] bg-white p-5 shadow-[0_-16px_50px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-200/80">
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
-              <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
-                {pendingSlot != null
-                  ? `اختبار ${pendingSlot + 1}`
-                  : "الاختبار"}
-              </p>
-              <h2
-                id="mock-gate-title"
-                className="mt-1.5 text-center font-display text-[1.45rem] font-extrabold leading-snug text-ink"
-              >
-                سجّل دخولك أولاً
-              </h2>
-              <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-slate-500">
-                الاختبارات ظاهرة للكل — الدخول وحفظ الدرجة يحتاج حساب Google.
-                مجاناً.
-              </p>
-              <button
-                type="button"
-                onClick={() => void onGoogle()}
-                disabled={busyGoogle}
-                className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ink text-[15px] font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
-                  <GoogleMark />
-                </span>
-                {busyGoogle ? "لحظة…" : "سجّل دخولك مع Google"}
-              </button>
-              {gateError && (
-                <p className="mt-3 text-center text-sm font-semibold text-rose-700">
-                  {gateError}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={closeGate}
-                className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-slate-400"
-              >
-                رجوع
-              </button>
-            </div>
-          </div>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
+              <GoogleMark />
+            </span>
+            {busyGoogle ? "لحظة…" : "سجّل دخولك مع Google"}
+          </button>
+          {gateError && (
+            <p className="mt-3 text-center text-sm font-semibold text-rose-700">
+              {gateError}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-slate-400"
+          >
+            رجوع
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

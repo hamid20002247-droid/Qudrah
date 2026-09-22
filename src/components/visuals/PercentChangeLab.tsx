@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  /** Homepage demo loop — stops after the student touches. */
+  autoDemo?: boolean;
 };
 
 const BASE = 80;
@@ -21,11 +23,12 @@ function hFor(v: number) {
  * Percent change lab — drag the green bar by its handle.
  * Layout uses fixed pixel heights (no % height inside flex) to avoid collapse.
  */
-export function PercentChangeLab({ onInteract, compact }: Props) {
+export function PercentChangeLab({ onInteract, compact, autoDemo }: Props) {
   const [neu, setNeu] = useState(100);
   const [showTrap, setShowTrap] = useState(false);
   const dragging = useRef(false);
   const trackRef = useRef<HTMLDivElement>(null);
+  const userTouched = useRef(false);
 
   const delta = neu - BASE;
   const correctPct = Math.round((delta / BASE) * 1000) / 10;
@@ -33,6 +36,18 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
   const isUp = delta >= 0;
 
   const fire = useCallback(() => onInteract?.(), [onInteract]);
+
+  useEffect(() => {
+    if (!autoDemo) return;
+    const frames = [100, 125, 145, 120, 95, 70, 85, 100];
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % frames.length;
+      setNeu(frames[i]!);
+    }, 1100);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
 
   const setFromClientY = (clientY: number) => {
     const el = trackRef.current;
@@ -47,6 +62,7 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
 
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
+    userTouched.current = true;
     dragging.current = true;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setFromClientY(e.clientY);
@@ -150,12 +166,14 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
         </div>
       </div>
 
-      <p className="mt-3 text-center text-[11px] text-slate-400">
-        أو اختر مثالاً جاهزاً بالأسفل
-      </p>
+      {!compact && (
+        <p className="mt-3 text-center text-[11px] text-slate-400">
+          أو اختر مثالاً جاهزاً بالأسفل
+        </p>
+      )}
 
       {/* Live numbers */}
-      <div className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-slate-100">
+      <div className={`mt-3 rounded-2xl bg-white ring-1 ring-slate-100 ${compact ? "p-3" : "p-4"}`}>
         <p className="text-center text-sm text-slate-600">
           التغيّر ={" "}
           <span className="font-black tabular-nums text-ink" dir="ltr">
@@ -172,18 +190,20 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setShowTrap((v) => !v);
-            fire();
-          }}
-          className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-rose-50 text-sm font-bold text-rose-800 ring-1 ring-rose-100"
-        >
-          {showTrap ? "إخفاء المصيدة" : "أظهر المصيدة الشائعة"}
-        </button>
+        {!compact && (
+          <button
+            type="button"
+            onClick={() => {
+              setShowTrap((v) => !v);
+              fire();
+            }}
+            className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-rose-50 text-sm font-bold text-rose-800 ring-1 ring-rose-100"
+          >
+            {showTrap ? "إخفاء المصيدة" : "أظهر المصيدة الشائعة"}
+          </button>
+        )}
 
-        {showTrap && (
+        {!compact && showTrap && (
           <div className="mt-3 rounded-xl bg-rose-50 px-3 py-3 text-center ring-1 ring-rose-200">
             <p className="text-[11px] font-bold text-rose-700">غلط شائع</p>
             <p
@@ -199,6 +219,7 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
         )}
       </div>
 
+      {!compact && (
       <div className="mt-3 flex flex-wrap justify-center gap-2">
         {[
           { label: "80→100", v: 100 },
@@ -209,6 +230,7 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
             key={p.label}
             type="button"
             onClick={() => {
+              userTouched.current = true;
               setNeu(p.v);
               fire();
             }}
@@ -222,6 +244,7 @@ export function PercentChangeLab({ onInteract, compact }: Props) {
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }

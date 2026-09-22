@@ -68,6 +68,7 @@ type Props = {
   skillId?: string;
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 export function VisualRenderer({
@@ -75,6 +76,7 @@ export function VisualRenderer({
   skillId,
   onInteract,
   compact,
+  autoDemo,
 }: Props) {
   const fire = () => {
     onInteract?.();
@@ -84,13 +86,31 @@ export function VisualRenderer({
   if (spec.kind === "custom") {
     switch (spec.component) {
       case "percent-change-lab":
-        return <PercentChangeLab onInteract={fire} compact={compact} />;
+        return (
+          <PercentChangeLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "percent-of-lab":
-        return <PercentOfLab onInteract={fire} compact={compact} />;
+        return (
+          <PercentOfLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "ratio-lab":
         return <RatioLab onInteract={fire} compact={compact} />;
       case "successive-lab":
-        return <SuccessiveLab onInteract={fire} compact={compact} />;
+        return (
+          <SuccessiveLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "direct-inverse-lab":
         return <DirectInverseLab onInteract={fire} compact={compact} />;
       case "buy-sell-lab":
@@ -124,11 +144,23 @@ export function VisualRenderer({
       case "triangle-area-lab":
         return <TriangleAreaLab onInteract={fire} compact={compact} />;
       case "pythagoras-lab":
-        return <PythagorasLab onInteract={fire} compact={compact} />;
+        return (
+          <PythagorasLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "circle-circ-lab":
         return <CircleCircLab onInteract={fire} compact={compact} />;
       case "circle-area-lab":
-        return <CircleAreaLab onInteract={fire} compact={compact} />;
+        return (
+          <CircleAreaLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "volume-lab":
         return <VolumeLab onInteract={fire} compact={compact} />;
       case "surface-area-lab":
@@ -188,9 +220,21 @@ export function VisualRenderer({
       case "cmp-percent-lab":
         return <CmpPercentLab onInteract={fire} compact={compact} />;
       case "cmp-frac-lab":
-        return <CmpFracLab onInteract={fire} compact={compact} />;
+        return (
+          <CmpFracLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "cmp-area-lab":
-        return <CmpAreaLab onInteract={fire} compact={compact} />;
+        return (
+          <CmpAreaLab
+            onInteract={fire}
+            compact={compact}
+            autoDemo={autoDemo}
+          />
+        );
       case "cmp-peri-area-lab":
         return <CmpPeriAreaLab onInteract={fire} compact={compact} />;
       case "cmp-algebra-lab":

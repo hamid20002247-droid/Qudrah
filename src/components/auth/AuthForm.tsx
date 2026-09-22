@@ -58,6 +58,14 @@ export function AuthForm() {
     }
   }, [loading, user, next, router]);
 
+  // Locked skills: open the skill page (real UI + signup sheet), never a blank auth card
+  useEffect(() => {
+    if (loading || user) return;
+    if (!openingSkill) return;
+    if (search.get("error") === "auth") return;
+    router.replace(next);
+  }, [loading, user, openingSkill, next, router, search]);
+
   async function onGoogle() {
     setError(null);
     setBusy(true);

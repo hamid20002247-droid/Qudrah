@@ -9,7 +9,6 @@ import {
   type FreePathState,
 } from "@/lib/access";
 import { track } from "@/lib/analytics";
-import { PRODUCT_FACTS } from "@/lib/next-action";
 import { useProgress } from "@/store/progress";
 
 type Variant = "hero" | "panel" | "done";
@@ -98,7 +97,6 @@ export function GuestFreePath({
         <p className="mt-3 text-center text-[11px] text-teal-100/80">
           باقي المهارات تُفتح بعد ما تحفظ تقدّمك
         </p>
-        <FreeSteps path={path} tone="onDark" className="mt-3" />
       </div>
     );
   }
@@ -119,33 +117,20 @@ export function GuestFreePath({
             {path.completedCount}/{path.total}
           </span>
         </div>
-        <p className="mb-3 text-[12px] leading-relaxed text-slate-600">
-          جرّب هذه الثلاث الآن. باقي المهارات تُفتح لما تحفظ تقدّمك.
-        </p>
-        <FreeSteps path={path} tone="light" />
         <Link
           href={path.allDone ? "/mock" : path.nextHref}
           onClick={() => {
             if (!path.allDone) track("cta_start_clicked");
           }}
-          className="mt-4 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-xl shadow-teal-600/25"
+          className="mt-1 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-600 text-base font-extrabold text-white shadow-xl shadow-teal-600/25"
         >
           {path.ctaLabel}
         </Link>
-        {path.allDone ? (
-          <p className="mt-2 text-center text-[11px] text-slate-500">
-            جاهز للاختبار؟ ادخل 60 سؤالاً الآن
-          </p>
-        ) : (
-          <p className="mt-2 text-center text-[11px] text-slate-500">
-            الروابط مباشرة — بدون حساب
-          </p>
-        )}
       </div>
     );
   }
 
-  // panel (default) — skills map / banners
+  // panel — compact CTA only (no skill list — labs live in HomeSkillShowcase)
   return (
     <div
       className={`overflow-hidden rounded-[1.75rem] bg-white p-4 ring-1 ring-teal-100 ${className}`}
@@ -158,132 +143,21 @@ export function GuestFreePath({
               : `بدون حساب · ${path.completedCount} من ${path.total}`}
           </p>
           <p className="mt-0.5 text-base font-extrabold text-ink">
-            {path.allDone ? "ادخل الاختبار الآن" : "جرّب هذه المهارات الآن"}
+            {path.allDone ? "ادخل الاختبار الآن" : "ثلاث محاكاة مجانية"}
           </p>
         </div>
         <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-600 text-sm font-black text-white">
           {path.completedCount}/{path.total}
         </span>
       </div>
-      <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-        {path.allDone
-          ? "الاختبار 60 سؤالاً مفتوح للتجربة — احفظ درجتك بعد التسليم."
-          : `${PRODUCT_FACTS.skills} مهارة في المسار — ابدأ بهذه الثلاث.`}
-      </p>
-      <FreeSteps path={path} tone="light" className="mt-3" />
       <Link
         href={path.allDone ? "/mock" : path.nextHref}
-        className={`mt-3 flex min-h-11 items-center justify-center rounded-2xl text-sm font-extrabold ${
-          path.allDone
-            ? "bg-ink text-white"
-            : "bg-teal-600 text-white"
+        className={`mt-4 flex min-h-12 items-center justify-center rounded-2xl text-sm font-extrabold ${
+          path.allDone ? "bg-ink text-white" : "bg-teal-600 text-white"
         }`}
       >
         {path.ctaLabel}
       </Link>
     </div>
-  );
-}
-
-function FreeSteps({
-  path,
-  tone,
-  className = "",
-}: {
-  path: FreePathState;
-  tone: "light" | "onDark";
-  className?: string;
-}) {
-  const onDark = tone === "onDark";
-  return (
-    <ol className={`space-y-2 ${className}`}>
-      {path.items.map((item) => {
-        const isDone = item.status === "done";
-        const isFocus =
-          item.status === "next" || item.status === "current";
-        return (
-          <li key={item.id}>
-            <Link
-              href={item.href}
-              className={`flex items-start gap-3 rounded-2xl px-3 py-2.5 transition active:scale-[0.99] ${
-                onDark
-                  ? isFocus
-                    ? "bg-white/15 ring-1 ring-white/25"
-                    : "bg-black/15"
-                  : isFocus
-                    ? "bg-teal-50 ring-1 ring-teal-200"
-                    : isDone
-                      ? "bg-emerald-50/80 ring-1 ring-emerald-100"
-                      : "bg-slate-50 ring-1 ring-slate-100"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-black ${
-                  isDone
-                    ? onDark
-                      ? "bg-emerald-400 text-emerald-950"
-                      : "bg-emerald-500 text-white"
-                    : isFocus
-                      ? onDark
-                        ? "bg-white text-teal-800"
-                        : "bg-teal-600 text-white"
-                      : onDark
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {isDone ? "✓" : item.order}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span
-                  className={`flex flex-wrap items-center gap-2 text-sm font-bold ${
-                    onDark ? "text-white" : "text-ink"
-                  }`}
-                >
-                  {item.title_ar}
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                      isDone
-                        ? onDark
-                          ? "bg-emerald-400/20 text-emerald-100"
-                          : "bg-emerald-100 text-emerald-800"
-                        : isFocus
-                          ? onDark
-                            ? "bg-white/20 text-white"
-                            : "bg-teal-600 text-white"
-                          : onDark
-                            ? "bg-white/10 text-white/70"
-                            : "bg-white text-slate-500 ring-1 ring-slate-200"
-                    }`}
-                  >
-                    {isDone
-                      ? "مكتملة"
-                      : item.status === "current"
-                        ? "أنت هنا"
-                        : item.status === "next"
-                          ? "التالي"
-                          : "بدون حساب"}
-                  </span>
-                </span>
-                <span
-                  className={`mt-0.5 block text-[12px] leading-snug ${
-                    onDark ? "text-white/70" : "text-slate-500"
-                  }`}
-                >
-                  {item.hook_ar}
-                </span>
-              </span>
-              <span
-                className={`mt-1 text-sm ${
-                  onDark ? "text-white/60" : "text-teal-700"
-                }`}
-              >
-                ←
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ol>
   );
 }

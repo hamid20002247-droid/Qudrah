@@ -1,17 +1,19 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
-export function SuccessiveLab({ onInteract, compact }: Props) {
+export function SuccessiveLab({ onInteract, compact, autoDemo }: Props) {
   const start = 100;
   const [up, setUp] = useState(20);
   const [down, setDown] = useState(20);
   const [step, setStep] = useState<0 | 1 | 2>(2);
+  const userTouched = useRef(false);
 
   const mid = Math.round(start * (1 + up / 100) * 100) / 100;
   const end = Math.round(mid * (1 - down / 100) * 100) / 100;
@@ -20,18 +22,47 @@ export function SuccessiveLab({ onInteract, compact }: Props) {
 
   const fire = useCallback(() => onInteract?.(), [onInteract]);
 
+  useEffect(() => {
+    if (!autoDemo) return;
+    const frames = [
+      { up: 20, down: 20 },
+      { up: 30, down: 10 },
+      { up: 10, down: 25 },
+      { up: 40, down: 20 },
+      { up: 20, down: 20 },
+    ];
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % frames.length;
+      const f = frames[i]!;
+      setUp(f.up);
+      setDown(f.down);
+      setStep(0);
+      window.setTimeout(() => {
+        if (!userTouched.current) setStep(1);
+      }, 350);
+      window.setTimeout(() => {
+        if (!userTouched.current) setStep(2);
+      }, 700);
+    }, 1600);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
+
   const cycle = (which: "up" | "down") => {
+    userTouched.current = true;
     const opts = [10, 20, 25, 30, 40, 50];
     if (which === "up") {
-      setUp(opts[(opts.indexOf(up) + 1) % opts.length]);
+      setUp(opts[(opts.indexOf(up) + 1) % opts.length]!);
     } else {
-      setDown(opts[(opts.indexOf(down) + 1) % opts.length]);
+      setDown(opts[(opts.indexOf(down) + 1) % opts.length]!);
     }
     setStep(2);
     fire();
   };
 
   const play = () => {
+    userTouched.current = true;
     setStep(0);
     fire();
     window.setTimeout(() => setStep(1), 400);

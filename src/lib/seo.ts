@@ -4,9 +4,9 @@ import { PRODUCTION_SITE_URL } from "@/lib/publicConfig";
 export const SITE_NAME = "قُدرة";
 export const SITE_NAME_LATIN = "Qudrah";
 
-export const DEFAULT_TITLE = "قُدرة — تدريب القسم الكمي في القدرات";
+export const DEFAULT_TITLE = "قُدرة — 20 اختبار قدرات كمي";
 export const DEFAULT_DESCRIPTION =
-  "تدريب القسم الكمي مبني على تصوّر تفاعلي: جرّب الفكرة بنفسك عبر 60 مهارة، ثم اختصار وتدريب واختبار موقوت 60 سؤالاً. ليست تابعة لقياس.";
+  "20 اختباراً كاملاً · 60 سؤال · 60 دقيقة. ادخل الآن أو أسّس باللمس. مجاني.";
 
 /** Absolute URL for a path (sharing / canonical). */
 export function absoluteUrl(path = "/"): string {
@@ -16,10 +16,10 @@ export function absoluteUrl(path = "/"): string {
 
 const OG_IMAGE = {
   // Cache-bust so Telegram/WhatsApp pick up new art (they cache og:image hard)
-  url: "/opengraph-image.png?v=2",
+  url: "/opengraph-image.png?v=4",
   width: 1200,
   height: 630,
-  alt: "قُدرة — افهم بالتفاعل مو بالحفظ",
+  alt: "قُدرة — 20 اختبار قدرات كمي · 60 سؤال",
 } as const;
 
 type PageMetaInput = {

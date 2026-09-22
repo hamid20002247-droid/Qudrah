@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 const PRESETS = [
@@ -14,11 +15,33 @@ const PRESETS = [
   { label: "٢٠ و ٢١", a: 20, b: 21 },
 ];
 
-export function PythagorasLab({ onInteract, compact }: Props) {
+export function PythagorasLab({ onInteract, compact, autoDemo }: Props) {
   const [a, setA] = useState(8);
   const [b, setB] = useState(15);
   const drag = useRef<"a" | "b" | null>(null);
+  const userTouched = useRef(false);
   const fire = useCallback(() => onInteract?.(), [onInteract]);
+
+  useEffect(() => {
+    if (!autoDemo) return;
+    const frames = [
+      { a: 8, b: 15 },
+      { a: 6, b: 8 },
+      { a: 5, b: 12 },
+      { a: 9, b: 12 },
+      { a: 7, b: 24 },
+      { a: 8, b: 15 },
+    ];
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % frames.length;
+      const f = frames[i]!;
+      setA(f.a);
+      setB(f.b);
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
 
   const c2 = a * a + b * b;
   const c = Math.sqrt(c2);
@@ -33,6 +56,7 @@ export function PythagorasLab({ onInteract, compact }: Props) {
   const oy = h - pad;
 
   const setFromPointer = (which: "a" | "b", clientX: number, clientY: number, svg: SVGSVGElement) => {
+    userTouched.current = true;
     const rect = svg.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * w;
     const y = ((clientY - rect.top) / rect.height) * h;
@@ -160,6 +184,7 @@ export function PythagorasLab({ onInteract, compact }: Props) {
               key={p.label}
               type="button"
               onClick={() => {
+                userTouched.current = true;
                 setA(p.a);
                 setB(p.b);
                 fire();

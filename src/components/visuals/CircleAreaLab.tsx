@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 type PiMode = "22/7" | "3.14";
@@ -26,13 +27,26 @@ function formatNum(n: number) {
   return (Math.round(n * 1000) / 1000).toString();
 }
 
-export function CircleAreaLab({ onInteract, compact }: Props) {
+export function CircleAreaLab({ onInteract, compact, autoDemo }: Props) {
   const [r, setR] = useState(7);
   const [mode, setMode] = useState<PiMode>("22/7");
   const [showTrap, setShowTrap] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
+  const userTouched = useRef(false);
   const fire = useCallback(() => onInteract?.(), [onInteract]);
+
+  useEffect(() => {
+    if (!autoDemo) return;
+    const frames = [7, 10, 14, 5, 12, 7];
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % frames.length;
+      setR(frames[i]!);
+    }, 1300);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
 
   const value = area(r, mode);
   const wrong = area(2 * r, mode);
@@ -41,6 +55,7 @@ export function CircleAreaLab({ onInteract, compact }: Props) {
   const visualR = 28 + (r / maxR) * (size / 2 - 36);
 
   const setFromClientX = (clientX: number) => {
+    userTouched.current = true;
     const el = trackRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -70,6 +85,7 @@ export function CircleAreaLab({ onInteract, compact }: Props) {
             key={m}
             type="button"
             onClick={() => {
+              userTouched.current = true;
               setMode(m);
               fire();
             }}
@@ -181,6 +197,7 @@ export function CircleAreaLab({ onInteract, compact }: Props) {
             key={p.label}
             type="button"
             onClick={() => {
+              userTouched.current = true;
               setR(p.r);
               fire();
             }}

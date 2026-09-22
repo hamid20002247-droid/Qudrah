@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/auth/AccountMenu";
@@ -68,7 +69,7 @@ const NAV = [
   },
   {
     href: "/skills",
-    label: "المهارات",
+    label: "تأسيس",
     match: (p: string) => p.startsWith("/skills") || p.startsWith("/skill"),
     icon: IconSkills,
   },
@@ -193,10 +194,25 @@ function IconMock({ active }: { active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname() || "/";
+  const [examOpen, setExamOpen] = useState(false);
+
+  useEffect(() => {
+    const sync = () =>
+      setExamOpen(document.body.dataset.mockExam === "1");
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["data-mock-exam"],
+    });
+    return () => mo.disconnect();
+  }, []);
+
   if (
     pathname.startsWith("/review") ||
     pathname.startsWith("/auth") ||
-    pathname.startsWith("/skill/")
+    pathname.startsWith("/skill/") ||
+    examOpen
   ) {
     return null;
   }
@@ -311,7 +327,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-lg space-y-3 px-4 text-center text-xs text-slate-400">
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
           <Link href="/skills" className="hover:text-teal-700">
-            المهارات
+            تأسيس
           </Link>
           <Link href="/mock" className="hover:text-teal-700">
             الاختبار

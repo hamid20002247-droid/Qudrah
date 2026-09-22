@@ -14,11 +14,8 @@ import {
   type SkillField,
 } from "@/content/catalog/fields";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { GuestFreePath } from "@/components/auth/GuestFreePath";
-import {
-  authHrefForSkill,
-  isSkillOpenWithoutAuth,
-} from "@/lib/access";
+import { HomeSkillShowcase } from "@/components/landing/HomeSkillShowcase";
+import { isSkillOpenWithoutAuth } from "@/lib/access";
 import { useProgress } from "@/store/progress";
 import { scrollWindowToTop } from "@/lib/scroll";
 import { useClientReady } from "@/components/ClientBody";
@@ -165,8 +162,8 @@ function FieldsView({
       </Link>
 
       {!signedIn && !loading && (
-        <div className="mt-5">
-          <GuestFreePath variant="panel" />
+        <div className="-mx-4 mt-2">
+          <HomeSkillShowcase showAllSkillsCta={false} />
         </div>
       )}
 
@@ -336,12 +333,6 @@ function FieldSkillsView({
         </div>
       </div>
 
-      {!signedIn && !loading && (
-        <div className="mt-4">
-          <GuestFreePath variant="panel" />
-        </div>
-      )}
-
       <ul className="mt-5 space-y-2.5">
         {field.skills.map((skill, idx) => {
           const liveSkill = isSkillLive(skill.id);
@@ -356,10 +347,8 @@ function FieldSkillsView({
             !user &&
             !freeOpen;
 
-          // Locked live skills → Arabic auth gate (never a missing route / English 404)
-          const href = locked
-            ? authHrefForSkill(skill.id)
-            : `/skill/${skill.id}`;
+          // Always open the skill page — SkillAccessGate shows real UI + signup sheet
+          const href = `/skill/${skill.id}`;
 
           const chip = !liveSkill
             ? { label: "قريباً", cls: "bg-slate-900/90 text-white" }

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   onInteract?: () => void;
   compact?: boolean;
+  autoDemo?: boolean;
 };
 
 const PRESETS: {
@@ -25,12 +26,27 @@ function verdict(a: number, b: number) {
   return "متساويتان";
 }
 
-export function CmpAreaLab({ onInteract, compact }: Props) {
+export function CmpAreaLab({ onInteract, compact, autoDemo }: Props) {
   const [side, setSide] = useState(6);
   const [length, setLength] = useState(9);
   const [width, setWidth] = useState(4);
   const active = useRef<"side" | "length" | "width" | null>(null);
+  const userTouched = useRef(false);
   const fire = useCallback(() => onInteract?.(), [onInteract]);
+
+  useEffect(() => {
+    if (!autoDemo) return;
+    let i = 0;
+    const id = window.setInterval(() => {
+      if (userTouched.current) return;
+      i = (i + 1) % PRESETS.length;
+      const p = PRESETS[i]!;
+      setSide(p.side);
+      setLength(p.length);
+      setWidth(p.width);
+    }, 1500);
+    return () => window.clearInterval(id);
+  }, [autoDemo]);
 
   const areaA = side * side;
   const areaB = length * width;
@@ -44,6 +60,7 @@ export function CmpAreaLab({ onInteract, compact }: Props) {
     clientX: number,
     el: HTMLDivElement,
   ) => {
+    userTouched.current = true;
     const rect = el.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const next = Math.max(2, Math.min(14, Math.round(2 + ratio * 12)));
@@ -218,6 +235,7 @@ export function CmpAreaLab({ onInteract, compact }: Props) {
               key={p.label}
               type="button"
               onClick={() => {
+                userTouched.current = true;
                 setSide(p.side);
                 setLength(p.length);
                 setWidth(p.width);
