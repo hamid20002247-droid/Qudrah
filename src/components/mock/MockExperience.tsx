@@ -116,7 +116,7 @@ export function MockExperience() {
     [history]
   );
   const doneCount = useMemo(
-    () => exams.filter((e) => e.completed).length,
+    () => exams.filter((e) => e.status === "done").length,
     [exams]
   );
 
@@ -268,6 +268,7 @@ export function MockExperience() {
           fullyAnswered,
           score,
           total: qs.length,
+          answeredCount,
           totalTimeMs,
         });
       }
@@ -319,10 +320,12 @@ export function MockExperience() {
     );
   }
 
+  const pathPct = Math.round((doneCount / MOCK_BANK_SIZE) * 100);
+
   return (
     <div className="relative mx-auto w-full max-w-lg overflow-x-hidden px-4 pb-32 pt-5">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.22),_transparent_65%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.2),_transparent_62%),radial-gradient(ellipse_at_80%_20%,_rgba(16,185,129,0.12),_transparent_45%)]"
         aria-hidden
       />
 
@@ -334,8 +337,8 @@ export function MockExperience() {
           20 اختبار قدرات كمي
         </h1>
         <p className="mt-2 max-w-[22rem] text-[14px] leading-relaxed text-slate-600">
-          كل اختبار {MOCK_EXAM_SIZE} سؤالاً · {MOCK_EXAM_SIZE} دقيقة. اختر
-          رقماً — بعد الإكمال يظهر درجتك ووقتك تحت الاختبار.
+          كل اختبار {MOCK_EXAM_SIZE} سؤالاً · {MOCK_EXAM_SIZE} دقيقة. أكمل
+          الـ 60 لتحفظ الوقت — الدرجة تظهر دائماً بعد التسليم.
         </p>
       </header>
 
@@ -350,28 +353,39 @@ export function MockExperience() {
       )}
 
       <div
-        className="animate-fade-up mt-5 flex items-stretch gap-2"
+        className="animate-fade-up mt-5 overflow-hidden rounded-[1.5rem] bg-ink p-4 text-white shadow-[0_20px_44px_-24px_rgba(15,23,42,0.55)]"
         style={{ animationDelay: "60ms" }}
       >
-        <div className="flex-1 rounded-2xl bg-ink px-4 py-3.5 text-white">
-          <p className="text-[11px] font-bold text-teal-300">مكتمل (60/60)</p>
-          <p className="mt-0.5 font-display text-2xl font-extrabold tabular-nums">
-            <LtrNum>
-              {doneCount}/{MOCK_BANK_SIZE}
-            </LtrNum>
-          </p>
-        </div>
-        <div className="flex-1 rounded-2xl bg-white px-4 py-3.5 ring-1 ring-slate-200/80">
-          <p className="text-[11px] font-bold text-slate-500">أفضل نتيجة</p>
-          <p className="mt-0.5 font-display text-2xl font-extrabold text-ink tabular-nums">
-            {ready && bestMockScore != null && lastMock ? (
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold text-teal-300">مسارك</p>
+            <p className="mt-0.5 font-display text-2xl font-extrabold tabular-nums">
               <LtrNum>
-                {bestMockScore}/{lastMock.total}
+                {doneCount}/{MOCK_BANK_SIZE}
               </LtrNum>
-            ) : (
-              "—"
-            )}
-          </p>
+              <span className="ms-1.5 text-sm font-bold text-white/55">
+                مكتمل 60/60
+              </span>
+            </p>
+          </div>
+          <div className="text-end">
+            <p className="text-[11px] font-bold text-white/50">أفضل درجة</p>
+            <p className="mt-0.5 font-display text-xl font-extrabold tabular-nums">
+              {ready && bestMockScore != null && lastMock ? (
+                <LtrNum>
+                  {bestMockScore}/{lastMock.total}
+                </LtrNum>
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3.5 h-2 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-gradient-to-l from-teal-400 to-emerald-400 transition-[width] duration-700 ease-out"
+            style={{ width: `${pathPct}%` }}
+          />
         </div>
       </div>
 
@@ -379,7 +393,7 @@ export function MockExperience() {
         type="button"
         onClick={() => requestExam(recommended)}
         disabled={!ready || loading}
-        className="animate-fade-up mt-5 flex min-h-[4.35rem] w-full flex-col items-center justify-center rounded-[1.5rem] bg-teal-600 text-white shadow-[0_18px_40px_-18px_rgba(13,148,136,0.65)] transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-60"
+        className="animate-fade-up mt-4 flex min-h-[4.5rem] w-full flex-col items-center justify-center rounded-[1.5rem] bg-teal-600 text-white shadow-[0_18px_40px_-18px_rgba(13,148,136,0.65)] transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-60"
         style={{ animationDelay: "100ms" }}
       >
         <span className="flex items-center gap-2 text-base font-extrabold">
@@ -389,12 +403,35 @@ export function MockExperience() {
             : `ابدأ اختبار ${recommended + 1}`}
         </span>
         <span className="mt-1 text-[12px] font-bold text-teal-100">
-          {MOCK_EXAM_SIZE} سؤال · {MOCK_EXAM_SIZE} دقيقة · مزيج كمي كامل
+          التالي في المسار · {MOCK_EXAM_SIZE} سؤال · {MOCK_EXAM_SIZE} دقيقة
         </span>
       </button>
 
+      <ul
+        className="animate-fade-up mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold"
+        style={{ animationDelay: "120ms" }}
+        aria-label="مفتاح الحالات"
+      >
+        <li className="inline-flex items-center gap-1.5 text-emerald-800">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          مكتمل
+        </li>
+        <li className="inline-flex items-center gap-1.5 text-amber-900">
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+          بدأته
+        </li>
+        <li className="inline-flex items-center gap-1.5 text-slate-600">
+          <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
+          لم يبدأ
+        </li>
+        <li className="inline-flex items-center gap-1.5 text-teal-800">
+          <span className="h-2.5 w-2.5 rounded-full bg-teal-600" />
+          التالي
+        </li>
+      </ul>
+
       <p
-        className="animate-fade-up mt-6 text-[13px] font-bold text-slate-500"
+        className="animate-fade-up mt-4 text-[13px] font-bold text-slate-500"
         style={{ animationDelay: "140ms" }}
       >
         كل الاختبارات
@@ -415,7 +452,7 @@ export function MockExperience() {
       </ol>
 
       <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
-        ملاحظة: الدرجة والوقت يُحفظان فقط إذا أجبت على الـ 60 سؤالاً كاملة.
+        الدرجة دائماً بعد التسليم · الوقت يُحفظ فقط عند إكمال الـ 60.
       </p>
 
       <Link
@@ -503,11 +540,54 @@ function ExamTile({
   disabled: boolean;
   onStart: () => void;
 }) {
-  const showResult =
-    exam.completed &&
-    exam.bestScore != null &&
-    exam.bestTotal != null &&
-    exam.bestTimeMs != null;
+  const isDone = exam.status === "done";
+  const isIncomplete = exam.status === "incomplete";
+  const isReady = exam.status === "ready";
+  const isNext = recommended && !isDone;
+  const hasScore = exam.score != null && exam.total != null;
+  const scorePct =
+    hasScore && exam.total! > 0
+      ? Math.round((exam.score! / exam.total!) * 100)
+      : 0;
+
+  const shell = isNext
+    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30 ring-2 ring-teal-400"
+    : isDone
+      ? "bg-emerald-50 text-ink ring-1 ring-emerald-200/90"
+      : isIncomplete
+        ? "bg-amber-50 text-ink ring-1 ring-amber-200/90"
+        : locked
+          ? "bg-slate-50/90 text-ink ring-1 ring-slate-200"
+          : "bg-white text-ink ring-1 ring-slate-200/90 hover:ring-teal-300";
+
+  const badge = isDone
+    ? { text: "مكتمل", cls: "bg-emerald-600 text-white" }
+    : isNext
+      ? {
+          text: locked ? "سجّل" : "التالي",
+          cls: "bg-white/20 text-white",
+        }
+      : isIncomplete
+        ? { text: "بدأته", cls: "bg-amber-500 text-white" }
+        : locked
+          ? { text: "مقفل", cls: "bg-slate-200 text-slate-600" }
+          : { text: "لم يبدأ", cls: "bg-slate-100 text-slate-600" };
+
+  const numCls = isNext
+    ? "bg-white/20 text-white"
+    : isDone
+      ? "bg-emerald-600 text-white"
+      : isIncomplete
+        ? "bg-amber-500 text-white"
+        : "bg-slate-100 text-slate-700";
+
+  const accent = isNext
+    ? "bg-white/35"
+    : isDone
+      ? "bg-emerald-500"
+      : isIncomplete
+        ? "bg-amber-400"
+        : "bg-slate-200";
 
   return (
     <li
@@ -518,82 +598,118 @@ function ExamTile({
         type="button"
         onClick={onStart}
         disabled={disabled}
-        className={`relative flex min-h-[6.75rem] w-full flex-col items-start justify-between rounded-[1.35rem] p-3.5 text-start transition active:scale-[0.99] disabled:opacity-60 ${
-          recommended && !exam.completed
-            ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25 ring-2 ring-teal-400"
-            : exam.completed
-              ? "bg-white text-ink ring-1 ring-teal-200/80"
-              : locked
-                ? "bg-slate-50 text-ink ring-1 ring-slate-200"
-                : "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300"
-        }`}
+        className={`relative flex min-h-[7.25rem] w-full flex-col items-start justify-between overflow-hidden rounded-[1.35rem] p-3.5 pe-3 text-start transition active:scale-[0.99] disabled:opacity-60 ${shell}`}
       >
-        <div className="flex w-full items-center justify-between gap-2">
+        <span
+          className={`absolute inset-y-3 start-0 w-1 rounded-full ${accent}`}
+          aria-hidden
+        />
+
+        <div className="flex w-full items-center justify-between gap-2 ps-1.5">
           <span
-            className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold tabular-nums ${
-              recommended && !exam.completed
-                ? "bg-white/20 text-white"
-                : exam.completed
-                  ? "bg-teal-100 text-teal-800"
-                  : "bg-slate-100 text-slate-700"
-            }`}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold tabular-nums ${numCls}`}
             dir="ltr"
           >
             {exam.number}
           </span>
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              recommended && !exam.completed
-                ? "bg-white/20 text-white"
-                : exam.completed
-                  ? "bg-teal-100 text-teal-800"
-                  : locked
-                    ? "bg-slate-200/80 text-slate-600"
-                    : "bg-amber-50 text-amber-900"
-            }`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}
           >
-            {locked && !exam.completed && <LockIcon />}
-            {exam.completed
-              ? "مكتمل"
-              : recommended
-                ? locked
-                  ? "سجّل"
-                  : "التالي"
-                : locked
-                  ? "مقفل"
-                  : "جديد"}
+            {locked && isReady && <LockIcon />}
+            {badge.text}
           </span>
         </div>
 
-        <div className="mt-2 w-full">
+        <div className="mt-2 w-full ps-1.5">
           <p
             className={`text-[14px] font-extrabold leading-none ${
-              recommended && !exam.completed ? "text-white" : "text-ink"
+              isNext ? "text-white" : "text-ink"
             }`}
           >
             {exam.title_ar}
           </p>
+          <p
+            className={`mt-1 text-[10px] font-semibold leading-snug ${
+              isNext ? "text-teal-50/85" : "text-slate-500"
+            }`}
+          >
+            {exam.focus_ar}
+          </p>
 
-          {showResult ? (
-            <div
-              className="mt-2 flex items-baseline gap-2 tabular-nums"
-              dir="ltr"
-            >
-              <span className="text-[15px] font-extrabold text-teal-800">
-                <LtrNum>
-                  {exam.bestScore}/{exam.bestTotal}
-                </LtrNum>
-              </span>
-              <span className="text-[11px] font-bold text-slate-500">
-                · {formatMs(exam.bestTimeMs!)}
-              </span>
+          {hasScore ? (
+            <div className="mt-2 space-y-1.5">
+              <div className="flex items-baseline justify-between gap-2">
+                <p
+                  className={`text-[15px] font-extrabold tabular-nums ${
+                    isNext
+                      ? "text-white"
+                      : isDone
+                        ? "text-emerald-800"
+                        : "text-amber-950"
+                  }`}
+                  dir="ltr"
+                >
+                  <LtrNum>
+                    {exam.score}/{exam.total}
+                  </LtrNum>
+                </p>
+                <span
+                  className={`text-[10px] font-bold tabular-nums ${
+                    isNext
+                      ? "text-teal-50"
+                      : isDone
+                        ? "text-emerald-700"
+                        : "text-amber-800"
+                  }`}
+                  dir="ltr"
+                >
+                  {scorePct}%
+                </span>
+              </div>
+              <div
+                className={`h-1 overflow-hidden rounded-full ${
+                  isNext ? "bg-white/20" : "bg-black/5"
+                }`}
+              >
+                <div
+                  className={`h-full rounded-full ${
+                    isNext
+                      ? "bg-white"
+                      : isDone
+                        ? "bg-emerald-500"
+                        : "bg-amber-400"
+                  }`}
+                  style={{ width: `${Math.min(100, scorePct)}%` }}
+                />
+              </div>
+              {isDone && exam.bestTimeMs != null ? (
+                <p
+                  className={`text-[11px] font-bold tabular-nums ${
+                    isNext ? "text-teal-50" : "text-emerald-700/85"
+                  }`}
+                  dir="ltr"
+                >
+                  الوقت {formatMs(exam.bestTimeMs)}
+                </p>
+              ) : isIncomplete ? (
+                <p
+                  className={`text-[10px] font-semibold ${
+                    isNext ? "text-teal-50/90" : "text-amber-800/85"
+                  }`}
+                >
+                  مجاب{" "}
+                  <span dir="ltr" className="tabular-nums">
+                    {exam.answeredCount ?? 0}/60
+                  </span>
+                  {" · "}
+                  أكمل لحفظ الوقت
+                </p>
+              ) : null}
             </div>
           ) : (
             <p
-              className={`mt-1.5 text-[11px] font-semibold leading-snug tabular-nums ${
-                recommended && !exam.completed
-                  ? "text-teal-50/90"
-                  : "text-slate-500"
+              className={`mt-2 text-[11px] font-semibold leading-snug tabular-nums ${
+                isNext ? "text-teal-50/90" : "text-slate-500"
               }`}
               dir="ltr"
             >

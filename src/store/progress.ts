@@ -66,6 +66,7 @@ type ProgressActions = {
       fullyAnswered?: boolean;
       score?: number;
       total?: number;
+      answeredCount?: number;
       totalTimeMs?: number;
     }
   ) => void;
@@ -215,21 +216,13 @@ export const useProgress = create<ProgressState & ProgressActions>()(
           lastSlots: [],
           slotResults: {},
         };
-        const fullyAnswered = Boolean(opts?.fullyAnswered);
         set({
           mockHistory: appendMockHistory(prev, fingerprints, slot, {
-            fullyAnswered,
-            result:
-              fullyAnswered &&
-              opts?.score != null &&
-              opts?.total != null &&
-              opts?.totalTimeMs != null
-                ? {
-                    score: opts.score,
-                    total: opts.total,
-                    totalTimeMs: opts.totalTimeMs,
-                  }
-                : undefined,
+            fullyAnswered: opts?.fullyAnswered,
+            score: opts?.score,
+            total: opts?.total,
+            answeredCount: opts?.answeredCount,
+            totalTimeMs: opts?.totalTimeMs,
           }),
         });
       },

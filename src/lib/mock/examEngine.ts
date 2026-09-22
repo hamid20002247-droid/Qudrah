@@ -20,13 +20,11 @@ export {
 };
 
 export type MockHistoryState = {
-  /** How many full exams the student finished (all 60 answered) */
   completedCount: number;
-  /** Sliding window of fingerprints (anti-repeat) */
   recentFingerprints: string[];
-  /** Fully completed slot indices */
+  /** Fully completed slot indices (derived + legacy) */
   lastSlots: number[];
-  /** Best full result per slot (key = String(slot)) */
+  /** Best attempt per slot (partial or full) */
   slotResults: Record<string, MockSlotResult>;
 };
 
@@ -47,6 +45,8 @@ export type BuiltMockExam = {
   seed: number;
 };
 
+export type ExamCardStatus = "ready" | "incomplete" | "done";
+
 export type MockExamCard = {
   slot: number;
   number: number;
@@ -54,12 +54,12 @@ export type MockExamCard = {
   focus_ar: string;
   questions: number;
   minutes: number;
-  /** True only when the student answered all 60 questions. */
-  completed: boolean;
-  /** Best full-run score — only when completed. */
-  bestScore: number | null;
-  bestTotal: number | null;
-  /** Best full-run total time (ms) — only when completed. */
+  status: ExamCardStatus;
+  /** Always shown when the student has any attempt. */
+  score: number | null;
+  total: number | null;
+  answeredCount: number | null;
+  /** Only when status === "done" (60/60 answered). */
   bestTimeMs: number | null;
 };
 
@@ -98,14 +98,83 @@ function focusFromMix(mix: ExamMix): string {
   return best;
 }
 
+/** Coerce legacy slot rows (score/total/time only) into the current shape. */
+function coerceSlotResult(raw: unknown): MockSlotResult | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const r = raw as Partial<MockSlotResult>;
+  if (typeof r.score !== "number" || typeof r.total !== "number") {
+    return undefined;
+  }
+  const total = r.total;
+  // Old rows only stored timing when all 60 were answered.
+  const legacyFull =
+    r.totalTimeMs != null &&
+    total === MOCK_EXAM_SIZE &&
+    r.answeredCount == null &&
+    r.fullyAnswered == null;
+
+  let answeredCount: number;
+  if (typeof r.answeredCount === "number") {
+    answeredCount = r.answeredCount;
+  } else if (legacyFull || r.fullyAnswered) {
+    answeredCount = MOCK_EXAM_SIZE;
+  } else {
+    // Unknown partial legacy row — don't invent a full 60.
+    answeredCount = 0;
+  }
+
+  const fullyAnswered = Boolean(
+    r.fullyAnswered === true ||
+      legacyFull ||
+      (answeredCount === MOCK_EXAM_SIZE &&
+        total === MOCK_EXAM_SIZE &&
+        r.totalTimeMs != null)
+  );
+
+  return {
+    score: r.score,
+    total,
+    answeredCount,
+    totalTimeMs: fullyAnswered ? (r.totalTimeMs ?? null) : null,
+    fullyAnswered,
+    completedAt:
+      typeof r.completedAt === "string"
+        ? r.completedAt
+        : new Date(0).toISOString(),
+  };
+}
+
+function isFullResult(r: MockSlotResult | undefined): boolean {
+  return Boolean(
+    r?.fullyAnswered &&
+      r.answeredCount === MOCK_EXAM_SIZE &&
+      r.total === MOCK_EXAM_SIZE &&
+      r.totalTimeMs != null
+  );
+}
+
 function normalizeHistory(
   history: Partial<MockHistoryState> | null | undefined
 ): MockHistoryState {
+  const raw = history?.slotResults ?? {};
+  const slotResults: Record<string, MockSlotResult> = {};
+  for (const [k, v] of Object.entries(raw)) {
+    const coerced = coerceSlotResult(v);
+    if (coerced) slotResults[k] = coerced;
+  }
+  // Source of truth for "done" = slotResults with full 60 answers.
+  // Ignore legacy lastSlots that have no matching full result (fixes "التالي" jumping ahead).
+  const fullSlots = Object.entries(slotResults)
+    .filter(([, r]) => isFullResult(r))
+    .map(([k]) => Number(k))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+
   return {
-    completedCount: history?.completedCount ?? 0,
+    completedCount: fullSlots.length,
     recentFingerprints: history?.recentFingerprints ?? [],
-    lastSlots: history?.lastSlots ?? [],
-    slotResults: history?.slotResults ?? {},
+    lastSlots: fullSlots,
+    slotResults,
   };
 }
 
@@ -114,11 +183,13 @@ export function listMockExamCards(
   history: Partial<MockHistoryState>
 ): MockExamCard[] {
   const h = normalizeHistory(history);
-  const completed = new Set(h.lastSlots);
   return EXAM_BLUEPRINTS.map((bp, slot) => {
     const focus = focusFromMix(bp.mix);
     const result = h.slotResults[String(slot)];
-    const isDone = completed.has(slot) && Boolean(result);
+    let status: ExamCardStatus = "ready";
+    if (isFullResult(result)) status = "done";
+    else if (result) status = "incomplete";
+
     return {
       slot,
       number: slot + 1,
@@ -126,23 +197,24 @@ export function listMockExamCards(
       focus_ar: `تركيز أوضح على ${focus}`,
       questions: MOCK_EXAM_SIZE,
       minutes: MOCK_EXAM_SIZE,
-      completed: isDone,
-      bestScore: isDone ? result!.score : null,
-      bestTotal: isDone ? result!.total : null,
-      bestTimeMs: isDone ? result!.totalTimeMs : null,
+      status,
+      score: result ? result.score : null,
+      total: result ? result.total : null,
+      answeredCount: result ? result.answeredCount : null,
+      bestTimeMs: isFullResult(result) ? result!.totalTimeMs : null,
     };
   });
 }
 
+/** First exam that is not fully completed (60/60). */
 export function nextRecommendedSlot(
   history: Partial<MockHistoryState>
 ): number {
   const h = normalizeHistory(history);
-  const completed = new Set(h.lastSlots);
   for (let i = 0; i < MOCK_BANK_SIZE; i++) {
-    if (!completed.has(i)) return i;
+    if (!isFullResult(h.slotResults[String(i)])) return i;
   }
-  return h.completedCount % MOCK_BANK_SIZE;
+  return 0;
 }
 
 export function buildMockExamAtSlot(
@@ -154,7 +226,9 @@ export function buildMockExamAtSlot(
   const safeSlot =
     ((slot % MOCK_BANK_SIZE) + MOCK_BANK_SIZE) % MOCK_BANK_SIZE;
   const avoid = new Set(h.recentFingerprints);
-  const attemptsOnSlot = h.lastSlots.filter((s) => s === safeSlot).length;
+  const attemptsOnSlot = Object.keys(h.slotResults).includes(String(safeSlot))
+    ? 1 + (h.lastSlots.includes(safeSlot) ? 1 : 0)
+    : 0;
   const seedBase = hashStr(
     `${deviceId}|mock|slot${safeSlot}|try${attemptsOnSlot}|n${h.completedCount}`
   );
@@ -179,15 +253,7 @@ export function buildNextMockExam(
   const seedBase = hashStr(`${deviceId}|mock|${n}`);
 
   if (n < MOCK_REMIX_AFTER) {
-    const used = new Set(h.lastSlots);
-    let slot = n % MOCK_BANK_SIZE;
-    for (let i = 0; i < MOCK_BANK_SIZE; i++) {
-      const cand = (n + i * 3) % MOCK_BANK_SIZE;
-      if (!used.has(cand)) {
-        slot = cand;
-        break;
-      }
-    }
+    const slot = nextRecommendedSlot(h);
     const blueprint = EXAM_BLUEPRINTS[slot]!;
     const seed = seedBase ^ (slot * 7919);
     const gens = generateExamQuestions(
@@ -224,10 +290,18 @@ function pickBetterSlotResult(
   next: MockSlotResult
 ): MockSlotResult {
   if (!prev) return next;
+  // Full completion always beats a partial
+  if (next.fullyAnswered && !prev.fullyAnswered) return next;
+  if (!next.fullyAnswered && prev.fullyAnswered) return prev;
   if (next.score > prev.score) return next;
   if (next.score < prev.score) return prev;
-  // Same score → keep the faster run
-  return next.totalTimeMs < prev.totalTimeMs ? next : prev;
+  if (next.fullyAnswered && prev.fullyAnswered) {
+    const nt = next.totalTimeMs ?? Number.POSITIVE_INFINITY;
+    const pt = prev.totalTimeMs ?? Number.POSITIVE_INFINITY;
+    return nt < pt ? next : prev;
+  }
+  // Both partial — keep more answers, then higher score already tied
+  return next.answeredCount >= prev.answeredCount ? next : prev;
 }
 
 export function appendMockHistory(
@@ -236,7 +310,10 @@ export function appendMockHistory(
   slot: number,
   opts?: {
     fullyAnswered?: boolean;
-    result?: Omit<MockSlotResult, "completedAt"> & { completedAt?: string };
+    score?: number;
+    total?: number;
+    answeredCount?: number;
+    totalTimeMs?: number;
   }
 ): MockHistoryState {
   const base = normalizeHistory(prev);
@@ -245,39 +322,46 @@ export function appendMockHistory(
     ...base.recentFingerprints,
   ].slice(0, FINGERPRINT_WINDOW);
 
-  const fullyAnswered = opts?.fullyAnswered ?? true;
-  if (!fullyAnswered || !opts?.result) {
-    return {
-      ...base,
-      recentFingerprints,
-    };
+  if (
+    opts?.score == null ||
+    opts?.total == null ||
+    opts?.answeredCount == null
+  ) {
+    return { ...base, recentFingerprints };
   }
 
-  const key = String(slot);
-  const incoming: MockSlotResult = {
-    score: opts.result.score,
-    total: opts.result.total,
-    totalTimeMs: opts.result.totalTimeMs,
-    completedAt: opts.result.completedAt ?? new Date().toISOString(),
-  };
-  const wasNew = !base.lastSlots.includes(slot);
-  const lastSlots = [slot, ...base.lastSlots.filter((s) => s !== slot)].slice(
-    0,
-    MOCK_BANK_SIZE
+  const fullyAnswered = Boolean(
+    opts.fullyAnswered &&
+      opts.answeredCount === MOCK_EXAM_SIZE &&
+      opts.total === MOCK_EXAM_SIZE
   );
 
+  const incoming: MockSlotResult = {
+    score: opts.score,
+    total: opts.total,
+    answeredCount: opts.answeredCount,
+    totalTimeMs: fullyAnswered ? (opts.totalTimeMs ?? null) : null,
+    fullyAnswered,
+    completedAt: new Date().toISOString(),
+  };
+
+  const key = String(slot);
+  const mergedResult = pickBetterSlotResult(base.slotResults[key], incoming);
+  const slotResults = { ...base.slotResults, [key]: mergedResult };
+
+  const fullSlots = Object.entries(slotResults)
+    .filter(([, r]) => isFullResult(r))
+    .map(([k]) => Number(k))
+    .filter((n) => Number.isFinite(n));
+
   return {
-    completedCount: wasNew ? base.completedCount + 1 : base.completedCount,
+    completedCount: fullSlots.length,
     recentFingerprints,
-    lastSlots,
-    slotResults: {
-      ...base.slotResults,
-      [key]: pickBetterSlotResult(base.slotResults[key], incoming),
-    },
+    lastSlots: fullSlots,
+    slotResults,
   };
 }
 
-/** Merge two mock histories (local ↔ cloud). */
 export function mergeMockHistory(
   a: Partial<MockHistoryState> | null | undefined,
   b: Partial<MockHistoryState> | null | undefined
@@ -288,17 +372,18 @@ export function mergeMockHistory(
   for (const [k, v] of Object.entries(right.slotResults)) {
     slotResults[k] = pickBetterSlotResult(slotResults[k], v);
   }
-  const lastSlots = [
-    ...new Set([...left.lastSlots, ...right.lastSlots]),
-  ].slice(0, MOCK_BANK_SIZE);
+  const fullSlots = Object.entries(slotResults)
+    .filter(([, r]) => isFullResult(r))
+    .map(([k]) => Number(k))
+    .filter((n) => Number.isFinite(n));
   const recentFingerprints = [
     ...left.recentFingerprints,
     ...right.recentFingerprints,
   ].slice(0, FINGERPRINT_WINDOW);
   return {
-    completedCount: Math.max(left.completedCount, right.completedCount, lastSlots.length),
+    completedCount: fullSlots.length,
     recentFingerprints,
-    lastSlots,
+    lastSlots: fullSlots,
     slotResults,
   };
 }

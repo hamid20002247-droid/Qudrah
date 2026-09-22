@@ -169,11 +169,14 @@ export type MockAttempt = {
   answers: (number | null)[];
 };
 
-/** Best full completion for one of the 20 mock exam slots. */
+/** Per-slot attempt — timing only when fullyAnswered (all 60). */
 export type MockSlotResult = {
   score: number;
   total: number;
-  totalTimeMs: number;
+  answeredCount: number;
+  /** Set only when every question was answered. */
+  totalTimeMs: number | null;
+  fullyAnswered: boolean;
   completedAt: string;
 };
 
