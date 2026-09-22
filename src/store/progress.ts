@@ -8,7 +8,7 @@ import type {
   RoundResult,
   SkillProgress,
 } from "@/lib/types";
-import { appendMockHistory } from "@/lib/mock/examEngine";
+import { appendMockHistory, mergeMockHistory } from "@/lib/mock/examEngine";
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -62,7 +62,12 @@ type ProgressActions = {
   recordMockExam: (
     fingerprints: string[],
     slot: number,
-    opts?: { fullyAnswered?: boolean }
+    opts?: {
+      fullyAnswered?: boolean;
+      score?: number;
+      total?: number;
+      totalTimeMs?: number;
+    }
   ) => void;
 };
 
@@ -88,6 +93,7 @@ export const useProgress = create<ProgressState & ProgressActions>()(
         completedCount: 0,
         recentFingerprints: [],
         lastSlots: [],
+        slotResults: {},
       },
 
       markPracticedToday: () => {
@@ -207,9 +213,24 @@ export const useProgress = create<ProgressState & ProgressActions>()(
           completedCount: 0,
           recentFingerprints: [],
           lastSlots: [],
+          slotResults: {},
         };
+        const fullyAnswered = Boolean(opts?.fullyAnswered);
         set({
-          mockHistory: appendMockHistory(prev, fingerprints, slot, opts),
+          mockHistory: appendMockHistory(prev, fingerprints, slot, {
+            fullyAnswered,
+            result:
+              fullyAnswered &&
+              opts?.score != null &&
+              opts?.total != null &&
+              opts?.totalTimeMs != null
+                ? {
+                    score: opts.score,
+                    total: opts.total,
+                    totalTimeMs: opts.totalTimeMs,
+                  }
+                : undefined,
+          }),
         });
       },
     }),

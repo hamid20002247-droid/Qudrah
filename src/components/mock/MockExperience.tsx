@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics";
 import { useClientReady } from "@/components/ClientBody";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { LtrNum } from "@/components/ui/LtrNum";
+import { formatMs } from "@/components/ui/ProgressRing";
 import { useProgress } from "@/store/progress";
 
 const MOCK_INTENT = "qudrah_mock_intent";
@@ -48,6 +49,35 @@ function GoogleMark() {
   );
 }
 
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={className}
+      aria-hidden
+    >
+      <path
+        d="M7 11V8a5 5 0 0 1 10 0v3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <rect
+        x="5"
+        y="11"
+        width="14"
+        height="10"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+}
+
 export function MockExperience() {
   const ready = useClientReady();
   const router = useRouter();
@@ -60,7 +90,7 @@ export function MockExperience() {
   const lastMock = useProgress((s) => s.lastMock);
 
   const [phase, setPhase] = useState<"lobby" | "exam">("lobby");
-  const [gated, setGated] = useState(false);
+  const [showGate, setShowGate] = useState(false);
   const [busyGoogle, setBusyGoogle] = useState(false);
   const [gateError, setGateError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -72,10 +102,12 @@ export function MockExperience() {
   const autoStarted = useRef(false);
 
   const guest = ready && configured && !loading && !user;
+  const signedIn = ready && configured && !loading && Boolean(user);
   const history = mockHistory ?? {
     completedCount: 0,
     recentFingerprints: [],
     lastSlots: [],
+    slotResults: {},
   };
 
   const exams = useMemo(() => listMockExamCards(history), [history]);
@@ -88,22 +120,38 @@ export function MockExperience() {
     [exams]
   );
 
-  const start = useCallback(
-    (slot: number, opts?: { gate?: boolean }) => {
-      const needGate = Boolean(opts?.gate);
-      track("mock_start_clicked", {
-        has_account: Boolean(user),
-        gated: needGate,
-        exam_slot: slot,
-        exam_number: slot + 1,
-      });
+  const beginExam = useCallback(
+    (slot: number) => {
       const built = buildMockExamAtSlot(slot, history, deviceId);
       setQuestions(built.questions);
       setMeta({ fingerprints: built.fingerprints, slot: built.slot });
       setPendingSlot(slot);
-      setGated(needGate);
       setPhase("exam");
-      if (needGate) {
+      setShowGate(false);
+      track("mock_started", {
+        size: built.questions.length,
+        mode: built.mode,
+        guest: false,
+        exam_slot: built.slot,
+        exam_number: built.slot + 1,
+      });
+    },
+    [history, deviceId]
+  );
+
+  /** Guests see exams but cannot enter — signup gate only. */
+  const requestExam = useCallback(
+    (slot: number) => {
+      track("mock_start_clicked", {
+        has_account: Boolean(user),
+        gated: guest,
+        exam_slot: slot,
+        exam_number: slot + 1,
+      });
+
+      if (guest) {
+        setPendingSlot(slot);
+        setShowGate(true);
         try {
           sessionStorage.setItem(MOCK_INTENT, "1");
           sessionStorage.setItem(MOCK_INTENT_SLOT, String(slot));
@@ -111,17 +159,13 @@ export function MockExperience() {
           /* ignore */
         }
         track("mock_gate_shown", { exam_slot: slot });
-      } else {
-        track("mock_started", {
-          size: built.questions.length,
-          mode: built.mode,
-          guest: false,
-          exam_slot: built.slot,
-          exam_number: built.slot + 1,
-        });
+        return;
       }
+
+      if (!signedIn && configured) return;
+      beginExam(slot);
     },
-    [user, history, deviceId]
+    [guest, user, signedIn, configured, beginExam]
   );
 
   useEffect(() => {
@@ -129,8 +173,9 @@ export function MockExperience() {
     track("mock_lobby_view", {
       exams_total: MOCK_BANK_SIZE,
       exams_done: doneCount,
+      guest,
     });
-  }, [ready, phase, doneCount]);
+  }, [ready, phase, doneCount, guest]);
 
   useEffect(() => {
     if (!ready || loading || !user || autoStarted.current) return;
@@ -144,11 +189,11 @@ export function MockExperience() {
         raw != null && raw !== "" ? Number(raw) : recommended;
       if (!Number.isFinite(slot)) return;
       autoStarted.current = true;
-      start(slot, { gate: false });
+      beginExam(slot);
     } catch {
       return;
     }
-  }, [ready, loading, user, start, phase, recommended]);
+  }, [ready, loading, user, beginExam, phase, recommended]);
 
   const closeGate = () => {
     try {
@@ -160,10 +205,7 @@ export function MockExperience() {
     track("mock_gate_dismissed", {
       exam_slot: pendingSlot ?? undefined,
     });
-    setPhase("lobby");
-    setGated(false);
-    setQuestions([]);
-    setMeta(null);
+    setShowGate(false);
     setPendingSlot(null);
     setGateError(null);
   };
@@ -222,7 +264,12 @@ export function MockExperience() {
       const fullyAnswered =
         qs.length === MOCK_EXAM_SIZE && answeredCount === MOCK_EXAM_SIZE;
       if (meta) {
-        recordMockExam(meta.fingerprints, meta.slot, { fullyAnswered });
+        recordMockExam(meta.fingerprints, meta.slot, {
+          fullyAnswered,
+          score,
+          total: qs.length,
+          totalTimeMs,
+        });
       }
       track("mock_completed", {
         score,
@@ -245,95 +292,30 @@ export function MockExperience() {
     const examLabel =
       meta != null ? `اختبار ${meta.slot + 1}` : "اختبار قدرات كمي";
     return (
-      <>
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
-          <FinalExam
-            title={examLabel}
-            questions={questions}
-            onComplete={finish}
-            paused={gated}
-            onExit={() => {
-              if (gated) {
-                closeGate();
-                return;
-              }
-              track("mock_exit_attempt", {
-                answered: questions.length,
-                exam_slot: meta?.slot,
-              });
-              if (
-                typeof window !== "undefined" &&
-                window.confirm("تبي تطلع؟ بيضيع التقدّم في هذا الاختبار.")
-              ) {
-                track("mock_abandoned", { exam_slot: meta?.slot });
-                setPhase("lobby");
-                setQuestions([]);
-                setMeta(null);
-                setPendingSlot(null);
-              }
-            }}
-            flushChrome
-          />
-        </div>
-
-        {gated && (
-          <div className="fixed inset-0 z-[70] flex flex-col justify-end">
-            <button
-              type="button"
-              className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
-              aria-label="إغلاق"
-              onClick={closeGate}
-            />
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="mock-gate-title"
-              className="relative mx-auto w-full max-w-lg px-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
-            >
-              <div className="overflow-hidden rounded-[1.75rem] bg-white p-5 shadow-[0_-16px_50px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-200/80">
-                <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
-                <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
-                  {pendingSlot != null
-                    ? `اختبار ${pendingSlot + 1} جاهز`
-                    : "الاختبار جاهز"}
-                </p>
-                <h2
-                  id="mock-gate-title"
-                  className="mt-1.5 text-center font-display text-[1.45rem] font-extrabold leading-snug text-ink"
-                >
-                  سجّل دخولك وابدأ
-                </h2>
-                <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-slate-500">
-                  ثواني بحساب Google، ونحفظ درجتك. مجاناً.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => void onGoogle()}
-                  disabled={busyGoogle}
-                  className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ink text-[15px] font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
-                    <GoogleMark />
-                  </span>
-                  {busyGoogle ? "لحظة…" : "سجّل دخولك مع Google"}
-                </button>
-                {gateError && (
-                  <p className="mt-3 text-center text-sm font-semibold text-rose-700">
-                    {gateError}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={closeGate}
-                  className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-slate-400"
-                >
-                  رجوع
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
+        <FinalExam
+          title={examLabel}
+          questions={questions}
+          onComplete={finish}
+          onExit={() => {
+            track("mock_exit_attempt", {
+              answered: questions.length,
+              exam_slot: meta?.slot,
+            });
+            if (
+              typeof window !== "undefined" &&
+              window.confirm("تبي تطلع؟ بيضيع التقدّم في هذا الاختبار.")
+            ) {
+              track("mock_abandoned", { exam_slot: meta?.slot });
+              setPhase("lobby");
+              setQuestions([]);
+              setMeta(null);
+              setPendingSlot(null);
+            }
+          }}
+          flushChrome
+        />
+      </div>
     );
   }
 
@@ -344,7 +326,6 @@ export function MockExperience() {
         aria-hidden
       />
 
-      {/* Hero — one job: what is this page */}
       <header className="animate-fade-up">
         <p className="text-[12px] font-bold tracking-wide text-teal-700">
           الاختبار الكامل
@@ -353,19 +334,27 @@ export function MockExperience() {
           20 اختبار قدرات كمي
         </h1>
         <p className="mt-2 max-w-[22rem] text-[14px] leading-relaxed text-slate-600">
-          كل اختبار {MOCK_EXAM_SIZE} سؤالاً في {MOCK_EXAM_SIZE} دقيقة — أسئلة
-          جديدة في كل مرة. اختر رقماً وابدأ. يُحسب مكتملاً فقط إذا أجبت على كل
-          الأسئلة.
+          كل اختبار {MOCK_EXAM_SIZE} سؤالاً · {MOCK_EXAM_SIZE} دقيقة. اختر
+          رقماً — بعد الإكمال يظهر درجتك ووقتك تحت الاختبار.
         </p>
       </header>
 
-      {/* Status — scannable, not a dashboard */}
+      {guest && (
+        <p
+          className="animate-fade-up mt-4 flex items-center gap-2 rounded-2xl bg-amber-50 px-3.5 py-2.5 text-[12px] font-semibold leading-snug text-amber-950 ring-1 ring-amber-100"
+          style={{ animationDelay: "40ms" }}
+        >
+          <LockIcon className="shrink-0 text-amber-700" />
+          شاهد الاختبارات كلها — للدخول سجّل بحساب Google (مجاناً).
+        </p>
+      )}
+
       <div
         className="animate-fade-up mt-5 flex items-stretch gap-2"
         style={{ animationDelay: "60ms" }}
       >
         <div className="flex-1 rounded-2xl bg-ink px-4 py-3.5 text-white">
-          <p className="text-[11px] font-bold text-teal-300">أنجزت</p>
+          <p className="text-[11px] font-bold text-teal-300">مكتمل (60/60)</p>
           <p className="mt-0.5 font-display text-2xl font-extrabold tabular-nums">
             <LtrNum>
               {doneCount}/{MOCK_BANK_SIZE}
@@ -386,16 +375,18 @@ export function MockExperience() {
         </div>
       </div>
 
-      {/* Primary CTA — recommended exam */}
       <button
         type="button"
-        onClick={() => start(recommended, { gate: guest })}
+        onClick={() => requestExam(recommended)}
         disabled={!ready || loading}
-        className="animate-fade-up mt-5 flex min-h-[4.25rem] w-full flex-col items-center justify-center rounded-[1.5rem] bg-teal-600 text-white shadow-[0_18px_40px_-18px_rgba(13,148,136,0.65)] transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-60"
+        className="animate-fade-up mt-5 flex min-h-[4.35rem] w-full flex-col items-center justify-center rounded-[1.5rem] bg-teal-600 text-white shadow-[0_18px_40px_-18px_rgba(13,148,136,0.65)] transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-60"
         style={{ animationDelay: "100ms" }}
       >
-        <span className="text-base font-extrabold">
-          ابدأ اختبار {recommended + 1}
+        <span className="flex items-center gap-2 text-base font-extrabold">
+          {guest && <LockIcon />}
+          {guest
+            ? `سجّل لبدء اختبار ${recommended + 1}`
+            : `ابدأ اختبار ${recommended + 1}`}
         </span>
         <span className="mt-1 text-[12px] font-bold text-teal-100">
           {MOCK_EXAM_SIZE} سؤال · {MOCK_EXAM_SIZE} دقيقة · مزيج كمي كامل
@@ -406,34 +397,93 @@ export function MockExperience() {
         className="animate-fade-up mt-6 text-[13px] font-bold text-slate-500"
         style={{ animationDelay: "140ms" }}
       >
-        أو اختر اختباراً بنفسك
+        كل الاختبارات
       </p>
 
-      {/* 20 exams — big tap targets, crystal clear */}
-      <ol className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-2">
+      <ol className="mt-3 grid grid-cols-2 gap-2.5">
         {exams.map((exam, idx) => (
           <ExamTile
             key={exam.slot}
             exam={exam}
             recommended={exam.slot === recommended}
+            locked={guest}
             delay={Math.min(idx, 12) * 28}
             disabled={!ready || loading}
-            onStart={() => start(exam.slot, { gate: guest })}
+            onStart={() => requestExam(exam.slot)}
           />
         ))}
       </ol>
 
-      <p className="mt-5 text-center text-[12px] leading-relaxed text-slate-400">
-        حساب · جبر · هندسة · إحصاء · مقارنات — نفس أسلوب الاختبار الحقيقي
+      <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400">
+        ملاحظة: الدرجة والوقت يُحفظان فقط إذا أجبت على الـ 60 سؤالاً كاملة.
       </p>
 
       <Link
         href="/skills"
-        className="mt-4 flex min-h-11 items-center justify-center text-sm font-semibold text-teal-800"
+        className="mt-3 flex min-h-11 items-center justify-center text-sm font-semibold text-teal-800"
         onClick={() => track("mock_lobby_skills_link")}
       >
         أفضّل إكمال مهارة أولاً
       </Link>
+
+      {showGate && (
+        <div className="fixed inset-0 z-[70] flex flex-col justify-end">
+          <button
+            type="button"
+            className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
+            aria-label="إغلاق"
+            onClick={closeGate}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mock-gate-title"
+            className="relative mx-auto w-full max-w-lg px-3 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          >
+            <div className="overflow-hidden rounded-[1.75rem] bg-white p-5 shadow-[0_-16px_50px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-200/80">
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
+              <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
+                {pendingSlot != null
+                  ? `اختبار ${pendingSlot + 1}`
+                  : "الاختبار"}
+              </p>
+              <h2
+                id="mock-gate-title"
+                className="mt-1.5 text-center font-display text-[1.45rem] font-extrabold leading-snug text-ink"
+              >
+                سجّل دخولك أولاً
+              </h2>
+              <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-slate-500">
+                الاختبارات ظاهرة للكل — الدخول وحفظ الدرجة يحتاج حساب Google.
+                مجاناً.
+              </p>
+              <button
+                type="button"
+                onClick={() => void onGoogle()}
+                disabled={busyGoogle}
+                className="mt-5 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl bg-ink text-[15px] font-extrabold text-white transition hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
+                  <GoogleMark />
+                </span>
+                {busyGoogle ? "لحظة…" : "سجّل دخولك مع Google"}
+              </button>
+              {gateError && (
+                <p className="mt-3 text-center text-sm font-semibold text-rose-700">
+                  {gateError}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={closeGate}
+                className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-slate-400"
+              >
+                رجوع
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -441,16 +491,24 @@ export function MockExperience() {
 function ExamTile({
   exam,
   recommended,
+  locked,
   delay,
   disabled,
   onStart,
 }: {
   exam: MockExamCard;
   recommended: boolean;
+  locked: boolean;
   delay: number;
   disabled: boolean;
   onStart: () => void;
 }) {
+  const showResult =
+    exam.completed &&
+    exam.bestScore != null &&
+    exam.bestTotal != null &&
+    exam.bestTimeMs != null;
+
   return (
     <li
       className="animate-fade-up list-none"
@@ -460,18 +518,20 @@ function ExamTile({
         type="button"
         onClick={onStart}
         disabled={disabled}
-        className={`flex min-h-[5.5rem] w-full flex-col items-start justify-between rounded-[1.35rem] p-3.5 text-start transition active:scale-[0.99] disabled:opacity-60 ${
-          recommended
+        className={`relative flex min-h-[6.75rem] w-full flex-col items-start justify-between rounded-[1.35rem] p-3.5 text-start transition active:scale-[0.99] disabled:opacity-60 ${
+          recommended && !exam.completed
             ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25 ring-2 ring-teal-400"
             : exam.completed
-              ? "bg-slate-50 text-ink ring-1 ring-slate-200"
-              : "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300"
+              ? "bg-white text-ink ring-1 ring-teal-200/80"
+              : locked
+                ? "bg-slate-50 text-ink ring-1 ring-slate-200"
+                : "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300"
         }`}
       >
         <div className="flex w-full items-center justify-between gap-2">
           <span
             className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold tabular-nums ${
-              recommended
+              recommended && !exam.completed
                 ? "bg-white/20 text-white"
                 : exam.completed
                   ? "bg-teal-100 text-teal-800"
@@ -482,33 +542,64 @@ function ExamTile({
             {exam.number}
           </span>
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              recommended
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              recommended && !exam.completed
                 ? "bg-white/20 text-white"
                 : exam.completed
                   ? "bg-teal-100 text-teal-800"
-                  : "bg-amber-50 text-amber-900"
+                  : locked
+                    ? "bg-slate-200/80 text-slate-600"
+                    : "bg-amber-50 text-amber-900"
             }`}
           >
-            {recommended ? "التالي" : exam.completed ? "مكتمل" : "جديد"}
+            {locked && !exam.completed && <LockIcon />}
+            {exam.completed
+              ? "مكتمل"
+              : recommended
+                ? locked
+                  ? "سجّل"
+                  : "التالي"
+                : locked
+                  ? "مقفل"
+                  : "جديد"}
           </span>
         </div>
+
         <div className="mt-2 w-full">
           <p
             className={`text-[14px] font-extrabold leading-none ${
-              recommended ? "text-white" : "text-ink"
+              recommended && !exam.completed ? "text-white" : "text-ink"
             }`}
           >
             {exam.title_ar}
           </p>
-          <p
-            className={`mt-1.5 text-[11px] font-semibold leading-snug tabular-nums ${
-              recommended ? "text-teal-50/90" : "text-slate-500"
-            }`}
-            dir="ltr"
-          >
-            {exam.questions} سؤال · {exam.minutes} د
-          </p>
+
+          {showResult ? (
+            <div
+              className="mt-2 flex items-baseline gap-2 tabular-nums"
+              dir="ltr"
+            >
+              <span className="text-[15px] font-extrabold text-teal-800">
+                <LtrNum>
+                  {exam.bestScore}/{exam.bestTotal}
+                </LtrNum>
+              </span>
+              <span className="text-[11px] font-bold text-slate-500">
+                · {formatMs(exam.bestTimeMs!)}
+              </span>
+            </div>
+          ) : (
+            <p
+              className={`mt-1.5 text-[11px] font-semibold leading-snug tabular-nums ${
+                recommended && !exam.completed
+                  ? "text-teal-50/90"
+                  : "text-slate-500"
+              }`}
+              dir="ltr"
+            >
+              {exam.questions} سؤال · {exam.minutes} د
+            </p>
+          )}
         </div>
       </button>
     </li>

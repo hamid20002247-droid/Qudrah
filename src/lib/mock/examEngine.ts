@@ -1,4 +1,4 @@
-import type { Question } from "@/lib/types";
+import type { Question, MockSlotResult } from "@/lib/types";
 import { shuffleInPlace } from "@/lib/content";
 import { withShuffledChoices } from "@/lib/drillDeck";
 import {
@@ -20,18 +20,21 @@ export {
 };
 
 export type MockHistoryState = {
-  /** How many full exams the student finished */
+  /** How many full exams the student finished (all 60 answered) */
   completedCount: number;
   /** Sliding window of fingerprints (anti-repeat) */
   recentFingerprints: string[];
-  /** Last exam slot indices used (for variety) */
+  /** Fully completed slot indices */
   lastSlots: number[];
+  /** Best full result per slot (key = String(slot)) */
+  slotResults: Record<string, MockSlotResult>;
 };
 
 export const EMPTY_MOCK_HISTORY: MockHistoryState = {
   completedCount: 0,
   recentFingerprints: [],
   lastSlots: [],
+  slotResults: {},
 };
 
 const FINGERPRINT_WINDOW = 420;
@@ -45,16 +48,19 @@ export type BuiltMockExam = {
 };
 
 export type MockExamCard = {
-  /** 0-based blueprint index */
   slot: number;
-  /** 1-based display number */
   number: number;
   title_ar: string;
   focus_ar: string;
   questions: number;
   minutes: number;
-  /** True only when the student answered all 60 questions in that exam. */
+  /** True only when the student answered all 60 questions. */
   completed: boolean;
+  /** Best full-run score — only when completed. */
+  bestScore: number | null;
+  bestTotal: number | null;
+  /** Best full-run total time (ms) — only when completed. */
+  bestTimeMs: number | null;
 };
 
 const FOCUS_ORDER = [
@@ -92,13 +98,27 @@ function focusFromMix(mix: ExamMix): string {
   return best;
 }
 
+function normalizeHistory(
+  history: Partial<MockHistoryState> | null | undefined
+): MockHistoryState {
+  return {
+    completedCount: history?.completedCount ?? 0,
+    recentFingerprints: history?.recentFingerprints ?? [],
+    lastSlots: history?.lastSlots ?? [],
+    slotResults: history?.slotResults ?? {},
+  };
+}
+
 /** Catalog of the 20 visible exams for the lobby. */
 export function listMockExamCards(
-  history: MockHistoryState
+  history: Partial<MockHistoryState>
 ): MockExamCard[] {
-  const completed = new Set(history.lastSlots);
+  const h = normalizeHistory(history);
+  const completed = new Set(h.lastSlots);
   return EXAM_BLUEPRINTS.map((bp, slot) => {
     const focus = focusFromMix(bp.mix);
+    const result = h.slotResults[String(slot)];
+    const isDone = completed.has(slot) && Boolean(result);
     return {
       slot,
       number: slot + 1,
@@ -106,34 +126,37 @@ export function listMockExamCards(
       focus_ar: `تركيز أوضح على ${focus}`,
       questions: MOCK_EXAM_SIZE,
       minutes: MOCK_EXAM_SIZE,
-      completed: completed.has(slot),
+      completed: isDone,
+      bestScore: isDone ? result!.score : null,
+      bestTotal: isDone ? result!.total : null,
+      bestTimeMs: isDone ? result!.totalTimeMs : null,
     };
   });
 }
 
-export function nextRecommendedSlot(history: MockHistoryState): number {
-  const completed = new Set(history.lastSlots);
+export function nextRecommendedSlot(
+  history: Partial<MockHistoryState>
+): number {
+  const h = normalizeHistory(history);
+  const completed = new Set(h.lastSlots);
   for (let i = 0; i < MOCK_BANK_SIZE; i++) {
     if (!completed.has(i)) return i;
   }
-  return history.completedCount % MOCK_BANK_SIZE;
+  return h.completedCount % MOCK_BANK_SIZE;
 }
 
-/**
- * Build a specific exam from the 20-slot bank (student picks the number).
- * Still avoids recent fingerprints so retakes feel fresh.
- */
 export function buildMockExamAtSlot(
   slot: number,
-  history: MockHistoryState,
+  history: Partial<MockHistoryState>,
   deviceId: string
 ): BuiltMockExam {
+  const h = normalizeHistory(history);
   const safeSlot =
     ((slot % MOCK_BANK_SIZE) + MOCK_BANK_SIZE) % MOCK_BANK_SIZE;
-  const avoid = new Set(history.recentFingerprints);
-  const attemptsOnSlot = history.lastSlots.filter((s) => s === safeSlot).length;
+  const avoid = new Set(h.recentFingerprints);
+  const attemptsOnSlot = h.lastSlots.filter((s) => s === safeSlot).length;
   const seedBase = hashStr(
-    `${deviceId}|mock|slot${safeSlot}|try${attemptsOnSlot}|n${history.completedCount}`
+    `${deviceId}|mock|slot${safeSlot}|try${attemptsOnSlot}|n${h.completedCount}`
   );
   const blueprint = EXAM_BLUEPRINTS[safeSlot]!;
   const seed = seedBase ^ (safeSlot * 7919) ^ (attemptsOnSlot * 1301);
@@ -146,21 +169,17 @@ export function buildMockExamAtSlot(
   return strip(gens, safeSlot, "bank", seed);
 }
 
-/**
- * Clever next-exam formula (auto path):
- * - Exams 1–20: walk distinct bank slots
- * - After 20: remix mode
- */
 export function buildNextMockExam(
-  history: MockHistoryState,
+  history: Partial<MockHistoryState>,
   deviceId: string
 ): BuiltMockExam {
-  const n = history.completedCount;
-  const avoid = new Set(history.recentFingerprints);
+  const h = normalizeHistory(history);
+  const n = h.completedCount;
+  const avoid = new Set(h.recentFingerprints);
   const seedBase = hashStr(`${deviceId}|mock|${n}`);
 
   if (n < MOCK_REMIX_AFTER) {
-    const used = new Set(history.lastSlots);
+    const used = new Set(h.lastSlots);
     let slot = n % MOCK_BANK_SIZE;
     for (let i = 0; i < MOCK_BANK_SIZE; i++) {
       const cand = (n + i * 3) % MOCK_BANK_SIZE;
@@ -200,34 +219,86 @@ function strip(
   return { questions, fingerprints, slot, mode, seed };
 }
 
+function pickBetterSlotResult(
+  prev: MockSlotResult | undefined,
+  next: MockSlotResult
+): MockSlotResult {
+  if (!prev) return next;
+  if (next.score > prev.score) return next;
+  if (next.score < prev.score) return prev;
+  // Same score → keep the faster run
+  return next.totalTimeMs < prev.totalTimeMs ? next : prev;
+}
+
 export function appendMockHistory(
-  prev: MockHistoryState,
+  prev: Partial<MockHistoryState>,
   fingerprints: string[],
   slot: number,
-  opts?: { fullyAnswered?: boolean }
+  opts?: {
+    fullyAnswered?: boolean;
+    result?: Omit<MockSlotResult, "completedAt"> & { completedAt?: string };
+  }
 ): MockHistoryState {
+  const base = normalizeHistory(prev);
   const recentFingerprints = [
     ...fingerprints,
-    ...prev.recentFingerprints,
+    ...base.recentFingerprints,
   ].slice(0, FINGERPRINT_WINDOW);
 
-  // Always remember seen questions (anti-repeat), even on partial submit.
-  // Only mark the slot completed when every question was answered.
   const fullyAnswered = opts?.fullyAnswered ?? true;
-  if (!fullyAnswered) {
+  if (!fullyAnswered || !opts?.result) {
     return {
-      ...prev,
+      ...base,
       recentFingerprints,
     };
   }
 
-  const lastSlots = [slot, ...prev.lastSlots.filter((s) => s !== slot)].slice(
+  const key = String(slot);
+  const incoming: MockSlotResult = {
+    score: opts.result.score,
+    total: opts.result.total,
+    totalTimeMs: opts.result.totalTimeMs,
+    completedAt: opts.result.completedAt ?? new Date().toISOString(),
+  };
+  const wasNew = !base.lastSlots.includes(slot);
+  const lastSlots = [slot, ...base.lastSlots.filter((s) => s !== slot)].slice(
     0,
     MOCK_BANK_SIZE
   );
+
   return {
-    completedCount: prev.completedCount + 1,
+    completedCount: wasNew ? base.completedCount + 1 : base.completedCount,
     recentFingerprints,
     lastSlots,
+    slotResults: {
+      ...base.slotResults,
+      [key]: pickBetterSlotResult(base.slotResults[key], incoming),
+    },
+  };
+}
+
+/** Merge two mock histories (local ↔ cloud). */
+export function mergeMockHistory(
+  a: Partial<MockHistoryState> | null | undefined,
+  b: Partial<MockHistoryState> | null | undefined
+): MockHistoryState {
+  const left = normalizeHistory(a);
+  const right = normalizeHistory(b);
+  const slotResults: Record<string, MockSlotResult> = { ...left.slotResults };
+  for (const [k, v] of Object.entries(right.slotResults)) {
+    slotResults[k] = pickBetterSlotResult(slotResults[k], v);
+  }
+  const lastSlots = [
+    ...new Set([...left.lastSlots, ...right.lastSlots]),
+  ].slice(0, MOCK_BANK_SIZE);
+  const recentFingerprints = [
+    ...left.recentFingerprints,
+    ...right.recentFingerprints,
+  ].slice(0, FINGERPRINT_WINDOW);
+  return {
+    completedCount: Math.max(left.completedCount, right.completedCount, lastSlots.length),
+    recentFingerprints,
+    lastSlots,
+    slotResults,
   };
 }

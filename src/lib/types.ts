@@ -169,6 +169,14 @@ export type MockAttempt = {
   answers: (number | null)[];
 };
 
+/** Best full completion for one of the 20 mock exam slots. */
+export type MockSlotResult = {
+  score: number;
+  total: number;
+  totalTimeMs: number;
+  completedAt: string;
+};
+
 /** Per-question review shown on /result (session only — not persisted long-term). */
 export type MockReviewItem = {
   prompt_ar: string;
@@ -188,10 +196,12 @@ export type ProgressState = {
   lastPracticeDate: string | null;
   continueSkillId: string | null;
   /** Anti-repeat history for full mock exams.
-   * `lastSlots` = exams fully answered (all 60 questions). */
+   * `lastSlots` = exams fully answered (all 60 questions).
+   * `slotResults` = best score + timing per completed slot. */
   mockHistory: {
     completedCount: number;
     recentFingerprints: string[];
     lastSlots: number[];
+    slotResults?: Record<string, MockSlotResult>;
   };
 };

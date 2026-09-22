@@ -1,4 +1,5 @@
 import type { ProgressState, RoundResult, SkillProgress } from "@/lib/types";
+import { mergeMockHistory } from "@/lib/mock/examEngine";
 
 export type ProgressSnapshot = Pick<
   ProgressState,
@@ -116,6 +117,7 @@ export function snapshotFromState(state: ProgressSnapshot): ProgressSnapshot {
       completedCount: 0,
       recentFingerprints: [],
       lastSlots: [],
+      slotResults: {},
     },
   };
 }
@@ -171,12 +173,6 @@ export function mergeProgressSnapshots(
     streakDays,
     lastPracticeDate: lastPracticeDate ?? null,
     continueSkillId: local.continueSkillId ?? remote.continueSkillId ?? null,
-    mockHistory: (() => {
-      const a = local.mockHistory;
-      const b = remote.mockHistory;
-      if (!a) return b ?? { completedCount: 0, recentFingerprints: [], lastSlots: [] };
-      if (!b) return a;
-      return a.completedCount >= b.completedCount ? a : b;
-    })(),
+    mockHistory: mergeMockHistory(local.mockHistory, remote.mockHistory),
   };
 }
