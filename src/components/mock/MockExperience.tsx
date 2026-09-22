@@ -628,13 +628,6 @@ function ExamTile({
           >
             {exam.title_ar}
           </p>
-          <p
-            className={`mt-1 text-[10px] font-semibold leading-snug ${
-              isNext ? "text-teal-50/85" : "text-slate-500"
-            }`}
-          >
-            {exam.focus_ar}
-          </p>
 
           {hasScore ? (
             <div className="mt-2 space-y-1.5">
@@ -708,12 +701,12 @@ function ExamTile({
             </div>
           ) : (
             <p
-              className={`mt-2 text-[11px] font-semibold leading-snug tabular-nums ${
+              className={`mt-2 text-[11px] font-semibold leading-snug ${
                 isNext ? "text-teal-50/90" : "text-slate-500"
               }`}
-              dir="ltr"
             >
-              {exam.questions} سؤال · {exam.minutes} د
+              <LtrNum>{exam.questions}</LtrNum> سؤال ·{" "}
+              <LtrNum>{exam.minutes}</LtrNum> د
             </p>
           )}
         </div>
