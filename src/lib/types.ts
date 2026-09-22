@@ -187,7 +187,8 @@ export type ProgressState = {
   streakDays: number;
   lastPracticeDate: string | null;
   continueSkillId: string | null;
-  /** Anti-repeat history for full mock exams */
+  /** Anti-repeat history for full mock exams.
+   * `lastSlots` = exams fully answered (all 60 questions). */
   mockHistory: {
     completedCount: number;
     recentFingerprints: string[];

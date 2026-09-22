@@ -3,9 +3,9 @@ import { MockExperience } from "@/components/mock/MockExperience";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "٢٠ اختبار قدرات كمي",
+  title: "20 اختبار قدرات كمي",
   description:
-    "٢٠ اختباراً كاملاً للقسم الكمي: كل اختبار ٦٠ سؤالاً في ٦٠ دقيقة بأسئلة جديدة. اختر اختباراً وابدأ.",
+    "20 اختباراً كاملاً للقسم الكمي: كل اختبار 60 سؤالاً في 60 دقيقة بأسئلة جديدة. يُحسب مكتملاً فقط إذا أجبت على كل الأسئلة.",
   path: "/mock",
 });
 

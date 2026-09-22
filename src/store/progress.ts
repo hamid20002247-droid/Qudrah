@@ -59,7 +59,11 @@ type ProgressActions = {
   setContinueSkill: (skillId: string | null) => void;
   getSkillProgress: (skillId: string) => SkillProgress;
   daysUntilTest: () => number | null;
-  recordMockExam: (fingerprints: string[], slot: number) => void;
+  recordMockExam: (
+    fingerprints: string[],
+    slot: number,
+    opts?: { fullyAnswered?: boolean }
+  ) => void;
 };
 
 export function isFinalUnlocked(
@@ -198,14 +202,14 @@ export const useProgress = create<ProgressState & ProgressActions>()(
         return diff;
       },
 
-      recordMockExam: (fingerprints, slot) => {
+      recordMockExam: (fingerprints, slot, opts) => {
         const prev = get().mockHistory ?? {
           completedCount: 0,
           recentFingerprints: [],
           lastSlots: [],
         };
         set({
-          mockHistory: appendMockHistory(prev, fingerprints, slot),
+          mockHistory: appendMockHistory(prev, fingerprints, slot, opts),
         });
       },
     }),

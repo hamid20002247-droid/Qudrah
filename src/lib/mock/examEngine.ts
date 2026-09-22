@@ -53,7 +53,8 @@ export type MockExamCard = {
   focus_ar: string;
   questions: number;
   minutes: number;
-  attempted: boolean;
+  /** True only when the student answered all 60 questions in that exam. */
+  completed: boolean;
 };
 
 const FOCUS_ORDER = [
@@ -95,31 +96,27 @@ function focusFromMix(mix: ExamMix): string {
 export function listMockExamCards(
   history: MockHistoryState
 ): MockExamCard[] {
-  const attempted = new Set(history.lastSlots);
+  const completed = new Set(history.lastSlots);
   return EXAM_BLUEPRINTS.map((bp, slot) => {
     const focus = focusFromMix(bp.mix);
     return {
       slot,
       number: slot + 1,
-      title_ar: `اختبار ${toArabicDigits(slot + 1)}`,
+      title_ar: `اختبار ${slot + 1}`,
       focus_ar: `تركيز أوضح على ${focus}`,
       questions: MOCK_EXAM_SIZE,
       minutes: MOCK_EXAM_SIZE,
-      attempted: attempted.has(slot),
+      completed: completed.has(slot),
     };
   });
 }
 
 export function nextRecommendedSlot(history: MockHistoryState): number {
-  const attempted = new Set(history.lastSlots);
+  const completed = new Set(history.lastSlots);
   for (let i = 0; i < MOCK_BANK_SIZE; i++) {
-    if (!attempted.has(i)) return i;
+    if (!completed.has(i)) return i;
   }
   return history.completedCount % MOCK_BANK_SIZE;
-}
-
-function toArabicDigits(n: number): string {
-  return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]!);
 }
 
 /**
@@ -206,12 +203,24 @@ function strip(
 export function appendMockHistory(
   prev: MockHistoryState,
   fingerprints: string[],
-  slot: number
+  slot: number,
+  opts?: { fullyAnswered?: boolean }
 ): MockHistoryState {
   const recentFingerprints = [
     ...fingerprints,
     ...prev.recentFingerprints,
   ].slice(0, FINGERPRINT_WINDOW);
+
+  // Always remember seen questions (anti-repeat), even on partial submit.
+  // Only mark the slot completed when every question was answered.
+  const fullyAnswered = opts?.fullyAnswered ?? true;
+  if (!fullyAnswered) {
+    return {
+      ...prev,
+      recentFingerprints,
+    };
+  }
+
   const lastSlots = [slot, ...prev.lastSlots.filter((s) => s !== slot)].slice(
     0,
     MOCK_BANK_SIZE

@@ -48,10 +48,6 @@ function GoogleMark() {
   );
 }
 
-function arabicNum(n: number): string {
-  return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]!);
-}
-
 export function MockExperience() {
   const ready = useClientReady();
   const router = useRouter();
@@ -88,7 +84,7 @@ export function MockExperience() {
     [history]
   );
   const doneCount = useMemo(
-    () => exams.filter((e) => e.attempted).length,
+    () => exams.filter((e) => e.completed).length,
     [exams]
   );
 
@@ -222,10 +218,17 @@ export function MockExperience() {
         };
       });
       saveMock(attempt);
-      if (meta) recordMockExam(meta.fingerprints, meta.slot);
+      const answeredCount = records.filter((r) => r.chosen >= 0).length;
+      const fullyAnswered =
+        qs.length === MOCK_EXAM_SIZE && answeredCount === MOCK_EXAM_SIZE;
+      if (meta) {
+        recordMockExam(meta.fingerprints, meta.slot, { fullyAnswered });
+      }
       track("mock_completed", {
         score,
         total: qs.length,
+        answered: answeredCount,
+        fully_answered: fullyAnswered,
         total_time: totalTimeMs,
         guest: !user,
         exam_slot: meta?.slot,
@@ -240,7 +243,7 @@ export function MockExperience() {
 
   if (phase === "exam" && questions.length > 0) {
     const examLabel =
-      meta != null ? `اختبار ${arabicNum(meta.slot + 1)}` : "اختبار قدرات كمي";
+      meta != null ? `اختبار ${meta.slot + 1}` : "اختبار قدرات كمي";
     return (
       <>
         <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
@@ -291,7 +294,7 @@ export function MockExperience() {
                 <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
                 <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
                   {pendingSlot != null
-                    ? `اختبار ${arabicNum(pendingSlot + 1)} جاهز`
+                    ? `اختبار ${pendingSlot + 1} جاهز`
                     : "الاختبار جاهز"}
                 </p>
                 <h2
@@ -347,12 +350,12 @@ export function MockExperience() {
           الاختبار الكامل
         </p>
         <h1 className="mt-1.5 font-display text-[1.85rem] font-extrabold leading-snug text-ink">
-          ٢٠ اختبار قدرات كمي
+          20 اختبار قدرات كمي
         </h1>
         <p className="mt-2 max-w-[22rem] text-[14px] leading-relaxed text-slate-600">
-          كل اختبار {arabicNum(MOCK_EXAM_SIZE)} سؤالاً في{" "}
-          {arabicNum(MOCK_EXAM_SIZE)} دقيقة — أسئلة جديدة في كل مرة. اختر
-          رقماً وابدأ.
+          كل اختبار {MOCK_EXAM_SIZE} سؤالاً في {MOCK_EXAM_SIZE} دقيقة — أسئلة
+          جديدة في كل مرة. اختر رقماً وابدأ. يُحسب مكتملاً فقط إذا أجبت على كل
+          الأسئلة.
         </p>
       </header>
 
@@ -392,11 +395,10 @@ export function MockExperience() {
         style={{ animationDelay: "100ms" }}
       >
         <span className="text-base font-extrabold">
-          ابدأ اختبار {arabicNum(recommended + 1)}
+          ابدأ اختبار {recommended + 1}
         </span>
         <span className="mt-1 text-[12px] font-bold text-teal-100">
-          {arabicNum(MOCK_EXAM_SIZE)} سؤال · {arabicNum(MOCK_EXAM_SIZE)} دقيقة
-          · مزيج كمي كامل
+          {MOCK_EXAM_SIZE} سؤال · {MOCK_EXAM_SIZE} دقيقة · مزيج كمي كامل
         </span>
       </button>
 
@@ -461,7 +463,7 @@ function ExamTile({
         className={`flex min-h-[5.5rem] w-full flex-col items-start justify-between rounded-[1.35rem] p-3.5 text-start transition active:scale-[0.99] disabled:opacity-60 ${
           recommended
             ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25 ring-2 ring-teal-400"
-            : exam.attempted
+            : exam.completed
               ? "bg-slate-50 text-ink ring-1 ring-slate-200"
               : "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300"
         }`}
@@ -471,23 +473,24 @@ function ExamTile({
             className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold tabular-nums ${
               recommended
                 ? "bg-white/20 text-white"
-                : exam.attempted
+                : exam.completed
                   ? "bg-teal-100 text-teal-800"
                   : "bg-slate-100 text-slate-700"
             }`}
+            dir="ltr"
           >
-            {arabicNum(exam.number)}
+            {exam.number}
           </span>
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
               recommended
                 ? "bg-white/20 text-white"
-                : exam.attempted
+                : exam.completed
                   ? "bg-teal-100 text-teal-800"
                   : "bg-amber-50 text-amber-900"
             }`}
           >
-            {recommended ? "التالي" : exam.attempted ? "مكتمل" : "جديد"}
+            {recommended ? "التالي" : exam.completed ? "مكتمل" : "جديد"}
           </span>
         </div>
         <div className="mt-2 w-full">
@@ -499,11 +502,12 @@ function ExamTile({
             {exam.title_ar}
           </p>
           <p
-            className={`mt-1.5 text-[11px] font-semibold leading-snug ${
+            className={`mt-1.5 text-[11px] font-semibold leading-snug tabular-nums ${
               recommended ? "text-teal-50/90" : "text-slate-500"
             }`}
+            dir="ltr"
           >
-            {arabicNum(exam.questions)} سؤال · {arabicNum(exam.minutes)} د
+            {exam.questions} سؤال · {exam.minutes} د
           </p>
         </div>
       </button>
