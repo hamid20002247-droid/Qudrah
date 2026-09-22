@@ -9,6 +9,7 @@ import {
   MOCK_EXAM_SIZE,
   MOCK_REMIX_AFTER,
   type GenQ,
+  type ExamMix,
 } from "./generators";
 import { hashStr } from "./rng";
 
@@ -33,7 +34,7 @@ export const EMPTY_MOCK_HISTORY: MockHistoryState = {
   lastSlots: [],
 };
 
-const FINGERPRINT_WINDOW = 420; // ~7 exams of memory
+const FINGERPRINT_WINDOW = 420;
 
 export type BuiltMockExam = {
   questions: Question[];
@@ -43,11 +44,115 @@ export type BuiltMockExam = {
   seed: number;
 };
 
+export type MockExamCard = {
+  /** 0-based blueprint index */
+  slot: number;
+  /** 1-based display number */
+  number: number;
+  title_ar: string;
+  focus_ar: string;
+  questions: number;
+  minutes: number;
+  attempted: boolean;
+};
+
+const FOCUS_ORDER = [
+  "حساب",
+  "جبر",
+  "هندسة",
+  "إحصاء",
+  "مقارنات",
+] as const;
+
+function focusFromMix(mix: ExamMix): string {
+  const scores: Record<(typeof FOCUS_ORDER)[number], number> = {
+    حساب:
+      (mix.percent ?? 0) +
+      (mix.ratio ?? 0) +
+      (mix.successive ?? 0) +
+      (mix.average ?? 0) +
+      (mix.buy_sell ?? 0) +
+      (mix.fraction ?? 0) +
+      (mix.rate ?? 0) +
+      (mix.number_sense ?? 0),
+    جبر: mix.algebra ?? 0,
+    هندسة: mix.geometry ?? 0,
+    إحصاء: (mix.statistics ?? 0) + (mix.probability ?? 0),
+    مقارنات: mix.comparison ?? 0,
+  };
+  let best: (typeof FOCUS_ORDER)[number] = "حساب";
+  let bestN = -1;
+  for (const k of FOCUS_ORDER) {
+    if (scores[k] > bestN) {
+      bestN = scores[k];
+      best = k;
+    }
+  }
+  return best;
+}
+
+/** Catalog of the 20 visible exams for the lobby. */
+export function listMockExamCards(
+  history: MockHistoryState
+): MockExamCard[] {
+  const attempted = new Set(history.lastSlots);
+  return EXAM_BLUEPRINTS.map((bp, slot) => {
+    const focus = focusFromMix(bp.mix);
+    return {
+      slot,
+      number: slot + 1,
+      title_ar: `اختبار ${toArabicDigits(slot + 1)}`,
+      focus_ar: `تركيز أوضح على ${focus}`,
+      questions: MOCK_EXAM_SIZE,
+      minutes: MOCK_EXAM_SIZE,
+      attempted: attempted.has(slot),
+    };
+  });
+}
+
+export function nextRecommendedSlot(history: MockHistoryState): number {
+  const attempted = new Set(history.lastSlots);
+  for (let i = 0; i < MOCK_BANK_SIZE; i++) {
+    if (!attempted.has(i)) return i;
+  }
+  return history.completedCount % MOCK_BANK_SIZE;
+}
+
+function toArabicDigits(n: number): string {
+  return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]!);
+}
+
 /**
- * Clever next-exam formula:
- * - Exams 1–10: walk distinct bank slots (15 available) with fresh seeds
- * - After 10: remix mode — blend blueprints + avoid recent fingerprints
- *   so repeats feel like new numbers/contexts, not déjà vu
+ * Build a specific exam from the 20-slot bank (student picks the number).
+ * Still avoids recent fingerprints so retakes feel fresh.
+ */
+export function buildMockExamAtSlot(
+  slot: number,
+  history: MockHistoryState,
+  deviceId: string
+): BuiltMockExam {
+  const safeSlot =
+    ((slot % MOCK_BANK_SIZE) + MOCK_BANK_SIZE) % MOCK_BANK_SIZE;
+  const avoid = new Set(history.recentFingerprints);
+  const attemptsOnSlot = history.lastSlots.filter((s) => s === safeSlot).length;
+  const seedBase = hashStr(
+    `${deviceId}|mock|slot${safeSlot}|try${attemptsOnSlot}|n${history.completedCount}`
+  );
+  const blueprint = EXAM_BLUEPRINTS[safeSlot]!;
+  const seed = seedBase ^ (safeSlot * 7919) ^ (attemptsOnSlot * 1301);
+  const gens = generateExamQuestions(
+    seed,
+    blueprint.mix,
+    avoid,
+    MOCK_EXAM_SIZE
+  );
+  return strip(gens, safeSlot, "bank", seed);
+}
+
+/**
+ * Clever next-exam formula (auto path):
+ * - Exams 1–20: walk distinct bank slots
+ * - After 20: remix mode
  */
 export function buildNextMockExam(
   history: MockHistoryState,
@@ -58,7 +163,6 @@ export function buildNextMockExam(
   const seedBase = hashStr(`${deviceId}|mock|${n}`);
 
   if (n < MOCK_REMIX_AFTER) {
-    // Prefer unused slots among the 15
     const used = new Set(history.lastSlots);
     let slot = n % MOCK_BANK_SIZE;
     for (let i = 0; i < MOCK_BANK_SIZE; i++) {
@@ -70,11 +174,15 @@ export function buildNextMockExam(
     }
     const blueprint = EXAM_BLUEPRINTS[slot]!;
     const seed = seedBase ^ (slot * 7919);
-    const gens = generateExamQuestions(seed, blueprint.mix, avoid, MOCK_EXAM_SIZE);
+    const gens = generateExamQuestions(
+      seed,
+      blueprint.mix,
+      avoid,
+      MOCK_EXAM_SIZE
+    );
     return strip(gens, slot, "bank", seed);
   }
 
-  // Endless remix — rotate slot hint but always remix
   const slot = (n * 5 + hashStr(deviceId)) % MOCK_BANK_SIZE;
   const seed = seedBase ^ 0xa5a5a5a5 ^ n;
   const gens = generateRemixExam(seed, avoid, MOCK_EXAM_SIZE);
@@ -87,7 +195,6 @@ function strip(
   mode: "bank" | "remix",
   seed: number
 ): BuiltMockExam {
-  // Fresh question order + choice order on every exam entrance
   const ordered = shuffleInPlace([...gens]);
   const fingerprints = ordered.map((g) => g.fingerprint);
   const questions: Question[] = ordered.map(({ fingerprint: _fp, ...rest }) =>
@@ -105,7 +212,10 @@ export function appendMockHistory(
     ...fingerprints,
     ...prev.recentFingerprints,
   ].slice(0, FINGERPRINT_WINDOW);
-  const lastSlots = [slot, ...prev.lastSlots].slice(0, MOCK_BANK_SIZE);
+  const lastSlots = [slot, ...prev.lastSlots.filter((s) => s !== slot)].slice(
+    0,
+    MOCK_BANK_SIZE
+  );
   return {
     completedCount: prev.completedCount + 1,
     recentFingerprints,

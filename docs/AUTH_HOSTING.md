@@ -30,7 +30,7 @@ fall back to Site URL = production and break localhost login).
 
 Do **not** put `service_role` in the client or in `publicConfig.ts`.
 
-PostHog runs **only in production** on `https://qodrah.vercel.app`. Do not add localhost as an authorized domain. The SDK sends plain JSON to **`https://us.i.posthog.com`** (`disable_compression: true` — current posthog-js gzip-without-query is rejected by US ingest with 400). Persistence is **localStorage only** — no tracking cookies, no cookie banner, no session replay. Every event includes `auth_state` (`guest` | `signed_in`). No PostHog env vars are required on Vercel.
+PostHog runs **only in production**. Autocapture is on (clicks, inputs, submits), plus pageviews, heatmaps, dead clicks, performance, and session replay (inputs masked). Named funnel events still fire. Persist is **localStorage only**. Every event includes `auth_state` (`guest` | `signed_in`). No PostHog env vars are required on Vercel.
 
 ## Supabase Auth URLs
 

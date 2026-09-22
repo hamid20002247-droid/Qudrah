@@ -45,11 +45,8 @@ function enrich(props?: AnalyticsProps): AnalyticsProps {
 }
 
 /**
- * Lean free-tier PostHog:
- * - Named funnel events + pageviews only (no session replay / heatmaps / autoclick spam)
- * - Guests and signed-in share the same events; `auth_state` is on every event
- * - Exam timer stays in-app only — we send totals on submit, not per-second ticks
- * - Default api_host is PostHog US direct (Vercel /ingest proxies corrupt gzip bodies)
+ * Full-behavior PostHog: autocapture every click/change/submit, pageviews,
+ * heatmaps, dead clicks, performance, and session replay — plus named funnel events.
  */
 export function initAnalytics() {
   if (typeof window === "undefined" || initialized || attempted) return;
@@ -58,9 +55,6 @@ export function initAnalytics() {
   const key = POSTHOG_KEY;
   if (!key) return;
 
-  // Direct US ingest — Vercel /ingest proxies corrupt bodies.
-  // disable_compression: posthog-js 1.43x sends gzip without ?compression=gzip-js,
-  // and US ingest then returns 400 "missing event name".
   const host =
     process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
@@ -71,13 +65,21 @@ export function initAnalytics() {
     person_profiles: "always",
     persistence: "localStorage",
     persistence_name: "ph_qudrah",
-    capture_pageview: false,
+    // SPA pageviews via history; Autocapture covers clicks/forms.
+    // Custom PostHogPageView disabled to avoid double $pageview.
+    capture_pageview: "history_change",
     capture_pageleave: true,
-    autocapture: false,
-    capture_heatmaps: false,
-    capture_dead_clicks: false,
-    capture_performance: false,
-    disable_session_recording: true,
+    autocapture: true,
+    capture_heatmaps: true,
+    capture_dead_clicks: true,
+    capture_performance: true,
+    disable_session_recording: false,
+    enable_recording_console_log: true,
+    session_recording: {
+      maskAllInputs: true,
+      maskTextSelector: "[data-ph-mask]",
+      recordCrossOriginIframes: false,
+    },
     disable_surveys: true,
     disable_compression: true,
     opt_out_useragent_filter: true,
@@ -85,8 +87,6 @@ export function initAnalytics() {
     opt_out_capturing_by_default: false,
     sanitize_properties: (props) => {
       const next = { ...props };
-      // Never delete `token` — PostHog puts the project API key there and
-      // needs it to build api_key on the capture payload.
       delete next.password;
       delete next.access_token;
       delete next.refresh_token;
@@ -102,6 +102,7 @@ export function initAnalytics() {
       });
       window.setTimeout(() => {
         ph.opt_in_capturing();
+        ph.startSessionRecording?.();
         initialized = true;
         for (const identify of pendingIdentity) identify();
         pendingIdentity = [];

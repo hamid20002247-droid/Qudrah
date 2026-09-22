@@ -8,6 +8,7 @@ import type {
   RoundResult,
   SkillProgress,
 } from "@/lib/types";
+import { appendMockHistory } from "@/lib/mock/examEngine";
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -203,17 +204,8 @@ export const useProgress = create<ProgressState & ProgressActions>()(
           recentFingerprints: [],
           lastSlots: [],
         };
-        const recentFingerprints = [
-          ...fingerprints,
-          ...prev.recentFingerprints,
-        ].slice(0, 420);
-        const lastSlots = [slot, ...prev.lastSlots].slice(0, 15);
         set({
-          mockHistory: {
-            completedCount: prev.completedCount + 1,
-            recentFingerprints,
-            lastSlots,
-          },
+          mockHistory: appendMockHistory(prev, fingerprints, slot),
         });
       },
     }),

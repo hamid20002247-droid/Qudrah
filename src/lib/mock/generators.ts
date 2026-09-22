@@ -1286,9 +1286,9 @@ function sumMix(mix: ExamMix): number {
   return Object.values(mix).reduce((a, c) => a + (c ?? 0), 0);
 }
 
-/** 15 exam blueprints — slight jitter around official mix, always 60. */
+/** 20 exam blueprints — slight jitter around official mix, always 60. */
 export const EXAM_BLUEPRINTS: { id: string; mix: ExamMix }[] = Array.from(
-  { length: 15 },
+  { length: 20 },
   (_, i) => {
     const rng = mulberry32(1000 + i * 97);
     const mix: ExamMix = { ...OFFICIAL_MIX_60 };
@@ -1302,6 +1302,8 @@ export const EXAM_BLUEPRINTS: { id: string; mix: ExamMix }[] = Array.from(
     if (rng() > 0.55) bump("statistics", "probability");
     if (rng() > 0.6) bump("geometry", "comparison");
     if (rng() > 0.5) bump("successive", "percent");
+    if (rng() > 0.55) bump("fraction", "rate");
+    if (rng() > 0.6) bump("buy_sell", "average");
     let total = sumMix(mix);
     while (total < 60) {
       mix.percent = (mix.percent ?? 0) + 1;
@@ -1321,7 +1323,8 @@ export const EXAM_BLUEPRINTS: { id: string; mix: ExamMix }[] = Array.from(
 
 export const MOCK_EXAM_SIZE = 60;
 export const MOCK_BANK_SIZE = EXAM_BLUEPRINTS.length;
-export const MOCK_REMIX_AFTER = 10;
+/** First 20 finishes walk the bank; after that remix forever. */
+export const MOCK_REMIX_AFTER = 20;
 
 function genForPattern(pattern: SubPattern, rng: Rng, seq: number): GenQ {
   const gens = PATTERN_GENS[pattern];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Question } from "@/lib/types";
@@ -8,7 +8,14 @@ import {
   FinalExam,
   type FinalAnswerRecord,
 } from "@/components/skill/FinalExam";
-import { buildNextMockExam, MOCK_EXAM_SIZE } from "@/lib/mock/examEngine";
+import {
+  buildMockExamAtSlot,
+  listMockExamCards,
+  nextRecommendedSlot,
+  MOCK_BANK_SIZE,
+  MOCK_EXAM_SIZE,
+  type MockExamCard,
+} from "@/lib/mock/examEngine";
 import { track } from "@/lib/analytics";
 import { useClientReady } from "@/components/ClientBody";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -16,6 +23,7 @@ import { LtrNum } from "@/components/ui/LtrNum";
 import { useProgress } from "@/store/progress";
 
 const MOCK_INTENT = "qudrah_mock_intent";
+const MOCK_INTENT_SLOT = "qudrah_mock_intent_slot";
 
 function GoogleMark() {
   return (
@@ -40,6 +48,10 @@ function GoogleMark() {
   );
 }
 
+function arabicNum(n: number): string {
+  return String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]!);
+}
+
 export function MockExperience() {
   const ready = useClientReady();
   const router = useRouter();
@@ -60,51 +72,69 @@ export function MockExperience() {
     fingerprints: string[];
     slot: number;
   } | null>(null);
+  const [pendingSlot, setPendingSlot] = useState<number | null>(null);
   const autoStarted = useRef(false);
 
   const guest = ready && configured && !loading && !user;
+  const history = mockHistory ?? {
+    completedCount: 0,
+    recentFingerprints: [],
+    lastSlots: [],
+  };
+
+  const exams = useMemo(() => listMockExamCards(history), [history]);
+  const recommended = useMemo(
+    () => nextRecommendedSlot(history),
+    [history]
+  );
+  const doneCount = useMemo(
+    () => exams.filter((e) => e.attempted).length,
+    [exams]
+  );
 
   const start = useCallback(
-    (opts?: { gate?: boolean }) => {
+    (slot: number, opts?: { gate?: boolean }) => {
       const needGate = Boolean(opts?.gate);
       track("mock_start_clicked", {
         has_account: Boolean(user),
         gated: needGate,
+        exam_slot: slot,
+        exam_number: slot + 1,
       });
-      const built = buildNextMockExam(
-        mockHistory ?? {
-          completedCount: 0,
-          recentFingerprints: [],
-          lastSlots: [],
-        },
-        deviceId
-      );
+      const built = buildMockExamAtSlot(slot, history, deviceId);
       setQuestions(built.questions);
       setMeta({ fingerprints: built.fingerprints, slot: built.slot });
+      setPendingSlot(slot);
       setGated(needGate);
       setPhase("exam");
       if (needGate) {
         try {
           sessionStorage.setItem(MOCK_INTENT, "1");
+          sessionStorage.setItem(MOCK_INTENT_SLOT, String(slot));
         } catch {
           /* ignore */
         }
-        track("mock_gate_shown");
+        track("mock_gate_shown", { exam_slot: slot });
       } else {
         track("mock_started", {
           size: built.questions.length,
           mode: built.mode,
           guest: false,
+          exam_slot: built.slot,
+          exam_number: built.slot + 1,
         });
       }
     },
-    [user, mockHistory, deviceId]
+    [user, history, deviceId]
   );
 
   useEffect(() => {
     if (!ready || phase !== "lobby") return;
-    track("mock_lobby_view");
-  }, [ready, phase]);
+    track("mock_lobby_view", {
+      exams_total: MOCK_BANK_SIZE,
+      exams_done: doneCount,
+    });
+  }, [ready, phase, doneCount]);
 
   useEffect(() => {
     if (!ready || loading || !user || autoStarted.current) return;
@@ -112,31 +142,42 @@ export function MockExperience() {
     try {
       if (sessionStorage.getItem(MOCK_INTENT) !== "1") return;
       sessionStorage.removeItem(MOCK_INTENT);
+      const raw = sessionStorage.getItem(MOCK_INTENT_SLOT);
+      sessionStorage.removeItem(MOCK_INTENT_SLOT);
+      const slot =
+        raw != null && raw !== "" ? Number(raw) : recommended;
+      if (!Number.isFinite(slot)) return;
+      autoStarted.current = true;
+      start(slot, { gate: false });
     } catch {
       return;
     }
-    autoStarted.current = true;
-    start({ gate: false });
-  }, [ready, loading, user, start, phase]);
+  }, [ready, loading, user, start, phase, recommended]);
 
   const closeGate = () => {
     try {
       sessionStorage.removeItem(MOCK_INTENT);
+      sessionStorage.removeItem(MOCK_INTENT_SLOT);
     } catch {
       /* ignore */
     }
-    track("mock_gate_dismissed");
+    track("mock_gate_dismissed", {
+      exam_slot: pendingSlot ?? undefined,
+    });
     setPhase("lobby");
     setGated(false);
     setQuestions([]);
     setMeta(null);
+    setPendingSlot(null);
     setGateError(null);
   };
 
   const onGoogle = async () => {
     setGateError(null);
     setBusyGoogle(true);
-    track("mock_gate_google_clicked");
+    track("mock_gate_google_clicked", {
+      exam_slot: pendingSlot ?? undefined,
+    });
     try {
       const err = await signInWithGoogle("/mock");
       if (err) setGateError(err);
@@ -187,6 +228,8 @@ export function MockExperience() {
         total: qs.length,
         total_time: totalTimeMs,
         guest: !user,
+        exam_slot: meta?.slot,
+        exam_number: meta ? meta.slot + 1 : undefined,
       });
       sessionStorage.setItem("qudrah_last_mock", JSON.stringify(attempt));
       sessionStorage.setItem("qudrah_last_mock_review", JSON.stringify(review));
@@ -196,11 +239,13 @@ export function MockExperience() {
   );
 
   if (phase === "exam" && questions.length > 0) {
+    const examLabel =
+      meta != null ? `اختبار ${arabicNum(meta.slot + 1)}` : "اختبار قدرات كمي";
     return (
       <>
         <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#F8FAFC]">
           <FinalExam
-            title="اختبار قدرات كمي"
+            title={examLabel}
             questions={questions}
             onComplete={finish}
             paused={gated}
@@ -211,15 +256,17 @@ export function MockExperience() {
               }
               track("mock_exit_attempt", {
                 answered: questions.length,
+                exam_slot: meta?.slot,
               });
               if (
                 typeof window !== "undefined" &&
                 window.confirm("تبي تطلع؟ بيضيع التقدّم في هذا الاختبار.")
               ) {
-                track("mock_abandoned");
+                track("mock_abandoned", { exam_slot: meta?.slot });
                 setPhase("lobby");
                 setQuestions([]);
                 setMeta(null);
+                setPendingSlot(null);
               }
             }}
             flushChrome
@@ -243,16 +290,18 @@ export function MockExperience() {
               <div className="overflow-hidden rounded-[1.75rem] bg-white p-5 shadow-[0_-16px_50px_-20px_rgba(15,23,42,0.45)] ring-1 ring-slate-200/80">
                 <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
                 <p className="text-center text-[11px] font-bold tracking-wide text-teal-700">
-                  الاختبار جاهز
+                  {pendingSlot != null
+                    ? `اختبار ${arabicNum(pendingSlot + 1)} جاهز`
+                    : "الاختبار جاهز"}
                 </p>
                 <h2
                   id="mock-gate-title"
                   className="mt-1.5 text-center font-display text-[1.45rem] font-extrabold leading-snug text-ink"
                 >
-                  ابدأ بحساب Google
+                  سجّل دخولك وابدأ
                 </h2>
                 <p className="mx-auto mt-2 max-w-[18rem] text-center text-sm leading-relaxed text-slate-500">
-                  ثواني، ونحفظ درجتك على كل أجهزتك. مجاناً.
+                  ثواني بحساب Google، ونحفظ درجتك. مجاناً.
                 </p>
                 <button
                   type="button"
@@ -263,7 +312,7 @@ export function MockExperience() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white">
                     <GoogleMark />
                   </span>
-                  {busyGoogle ? "لحظة…" : "المتابعة مع Google"}
+                  {busyGoogle ? "لحظة…" : "سجّل دخولك مع Google"}
                 </button>
                 {gateError && (
                   <p className="mt-3 text-center text-sm font-semibold text-rose-700">
@@ -286,75 +335,178 @@ export function MockExperience() {
   }
 
   return (
-    <div className="relative mx-auto flex min-h-[75vh] w-full max-w-lg flex-col justify-center overflow-x-hidden px-4 py-10 pb-32">
+    <div className="relative mx-auto w-full max-w-lg overflow-x-hidden px-4 pb-32 pt-5">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.2),_transparent_65%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 bg-[radial-gradient(ellipse_at_top,_rgba(13,148,136,0.22),_transparent_65%)]"
         aria-hidden
       />
 
-      <div className="overflow-hidden rounded-[2rem] bg-ink text-white shadow-[0_28px_60px_-28px_rgba(15,118,110,0.55)]">
-        <div className="relative px-6 pb-8 pt-8">
-          <div
-            className="pointer-events-none absolute -start-10 top-0 h-40 w-40 rounded-full bg-teal-400/20 blur-3xl"
-            aria-hidden
-          />
-          <p className="text-[11px] font-bold tracking-wide text-teal-300">
-            الاختبار الكامل
+      {/* Hero — one job: what is this page */}
+      <header className="animate-fade-up">
+        <p className="text-[12px] font-bold tracking-wide text-teal-700">
+          الاختبار الكامل
+        </p>
+        <h1 className="mt-1.5 font-display text-[1.85rem] font-extrabold leading-snug text-ink">
+          ٢٠ اختبار قدرات كمي
+        </h1>
+        <p className="mt-2 max-w-[22rem] text-[14px] leading-relaxed text-slate-600">
+          كل اختبار {arabicNum(MOCK_EXAM_SIZE)} سؤالاً في{" "}
+          {arabicNum(MOCK_EXAM_SIZE)} دقيقة — أسئلة جديدة في كل مرة. اختر
+          رقماً وابدأ.
+        </p>
+      </header>
+
+      {/* Status — scannable, not a dashboard */}
+      <div
+        className="animate-fade-up mt-5 flex items-stretch gap-2"
+        style={{ animationDelay: "60ms" }}
+      >
+        <div className="flex-1 rounded-2xl bg-ink px-4 py-3.5 text-white">
+          <p className="text-[11px] font-bold text-teal-300">أنجزت</p>
+          <p className="mt-0.5 font-display text-2xl font-extrabold tabular-nums">
+            <LtrNum>
+              {doneCount}/{MOCK_BANK_SIZE}
+            </LtrNum>
           </p>
-          <h1 className="mt-2 font-display text-[1.85rem] font-extrabold leading-snug">
-            اختبار قدرات كمي
-            <br />
-            حساب · جبر · هندسة · إحصاء · مقارنات
-          </h1>
-          <p className="mt-3 max-w-[21rem] text-sm leading-relaxed text-slate-300">
-            {MOCK_EXAM_SIZE} سؤالاً في {MOCK_EXAM_SIZE} دقيقة — مزيج القسم
-            الكمي: حوالي 40٪ حساب، 24٪ هندسة، 23٪ جبر، 13٪ إحصاء، مع مقارنات
-            داخل الأسئلة.
+        </div>
+        <div className="flex-1 rounded-2xl bg-white px-4 py-3.5 ring-1 ring-slate-200/80">
+          <p className="text-[11px] font-bold text-slate-500">أفضل نتيجة</p>
+          <p className="mt-0.5 font-display text-2xl font-extrabold text-ink tabular-nums">
+            {ready && bestMockScore != null && lastMock ? (
+              <LtrNum>
+                {bestMockScore}/{lastMock.total}
+              </LtrNum>
+            ) : (
+              "—"
+            )}
           </p>
-
-          <p className="mt-5 rounded-2xl bg-teal-500/15 px-4 py-3 text-sm font-bold leading-snug text-teal-100 ring-1 ring-teal-400/25">
-            كل مرة اختبار جديد بأسئلة جديدة
-          </p>
-
-          <ul className="mt-4 space-y-2 text-sm text-slate-400">
-            <li className="flex gap-2">
-              <span className="text-teal-400">●</span>
-              مؤقت واحد لكامل الجلسة، مع خريطة للتنقّل بين الأسئلة
-            </li>
-            <li className="flex gap-2">
-              <span className="text-teal-400">●</span>
-              تراجع إجاباتك بعد التسليم
-            </li>
-          </ul>
-
-          {ready && bestMockScore != null && lastMock && (
-            <p className="mt-5 rounded-2xl bg-white/5 px-4 py-3 text-sm text-teal-100 ring-1 ring-white/10">
-              أفضل نتيجة لك:{" "}
-              <span className="font-extrabold text-white">
-                <LtrNum>
-                  {bestMockScore}/{lastMock.total}
-                </LtrNum>
-              </span>
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={() => start({ gate: guest })}
-            disabled={!ready || loading}
-            className="mt-6 flex min-h-14 w-full items-center justify-center rounded-2xl bg-teal-500 text-base font-extrabold text-white shadow-lg shadow-teal-600/25 transition hover:bg-teal-400 active:scale-[0.99] disabled:opacity-60"
-          >
-            ادخل الاختبار
-          </button>
         </div>
       </div>
+
+      {/* Primary CTA — recommended exam */}
+      <button
+        type="button"
+        onClick={() => start(recommended, { gate: guest })}
+        disabled={!ready || loading}
+        className="animate-fade-up mt-5 flex min-h-[4.25rem] w-full flex-col items-center justify-center rounded-[1.5rem] bg-teal-600 text-white shadow-[0_18px_40px_-18px_rgba(13,148,136,0.65)] transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-60"
+        style={{ animationDelay: "100ms" }}
+      >
+        <span className="text-base font-extrabold">
+          ابدأ اختبار {arabicNum(recommended + 1)}
+        </span>
+        <span className="mt-1 text-[12px] font-bold text-teal-100">
+          {arabicNum(MOCK_EXAM_SIZE)} سؤال · {arabicNum(MOCK_EXAM_SIZE)} دقيقة
+          · مزيج كمي كامل
+        </span>
+      </button>
+
+      <p
+        className="animate-fade-up mt-6 text-[13px] font-bold text-slate-500"
+        style={{ animationDelay: "140ms" }}
+      >
+        أو اختر اختباراً بنفسك
+      </p>
+
+      {/* 20 exams — big tap targets, crystal clear */}
+      <ol className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-2">
+        {exams.map((exam, idx) => (
+          <ExamTile
+            key={exam.slot}
+            exam={exam}
+            recommended={exam.slot === recommended}
+            delay={Math.min(idx, 12) * 28}
+            disabled={!ready || loading}
+            onStart={() => start(exam.slot, { gate: guest })}
+          />
+        ))}
+      </ol>
+
+      <p className="mt-5 text-center text-[12px] leading-relaxed text-slate-400">
+        حساب · جبر · هندسة · إحصاء · مقارنات — نفس أسلوب الاختبار الحقيقي
+      </p>
 
       <Link
         href="/skills"
         className="mt-4 flex min-h-11 items-center justify-center text-sm font-semibold text-teal-800"
+        onClick={() => track("mock_lobby_skills_link")}
       >
         أفضّل إكمال مهارة أولاً
       </Link>
     </div>
+  );
+}
+
+function ExamTile({
+  exam,
+  recommended,
+  delay,
+  disabled,
+  onStart,
+}: {
+  exam: MockExamCard;
+  recommended: boolean;
+  delay: number;
+  disabled: boolean;
+  onStart: () => void;
+}) {
+  return (
+    <li
+      className="animate-fade-up list-none"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <button
+        type="button"
+        onClick={onStart}
+        disabled={disabled}
+        className={`flex min-h-[5.5rem] w-full flex-col items-start justify-between rounded-[1.35rem] p-3.5 text-start transition active:scale-[0.99] disabled:opacity-60 ${
+          recommended
+            ? "bg-teal-600 text-white shadow-lg shadow-teal-600/25 ring-2 ring-teal-400"
+            : exam.attempted
+              ? "bg-slate-50 text-ink ring-1 ring-slate-200"
+              : "bg-white text-ink ring-1 ring-slate-200 hover:ring-teal-300"
+        }`}
+      >
+        <div className="flex w-full items-center justify-between gap-2">
+          <span
+            className={`flex h-9 w-9 items-center justify-center rounded-xl text-sm font-extrabold tabular-nums ${
+              recommended
+                ? "bg-white/20 text-white"
+                : exam.attempted
+                  ? "bg-teal-100 text-teal-800"
+                  : "bg-slate-100 text-slate-700"
+            }`}
+          >
+            {arabicNum(exam.number)}
+          </span>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              recommended
+                ? "bg-white/20 text-white"
+                : exam.attempted
+                  ? "bg-teal-100 text-teal-800"
+                  : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {recommended ? "التالي" : exam.attempted ? "مكتمل" : "جديد"}
+          </span>
+        </div>
+        <div className="mt-2 w-full">
+          <p
+            className={`text-[14px] font-extrabold leading-none ${
+              recommended ? "text-white" : "text-ink"
+            }`}
+          >
+            {exam.title_ar}
+          </p>
+          <p
+            className={`mt-1.5 text-[11px] font-semibold leading-snug ${
+              recommended ? "text-teal-50/90" : "text-slate-500"
+            }`}
+          >
+            {arabicNum(exam.questions)} سؤال · {arabicNum(exam.minutes)} د
+          </p>
+        </div>
+      </button>
+    </li>
   );
 }

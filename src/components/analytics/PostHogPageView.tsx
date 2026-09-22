@@ -1,18 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { trackPageView } from "@/lib/analytics";
-
+/**
+ * Pageviews are captured by posthog-js (`capture_pageview: "history_change"`).
+ * Kept as a no-op mount so layout Suspense boundary stays stable.
+ */
 export function PostHogPageView() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    if (!pathname) return;
-    const search = searchParams?.toString();
-    trackPageView(pathname, search ? `?${search}` : "");
-  }, [pathname, searchParams]);
-
   return null;
 }
