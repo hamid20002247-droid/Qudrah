@@ -327,10 +327,10 @@ export function SiteFooter() {
       <div className="mx-auto max-w-lg space-y-3 px-4 text-center text-xs text-slate-400">
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
           <Link href="/skills" className="hover:text-teal-700">
-            تأسيس
+            تأسيس قدرات كمي
           </Link>
           <Link href="/mock" className="hover:text-teal-700">
-            الاختبار
+            اختبار قدرات كمي
           </Link>
           <Link href="/auth" className="hover:text-teal-700">
             الحساب

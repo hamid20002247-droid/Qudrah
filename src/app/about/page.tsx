@@ -4,10 +4,11 @@ import { PRODUCT_FACTS } from "@/lib/next-action";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "عن قُدرة",
+  title: "عن قُدرة — تدريب اختبار القدرات الكمي",
   description:
-    "قُدرة أداة تدريب مستقلة للقسم الكمي في اختبار القدرات. غير تابعة لهيئة تقويم التعليم والتدريب أو قياس.",
+    "قُدرة أداة تدريب مستقلة للقسم الكمي في اختبار القدرات: اختبارات كاملة وتأسيس تفاعلي. غير تابعة لهيئة تقويم التعليم والتدريب أو قياس.",
   path: "/about",
+  keywords: ["عن قُدرة", "تدريب قدرات مستقل", "قدرات كمي مجاني"],
 });
 
 export default function AboutPage() {

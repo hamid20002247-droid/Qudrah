@@ -8,7 +8,12 @@ import {
 import { SkillAccessGate } from "@/components/auth/SkillAccessGate";
 import { SkillExperience } from "@/components/skill/SkillExperience";
 import { ComingSoonSkill } from "@/components/skills/ComingSoonSkill";
-import { buildPageMetadata } from "@/lib/seo";
+import { SkillJsonLd } from "@/components/seo/SkillJsonLd";
+import {
+  buildPageMetadata,
+  skillPageDescription,
+  skillPageTitle,
+} from "@/lib/seo";
 import Link from "next/link";
 import { authHrefForSkill } from "@/lib/access";
 
@@ -30,9 +35,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const live = getSkillById(id);
   if (live) {
     return buildPageMetadata({
-      title: live.title_ar,
-      description: live.hook_ar,
+      title: skillPageTitle(live.title_ar),
+      description: skillPageDescription(live.hook_ar),
       path: `/skill/${id}`,
+      keywords: [live.title_ar, "تدريب قدرات كمي", "مهارات قدرات"],
+      ogType: "article",
     });
   }
   const catalog = getCatalogSkill(id);
@@ -101,12 +108,19 @@ export default async function SkillPage({ params }: Props) {
       drill: skill.drill.filter((q) => q.review_status === "approved"),
     };
     return (
-      <SkillAccessGate
-        skillId={publicSkill.id}
-        skillTitle={publicSkill.title_ar}
-      >
-        <SkillExperience skill={publicSkill} />
-      </SkillAccessGate>
+      <>
+        <SkillJsonLd
+          id={publicSkill.id}
+          titleAr={publicSkill.title_ar}
+          description={skillPageDescription(publicSkill.hook_ar)}
+        />
+        <SkillAccessGate
+          skillId={publicSkill.id}
+          skillTitle={publicSkill.title_ar}
+        >
+          <SkillExperience skill={publicSkill} />
+        </SkillAccessGate>
+      </>
     );
   }
 

@@ -11,6 +11,8 @@ import { PRODUCTION_SITE_URL } from "@/lib/publicConfig";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
+  INDEXABLE_ROBOTS,
+  SITE_KEYWORDS,
   SITE_NAME,
 } from "@/lib/seo";
 import "./globals.css";
@@ -30,22 +32,20 @@ export const metadata: Metadata = {
   },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: [
-    "قدرات",
-    "كمي",
-    "اختبار القدرات",
-    "تدريب قدرات",
-    "القسم الكمي",
-    "محاكاة قدرات",
-    "قياس كمي",
-    "قُدرة",
-  ],
+  authors: [{ name: SITE_NAME, url: PRODUCTION_SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "education",
+  keywords: [...SITE_KEYWORDS],
   manifest: "/manifest.webmanifest",
-  alternates: { canonical: "/" },
-  robots: {
-    index: true,
-    follow: true,
+  alternates: {
+    canonical: PRODUCTION_SITE_URL,
+    languages: {
+      "ar-SA": PRODUCTION_SITE_URL,
+      ar: PRODUCTION_SITE_URL,
+    },
   },
+  robots: INDEXABLE_ROBOTS,
   icons: {
     icon: [
       { url: "/icons/icon.svg?v=4", type: "image/svg+xml" },
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
         url: "/opengraph-image.png?v=4",
         width: 1200,
         height: 630,
-        alt: "قُدرة — 20 اختبار قدرات كمي · 60 سؤال",
+        alt: "قُدرة — اختبار القدرات الكمي مجاناً · 20 اختباراً وتأسيس تفاعلي",
       },
     ],
   },

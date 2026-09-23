@@ -6,8 +6,28 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/auth", "/api/", "/review", "/profile", "/result", "/ingest"],
+        allow: ["/", "/mock", "/skills", "/skill/", "/about"],
+        disallow: [
+          "/auth",
+          "/api/",
+          "/review",
+          "/profile",
+          "/result",
+          "/ingest",
+          "/auth/",
+        ],
+      },
+      {
+        userAgent: "Googlebot",
+        allow: ["/", "/mock", "/skills", "/skill/", "/about"],
+        disallow: [
+          "/auth",
+          "/api/",
+          "/review",
+          "/profile",
+          "/result",
+          "/ingest",
+        ],
       },
     ],
     sitemap: `${PRODUCTION_SITE_URL}/sitemap.xml`,

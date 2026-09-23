@@ -1,14 +1,17 @@
 {
-  "name": "قُدرة",
+  "name": "قُدرة — اختبار القدرات الكمي",
   "short_name": "قُدرة",
-  "description": "تدريب القسم الكمي في اختبار القدرات — مهارات، تدريب موقوت، ومحاكاة.",
+  "description": "محاكاة اختبار القدرات الكمي مجاناً: 20 اختباراً كاملاً وتأسيس تفاعلي لـ 60 مهارة.",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F8FAFC",
   "theme_color": "#0D9488",
-  "lang": "ar",
+  "lang": "ar-SA",
   "dir": "rtl",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-48.png",
