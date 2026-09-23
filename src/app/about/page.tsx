@@ -54,6 +54,17 @@ export default function AboutPage() {
         </p>
       </div>
 
+      <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-slate-200">
+        <p className="text-sm font-bold text-ink">تواصل معنا</p>
+        <a
+          href="mailto:contact@qodrah.site"
+          className="mt-2 inline-block font-semibold text-teal-700 underline-offset-2 hover:underline"
+          dir="ltr"
+        >
+          contact@qodrah.site
+        </a>
+      </div>
+
       <p className="mt-6 text-xs leading-relaxed text-slate-400">
         ملاحظة: بعض متصفحات التطبيقات قد تمسح التقدّم المحفوظ على الجهاز. إن
         اختفى تقدّمك، ابدأ من جديد من خريطة المهارات.

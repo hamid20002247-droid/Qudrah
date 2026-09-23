@@ -1,11 +1,12 @@
 import type { Difficulty, Question, SubPattern } from "@/lib/types";
-import { mulberry32, pick, randInt, shuffle, type Rng } from "./rng";
+import { mulberry32, pick, pickPrefer, randInt, shuffle, type Rng } from "./rng";
+import { genQuduratHard, isCleanGenQ } from "./quduratHard";
 
 const META = {
-  source: "qudrah-generated-full-kami-bank-2026-v2-hard",
+  source: "qudrah-generated-full-kami-bank-2026-v4-qudurat",
   review_status: "approved" as const,
   reviewed_by: "generator",
-  reviewed_at: "2026-09-13T00:00:00.000Z",
+  reviewed_at: "2026-09-23T12:00:00.000Z",
 };
 
 export type GenQ = Question & { fingerprint: string };
@@ -35,24 +36,43 @@ function simplifyFrac(n: number, d: number): string {
   return `${n / g}/${d / g}`;
 }
 
+type ChoiceItem = { value: string; note: string | null };
+
+/**
+ * Build 4 unique choices with notes glued to trap values
+ * so shuffle never mis-labels explanations.
+ */
 function buildChoices(
   rng: Rng,
   correct: string,
-  traps: string[]
-): { choices_ar: string[]; correct_index: number } {
-  const unique = [correct, ...traps].filter(
-    (v, i, a) => v !== "" && a.indexOf(v) === i
-  );
-  let n = 0;
-  while (unique.length < 4 && n < 12) {
-    unique.push(String(randInt(rng, 1, 180)));
-    n++;
+  traps: string[],
+  trapNotes?: string[]
+): { choices_ar: string[]; correct_index: number; notes: (string | null)[] } {
+  const items: ChoiceItem[] = [{ value: correct, note: null }];
+  traps.forEach((t, i) => {
+    if (!t || t === correct) return;
+    if (items.some((x) => x.value === t)) return;
+    items.push({
+      value: t,
+      note: trapNotes?.[i] ?? "خيار شائع لكنه غير صحيح لهذا السؤال.",
+    });
+  });
+  let guard = 0;
+  while (items.length < 4 && guard < 16) {
+    const filler = String(randInt(rng, 2, 220));
+    if (!items.some((x) => x.value === filler)) {
+      items.push({
+        value: filler,
+        note: "رقم قريب يُختار بالتخمين دون خطوات صحيحة.",
+      });
+    }
+    guard++;
   }
-  const four = unique.slice(0, 4);
-  const ordered = shuffle(rng, four);
+  const four = shuffle(rng, items.slice(0, 4));
   return {
-    choices_ar: ordered,
-    correct_index: ordered.indexOf(correct),
+    choices_ar: four.map((x) => x.value),
+    correct_index: four.findIndex((x) => x.value === correct),
+    notes: four.map((x) => x.note),
   };
 }
 
@@ -68,21 +88,25 @@ function makeQ(
   rng: Rng,
   trapNotes?: string[]
 ): GenQ {
-  const { choices_ar, correct_index } = buildChoices(rng, correct, traps);
+  const { choices_ar, correct_index, notes } = buildChoices(
+    rng,
+    correct,
+    traps,
+    trapNotes
+  );
   const trap_explanations_ar: Record<number, string> = {};
-  let noteIdx = 0;
-  choices_ar.forEach((_, i) => {
-    if (i !== correct_index) {
-      trap_explanations_ar[i] =
-        trapNotes?.[noteIdx++] ?? "خيار شائع لكنه غير صحيح لهذا السؤال.";
-    }
+  notes.forEach((note, i) => {
+    if (i !== correct_index && note) trap_explanations_ar[i] = note;
   });
+  // Guarantee correct_index is valid
+  const safeIndex =
+    correct_index >= 0 ? correct_index : choices_ar.indexOf(correct);
   return {
     id,
     fingerprint,
     prompt_ar,
     choices_ar,
-    correct_index,
+    correct_index: safeIndex < 0 ? 0 : safeIndex,
     trap_explanations_ar,
     solve_ar,
     difficulty,
@@ -93,23 +117,56 @@ function makeQ(
 
 // ─── حساب — معظمها متوسط/صعب متعدد الخطوات ───────────────
 
-/** نسبة الزيادة الصحيحة (مصيدة القسمة على الجديد) */
+/** نسبة الزيادة — غالباً مع خطوة وسيطة (لا سؤال مباشر فقط) */
 function genPercentUp(rng: Rng, seq: number): GenQ {
-  const base = randInt(rng, 40, 280) * 5;
+  const base = randInt(rng, 80, 360) * 5;
   const p = pick(rng, [12, 15, 16, 20, 25, 30, 35, 40]);
   const neu = Math.round(base * (1 + p / 100));
   const wrongNew = Math.round(((neu - base) / neu) * 100);
+  // Multi-step: ask increase amount then imply %, or two prices
+  if (rng() > 0.4) {
+    const extra = randInt(rng, 2, 9) * 5;
+    const paid = neu + extra;
+    return makeQ(
+      `g-pct-up2-${seq}`,
+      `pct-up2:${base}:${p}:${extra}`,
+      `سلعة كان سعرها ${base} ريالاً فارتفع بنسبة ${p}٪، ثم دُفعت رسوم توصيل ${extra}. كم المبلغ الكلي المدفوع؟`,
+      num(paid),
+      [
+        num(neu),
+        num(base + extra),
+        num(Math.round(base * (1 + p / 100) - extra)),
+      ],
+      `بعد الزيادة: ${base}×(1+${p}/100)=${neu}. الكلي مع الرسوم = ${neu}+${extra}=${paid}.`,
+      "percent",
+      "hard",
+      rng,
+      [
+        "نسيت إضافة رسوم التوصيل.",
+        "أضفت الرسوم على السعر الأصلي قبل الزيادة.",
+        "طرحت الرسوم بدل إضافتها.",
+      ]
+    );
+  }
   return makeQ(
     `g-pct-up-${seq}`,
     `pct-up:${base}:${p}`,
     `ارتفع سعر سلعة من ${base} إلى ${neu} ريالاً. نسبة الزيادة؟`,
     pct(p),
-    [pct(wrongNew), pct(p + 5), pct(Math.round(((neu - base) / ((base + neu) / 2)) * 100))],
+    [
+      pct(wrongNew),
+      pct(p + 5),
+      pct(Math.round(((neu - base) / ((base + neu) / 2)) * 100)),
+    ],
     `الزيادة = ${neu - base}. النسبة = الزيادة ÷ الأصل = ${neu - base} ÷ ${base} = ${p}٪.`,
     "percent",
     "mid",
     rng,
-    ["قسّمت على الرقم الجديد بدل الأصل.", "زدت النسبة تقديرياً.", "استخدمت متوسط القيمين كمقام."]
+    [
+      "قسّمت على الرقم الجديد بدل الأصل.",
+      "زدت النسبة تقديرياً.",
+      "استخدمت متوسط القيمين كمقام.",
+    ]
   );
 }
 
@@ -173,10 +230,32 @@ function genPercentOfPercent(rng: Rng, seq: number): GenQ {
 }
 
 function genPercentDown(rng: Rng, seq: number): GenQ {
-  const base = randInt(rng, 50, 400) * 4;
+  const base = randInt(rng, 80, 480) * 4;
   const p = pick(rng, [10, 15, 20, 25, 30, 40]);
   const neu = Math.round(base * (1 - p / 100));
   const wrongNew = Math.round(((base - neu) / neu) * 100);
+  if (rng() > 0.45) {
+    // two successive discounts — classic trap
+    const p2 = pick(rng, [10, 15, 20, 25].filter((x) => x !== p));
+    const after = Math.round(neu * (1 - p2 / 100));
+    const naive = Math.round(base * (1 - (p + p2) / 100));
+    return makeQ(
+      `g-pct-dn2-${seq}`,
+      `pct-dn2:${base}:${p}:${p2}`,
+      `سعر ${base} خُفض بنسبة ${p}٪ ثم بنسبة ${p2}٪ إضافية على السعر بعد الخصم الأول. السعر النهائي؟`,
+      num(after),
+      [num(naive), num(neu), num(base - Math.round((base * (p + p2)) / 100))],
+      `بعد الخصم الأول: ${neu}. ثم ×(1−${p2}/100)=${after}. لا تُجمع النسبتان (${naive}).`,
+      "percent",
+      "hard",
+      rng,
+      [
+        "جمعت نسبتي الخصم وطبّقتهما مرة واحدة على الأصل.",
+        "حسبت الخصم الأول فقط.",
+        "طرحت مجموع النسب من الأصل كمبالغ ثابتة.",
+      ]
+    );
+  }
   return makeQ(
     `g-pct-dn-${seq}`,
     `pct-dn:${base}:${p}`,
@@ -187,7 +266,11 @@ function genPercentDown(rng: Rng, seq: number): GenQ {
     "percent",
     "mid",
     rng,
-    ["قسّمت على السعر بعد النقص.", "زدت النسبة.", "حسبت ما تبقى بدل نسبة النقص."]
+    [
+      "قسّمت على السعر بعد النقص.",
+      "زدت النسبة.",
+      "حسبت ما تبقى بدل نسبة النقص.",
+    ]
   );
 }
 
@@ -307,13 +390,34 @@ function genRatioThree(rng: Rng, seq: number): GenQ {
 function genInverseWork(rng: Rng, seq: number): GenQ {
   const w1 = pick(rng, [2, 3, 4, 5, 6]);
   const d1 = pick(rng, [6, 8, 9, 10, 12, 15]);
-  const w2 = pick(rng, [w1 * 2, w1 * 3, w1 + 2].filter((x) => x !== w1 && x > 0));
+  const w2 = pickPrefer(
+    rng,
+    [w1 * 2, w1 * 3, w1 + 2].filter((x) => x !== w1 && x > 0),
+    [w1 * 2]
+  );
   const work = w1 * d1;
   const d2 = work / w2;
   if (!Number.isInteger(d2)) {
     // force integer
-    const w2b = pick(rng, [2, 3, 4, 5, 6].filter((x) => work % x === 0 && x !== w1));
+    const w2b = pickPrefer(
+      rng,
+      [2, 3, 4, 5, 6].filter((x) => work % x === 0 && x !== w1),
+      [w1]
+    );
     const d2b = work / w2b;
+    if (!Number.isInteger(d2b) || w2b === w1) {
+      return makeQ(
+        `g-inv-${seq}`,
+        `inv:4:12:6`,
+        `4 عمال ينجزون عملاً في 12 يوماً. كم يوماً يحتاج 6 عمال لنفس العمل؟`,
+        num(8),
+        [num(18), num(9), num(6)],
+        `1) كمية العمل = 4×12 = 48. 2) الأيام مع 6 عمال = 48÷6 = 8. 3) الإجابة = 8.`,
+        "ratio",
+        "hard",
+        rng
+      );
+    }
     return makeQ(
       `g-work-${seq}`,
       `work:${w1}:${d1}:${w2b}`,
@@ -389,41 +493,55 @@ function genAverage(rng: Rng, seq: number): GenQ {
 }
 
 function genBuySell(rng: Rng, seq: number): GenQ {
-  const cost = randInt(rng, 20, 90) * 5;
-  const p = pick(rng, [10, 15, 20, 25, 30, 40]);
-  if (rng() > 0.55) {
-    // discount then ask paid
-    const list = cost;
-    const paid = Math.round(list * (1 - p / 100));
+  if (rng() > 0.4) return genBuySellPair(rng, seq);
+  const cost = randInt(rng, 40, 120) * 5;
+  const markup = pick(rng, [20, 25, 30, 40]);
+  const discount = pick(rng, [10, 15, 20, 25]);
+  const listed = Math.round(cost * (1 + markup / 100));
+  const paid = Math.round(listed * (1 - discount / 100));
+  const profit = paid - cost;
+  const ask = pick(rng, ["paid", "profit"] as const);
+  if (ask === "profit") {
     return makeQ(
-      `g-bs-disc-${seq}`,
-      `bs-disc:${list}:${p}`,
-      `سعر أصلي ${list} ريالاً عليه خصم ${p}٪. كم يدفع المشتري؟`,
-      num(paid),
-      [num(list - p), num(Math.round(list * (p / 100))), num(list + Math.round((list * p) / 100))],
-      `يدفع = ${list} × (1 − ${p}/100) = ${paid}.`,
+      `g-bs-mp-${seq}`,
+      `bs-mp:${cost}:${markup}:${discount}`,
+      `تكلفة سلعة ${cost}. وُضعت للبيع بربح ${markup}٪ ثم خُفض السعر بخصم ${discount}٪ من سعر البيع. صافي الربح؟`,
+      num(profit),
+      [
+        num(listed - cost),
+        num(paid),
+        num(Math.round(cost * (markup - discount) / 100)),
+      ],
+      `سعر العرض = ${listed}. بعد الخصم يدفع ${paid}. الربح = ${paid}−${cost}=${profit}.`,
       "buy_sell",
-      "mid",
-      rng
+      "hard",
+      rng,
+      [
+        "حسبت الربح قبل الخصم.",
+        "أجبت بالسعر المدفوع بدل الربح.",
+        "طرحت نسبتي الربح والخصم من التكلفة مباشرة.",
+      ]
     );
   }
-  // profit percent from cost/sell
-  const sell = Math.round(cost * (1 + p / 100));
   return makeQ(
-    `g-bs-pp-${seq}`,
-    `bs-pp:${cost}:${sell}`,
-    `اشترى بـ ${cost} وباع بـ ${sell}. نسبة الربح؟`,
-    pct(p),
+    `g-bs-paid-${seq}`,
+    `bs-paid:${cost}:${markup}:${discount}`,
+    `تكلفة ${cost}، ربح معلن ${markup}٪، ثم خصم ${discount}٪ للمشتري على سعر البيع. كم يدفع المشتري؟`,
+    num(paid),
     [
-      pct(Math.round(((sell - cost) / sell) * 100)),
-      pct(Math.round(((sell - cost) / ((cost + sell) / 2)) * 100)),
-      num(sell - cost),
+      num(listed),
+      num(Math.round(cost * (1 + (markup - discount) / 100))),
+      num(cost),
     ],
-    `الربح = ${sell - cost}. النسبة ÷ التكلفة = ${p}٪.`,
+    `سعر البيع قبل الخصم = ${listed}. بعد الخصم = ${listed}×(1−${discount}/100)=${paid}.`,
     "buy_sell",
-    "mid",
+    "hard",
     rng,
-    ["قسّمت على سعر البيع.", "استخدمت المتوسط.", "أجبت بمبلغ الربح لا النسبة."]
+    [
+      "نسيت تطبيق الخصم.",
+      "طبّقت فرق النسبتين على التكلفة مرة واحدة.",
+      "أجبت بالتكلفة.",
+    ]
   );
 }
 
@@ -452,23 +570,37 @@ function genBuySellPair(rng: Rng, seq: number): GenQ {
 }
 
 function genFraction(rng: Rng, seq: number): GenQ {
+  // Chain / of-remainder is Qudrat-level; plain leftover is too easy
+  if (rng() > 0.2) return genFractionChain(rng, seq);
   const den = pick(rng, [3, 4, 5, 6, 8]);
   const nume = randInt(rng, 1, den - 1);
-  const whole = den * randInt(rng, 12, 48);
+  const whole = den * randInt(rng, 18, 60);
   const first = (whole * nume) / den;
   const left = whole - first;
-  // ما تبقى بعد أخذ كسر
-  return makeQ(
-    `g-frac-left-${seq}`,
-    `frac-left:${nume}:${den}:${whole}`,
-    `أخذ شخص ${nume}/${den} من مبلغ ${whole}. كم يتبقى؟`,
-    num(left),
-    [num(first), num(whole / den), num(whole - nume)],
-    `المأخوذ = ${first}. المتبقي = ${whole} − ${first} = ${left}.`,
-    "fraction",
-    "mid",
+  const other = pickPrefer(
     rng,
-    ["أجبت بالمأخوذ بدل المتبقي.", "أخذت الجزء الواحد فقط.", "طرحت البسط من الكل."]
+    [2, 3, 4].filter((d) => left % d === 0),
+    [2, 3, 4]
+  );
+  const share = left / other;
+  if (!Number.isInteger(share)) {
+    return genFractionChain(rng, seq);
+  }
+  return makeQ(
+    `g-frac-left2-${seq}`,
+    `frac-left2:${nume}:${den}:${whole}:${other}`,
+    `مبلغ ${whole} أُخذ منه ${nume}/${den}، ثم قُسّم الباقي بالتساوي على ${other} أشخاص. نصيب الواحد من الباقي؟`,
+    num(share),
+    [num(left), num(first), num(whole / other)],
+    `المأخوذ = ${first}. الباقي = ${left}. نصيب الواحد = ${left}÷${other}=${share}.`,
+    "fraction",
+    "hard",
+    rng,
+    [
+      "أجبت بالباقي كله.",
+      "أجبت بالمأخوذ.",
+      "قسّمت المبلغ الأصلي على عدد الأشخاص.",
+    ]
   );
 }
 
@@ -513,42 +645,60 @@ function genFractionChain(rng: Rng, seq: number): GenQ {
 }
 
 function genRate(rng: Rng, seq: number): GenQ {
-  const speed = pick(rng, [40, 50, 60, 72, 80, 90]);
-  const dist = pick(rng, [120, 150, 180, 240, 300, 360].filter((d) => d % speed === 0 || (d * 2) % speed === 0));
-  // ask time or remaining
-  if (rng() > 0.5) {
-    const hours = dist / speed;
-    const ans = Number.isInteger(hours) ? num(hours) : num(hours);
+  // Harmonic mean / meeting problems > plain time
+  if (rng() > 0.35) {
+    const s1 = pick(rng, [40, 50, 60, 72]);
+    const s2 = pickPrefer(
+      rng,
+      [60, 80, 90, 100].filter((x) => x !== s1),
+      [60, 80, 90]
+    );
+    const leg = pickPrefer(
+      rng,
+      [60, 90, 120, 180].filter((d) => d % s1 === 0 || (2 * d) % s1 === 0),
+      [60, 120, 180]
+    );
+    const t = leg / s1 + leg / s2;
+    const avg = Math.round(((2 * leg) / t) * 100) / 100;
+    const arith = (s1 + s2) / 2;
     return makeQ(
-      `g-rate-t-${seq}`,
-      `rate-t:${speed}:${dist}`,
-      `سيارة سرعتها ${speed} كم/س قطعت ${dist} كم. الزمن بالساعات؟`,
-      ans,
-      [num(dist - speed), num(speed / 10), num(dist / (speed / 2))],
-      `الزمن = المسافة ÷ السرعة = ${dist} ÷ ${speed} = ${ans}.`,
+      `g-rate-avg-${seq}`,
+      `rate-avg:${s1}:${s2}:${leg}`,
+      `قطع سائق المسافة ${leg} كم بسرعة ${s1} ثم عاد نفس المسافة بسرعة ${s2}. متوسط سرعته للرحلة ذهاباً وإياباً؟`,
+      num(avg),
+      [num(arith), num(s1), num(s2)],
+      `الزمن الكلي = ${leg}/${s1} + ${leg}/${s2}. المتوسط = المسافة الكلية ÷ الزمن ≈ ${avg} (وليس متوسط السرعتين ${arith}).`,
       "rate",
-      "mid",
-      rng
+      "hard",
+      rng,
+      [
+        "أخذت المتوسط الحسابي للسرعتين.",
+        "أخذت سرعة الذهاب فقط.",
+        "أخذت سرعة الإياب فقط.",
+      ]
     );
   }
-  // two speeds average trap
-  const s1 = pick(rng, [40, 50, 60]);
-  const s2 = pick(rng, [60, 80, 90, 100].filter((x) => x !== s1));
-  const leg = pick(rng, [60, 90, 120]);
-  const t = leg / s1 + leg / s2;
-  const avg = Math.round(((2 * leg) / t) * 100) / 100;
-  const arith = (s1 + s2) / 2;
+  const speed = pick(rng, [45, 50, 60, 72, 80, 90]);
+  const hours = pick(rng, [2, 2.5, 3, 3.5, 4]);
+  const dist = speed * hours;
+  const rest = pick(rng, [20, 30, 40, 45]);
+  const totalTime = hours + rest / 60;
+  const avg = Math.round((dist / totalTime) * 100) / 100;
   return makeQ(
-    `g-rate-avg-${seq}`,
-    `rate-avg:${s1}:${s2}:${leg}`,
-    `قطع سائق المسافة ${leg} كم بسرعة ${s1} ثم عاد نفس المسافة بسرعة ${s2}. متوسط سرعته للرحلة ذهاباً وإياباً؟`,
+    `g-rate-rest-${seq}`,
+    `rate-rest:${speed}:${hours}:${rest}`,
+    `سيارة سرعتها ${speed} كم/س سارت ${hours} ساعة ثم توقفت ${rest} دقيقة. متوسط السرعة للرحلة كلها (بما فيها التوقف)؟`,
     num(avg),
-    [num(arith), num(s1), num(s2)],
-    `الزمن الكلي = ${leg}/${s1} + ${leg}/${s2}. المتوسط = المسافة الكلية ÷ الزمن ≈ ${avg} (وليس متوسط السرعتين ${arith}).`,
+    [num(speed), num(dist), num(Math.round(speed * (hours / totalTime)))],
+    `المسافة = ${dist} كم. الزمن الكلي = ${hours}+${rest}/60 = ${totalTime} س. المتوسط = ${dist}÷${totalTime}≈${avg}.`,
     "rate",
     "hard",
     rng,
-    ["أخذت المتوسط الحسابي للسرعتين.", "أخذت سرعة الذهاب فقط.", "أخذت سرعة الإياب فقط."]
+    [
+      "تجاهلت زمن التوقف وأخذت سرعة السير.",
+      "أجبت بالمسافة.",
+      "قسّمت خطأ على زمن السير فقط مع رقم معدّل.",
+    ]
   );
 }
 
@@ -607,21 +757,29 @@ function genNumberSenseHard(rng: Rng, seq: number): GenQ {
 // ─── جبر ────────────────────────────────────────────────
 
 function genLinearEq(rng: Rng, seq: number): GenQ {
-  const a = randInt(rng, 2, 9);
-  const x = randInt(rng, 2, 18);
-  const b = randInt(rng, 1, 25);
-  const c = a * x + b;
+  // Prefer two-sided / distribute form — single-step ax+b=c is too easy for Qudrat
+  if (rng() > 0.25) return genLinearEqHard(rng, seq);
+  const a = randInt(rng, 3, 9);
+  const x = randInt(rng, 3, 16);
+  const b = randInt(rng, 2, 20);
+  const d = randInt(rng, 2, 7);
+  // a x + b = d x + c  → c = a x + b - d x
+  const c = a * x + b - d * x;
   return makeQ(
     `g-alg-eq-${seq}`,
-    `alg-eq:${a}:${b}:${c}`,
-    `إذا كان ${a}س + ${b} = ${c}، فما قيمة س؟`,
+    `alg-eq2:${a}:${b}:${d}:${c}`,
+    `إذا كان ${a}س + ${b} = ${d}س + ${c}، فما قيمة س؟`,
     num(x),
-    [num(c - b), num(Math.round(c / a)), num(x + 1)],
-    `${a}س = ${c - b}، س = ${x}.`,
+    [num(x + 1), num(Math.abs(c - b)), num(a + d)],
+    `انقل حدود س: ${a}س − ${d}س = ${c} − ${b} ⇒ ${(a - d)}س = ${c - b} ⇒ س = ${x}.`,
     "algebra",
-    "mid",
+    "hard",
     rng,
-    ["نسيت القسمة على المعامل.", "قسمت الطرف الأيمن كله على المعامل.", "خطأ حسابي بسيط."]
+    [
+      "جمعت المعاملات بدل طرحها.",
+      "طرحت الثوابت بالاتجاه المعاكس.",
+      "أخذت حاصل جمع الطرفين.",
+    ]
   );
 }
 
@@ -630,17 +788,18 @@ function genLinearEqHard(rng: Rng, seq: number): GenQ {
   const x = randInt(rng, 2, 12);
   const a = randInt(rng, 2, 5);
   const b = randInt(rng, 1, 8);
-  const c = randInt(rng, 2, 6);
+  let c = randInt(rng, 2, 6);
+  if (c === a) c = a + 1;
   // a(x+b) = c*x + k  → choose k so integer
   const left = a * (x + b);
   const k = left - c * x;
   return makeQ(
     `g-alg-eqh-${seq}`,
     `alg-eqh:${a}:${b}:${c}:${k}`,
-    `حلّ: ${a}(س + ${b}) = ${c}س + ${k}`,
+    `حلّ: ${a}(س + ${b}) = ${c}س ${k < 0 ? "−" : "+"} ${Math.abs(k)}`,
     num(x),
     [num(x + 1), num(b), num(Math.abs(k))],
-    `وسّع: ${a}س + ${a * b} = ${c}س + ${k} ⇒ س = ${x}.`,
+    `1) وسّع: ${a}س + ${a * b} = ${c}س ${k < 0 ? "−" : "+"} ${Math.abs(k)}. 2) ${a - c}س = ${k - a * b}. 3) س = ${x}.`,
     "algebra",
     "hard",
     rng
@@ -723,38 +882,92 @@ function genSequence(rng: Rng, seq: number): GenQ {
 
 /** عمر — جبر لفظي */
 function genAge(rng: Rng, seq: number): GenQ {
-  const son = randInt(rng, 5, 14);
+  const son = randInt(rng, 6, 16);
   const k = pick(rng, [2, 3, 4]);
   const father = k * son;
-  const years = randInt(rng, 3, 8);
-  // بعد years: father+years vs son+years — ask father's age now or ratio later
-  const ask = rng() > 0.5;
-  if (ask) {
+  const years = randInt(rng, 4, 10);
+  // After years, father will be m times son — solve for years OR ask future ages
+  const mode = pick(rng, ["now", "future-ratio", "ago"] as const);
+  if (mode === "future-ratio") {
+    // father + y = m (son + y) — pick m < k so solvable with positive y
+    const m = k === 4 ? 3 : 2;
+    // f+y = m(s+y) → ks + y = m s + m y → y(1-m) = ms - ks → y = (k-m)s/(m-1)
+    const y = ((k - m) * son) / (m - 1);
+    if (!Number.isInteger(y) || y <= 0) {
+      // fallback clean: son=10, k=3, m=2 → y=10
+      const s2 = 10;
+      const y2 = 10;
+      return makeQ(
+        `g-alg-age-fr-${seq}`,
+        `age-fr:10:3:2`,
+        `عمر الأب الآن 3 أمثال عمر ابنه (الابن 10). بعد كم سنة يصبح عمر الأب مثلي عمر الابن؟`,
+        num(y2),
+        [num(5), num(15), num(20)],
+        `الآن الأب 30. نريد 30+س = 2(10+س) ⇒ س = 10.`,
+        "algebra",
+        "hard",
+        rng,
+        [
+          "ظننت أن الفرق يتغيّر مع الزمن.",
+          "حوّلت الأمثال دون معادلة.",
+          "أضفت الأعمار بدل حل المعادلة.",
+        ]
+      );
+    }
     return makeQ(
-      `g-alg-age-${seq}`,
-      `age:${son}:${k}`,
-      `عمر الأب ${k} أمثال عمر ابنه. إذا كان مجموع عمريهما ${father + son}، فما عمر الابن؟`,
-      num(son),
-      [num(father), num(Math.round((father + son) / 2)), num(k)],
-      `س + ${k}س = ${father + son} ⇒ س = ${son}.`,
+      `g-alg-age-fr-${seq}`,
+      `age-fr:${son}:${k}:${m}`,
+      `عمر الأب الآن ${k} أمثال عمر ابنه (${son} سنة). بعد كم سنة يصبح عمر الأب ${m} أمثال عمر الابن؟`,
+      num(y),
+      [num(years), num(father - son), num(son * m)],
+      `الآن الأب ${father}. المعادلة: ${father}+س = ${m}(${son}+س) ⇒ س = ${y}.`,
       "algebra",
       "hard",
-      rng
+      rng,
+      [
+        "استخدمت فرق العمر مباشرة كإجابة.",
+        "ضربت عمر الابن في المثل الجديد.",
+        "اخترت سنوات عشوائية من السؤال.",
+      ]
     );
   }
-  const fLater = father + years;
-  const sLater = son + years;
+  if (mode === "ago") {
+    const ago = Math.min(years, son - 2);
+    if (ago <= 0) {
+      return genAge(rng, seq + 1);
+    }
+    return makeQ(
+      `g-alg-age-ago-${seq}`,
+      `age-ago:${son}:${k}:${ago}`,
+      `عمر الأب الآن ${father} والابن ${son}. قبل ${ago} سنوات، كم كان مجموع عمريهما؟`,
+      num(father + son - 2 * ago),
+      [num(father + son - ago), num(father + son), num(father - son)],
+      `كلٌ ينقص ${ago}، فالمجموع ينقص ${2 * ago}. الناتج = ${father + son - 2 * ago}.`,
+      "algebra",
+      "hard",
+      rng,
+      [
+        "نقصت السنوات من مجموع واحد فقط.",
+        "نسيت طرح السنوات.",
+        "حسبت فرق العمر بدل المجموع.",
+      ]
+    );
+  }
   return makeQ(
-    `g-alg-age2-${seq}`,
-    `age2:${son}:${k}:${years}`,
-    `عمر الأب الآن ${father} وعمر الابن ${son}. بعد ${years} سنوات، كم يزيد عمر الأب عن عمر الابن؟`,
-    num(fLater - sLater),
-    [num(father - son), num(years), num(fLater)],
-    `الفرق ثابت = ${father - son} حتى بعد ${years} سنة.`,
+    `g-alg-age-${seq}`,
+    `age:${son}:${k}:${years}`,
+    `عمر الأب ${k} أمثال عمر ابنه، ومجموعهما ${father + son}. بعد ${years} سنوات، ما مجموع عمريهما؟`,
+    num(father + son + 2 * years),
+    [num(father + son + years), num(father + years), num(son + years)],
+    `الآن المجموع ${father + son}. بعد ${years} سنة يزيد المجموع بـ ${2 * years} = ${father + son + 2 * years}.`,
     "algebra",
-    "mid",
+    "hard",
     rng,
-    ["نسيت أن الفرق لا يتغير.", "أجبت بعدد السنوات.", "أخذت عمر الأب لاحقاً."]
+    [
+      "أضفت السنوات مرة واحدة فقط للمجموع.",
+      "أخذت عمر الأب لاحقاً فقط.",
+      "أخذت عمر الابن لاحقاً فقط.",
+    ]
   );
 }
 
@@ -859,22 +1072,41 @@ function genTriangleArea(rng: Rng, seq: number): GenQ {
   );
 }
 
-/** فيثاغورس */
+/** فيثاغورس — تجنّب مضاعفات 3-4-5 الشهيرة */
 function genPythagoras(rng: Rng, seq: number): GenQ {
   const triples = [
-    [3, 4, 5],
     [5, 12, 13],
-    [6, 8, 10],
     [7, 24, 25],
     [8, 15, 17],
-    [9, 12, 15],
+    [9, 40, 41],
+    [11, 60, 61],
+    [12, 35, 37],
   ] as const;
   const t = pick(rng, [...triples]);
-  const k = pick(rng, [1, 2, 3]);
+  const k = pick(rng, [1, 2]);
   const a = t[0] * k;
   const b = t[1] * k;
   const c = t[2] * k;
-  const mode = pick(rng, ["hyp", "leg"] as const);
+  const mode = pick(rng, ["hyp", "leg", "area"] as const);
+  if (mode === "area") {
+    const area = (a * b) / 2;
+    return makeQ(
+      `g-geo-py-ar-${seq}`,
+      `geo-py-ar:${a}:${b}`,
+      `مثلث قائم الزاوية ضلعاه القائمة ${a} و ${b}. مساحته؟`,
+      num(area),
+      [num(a * b), num(a + b), num(c)],
+      `المساحة = ½×${a}×${b} = ${area}. (الوتر ${c} غير مطلوب للمساحة).`,
+      "geometry",
+      "hard",
+      rng,
+      [
+        "نسيت النصف فأجبت بحاصل الضلعين.",
+        "جمعت الضلعين.",
+        "أجبت بطول الوتر.",
+      ]
+    );
+  }
   if (mode === "hyp") {
     return makeQ(
       `g-geo-py-${seq}`,
@@ -898,7 +1130,12 @@ function genPythagoras(rng: Rng, seq: number): GenQ {
     `الضلع² = ${c}² − ${a}² = ${b}² ⇒ ${b}.`,
     "geometry",
     "hard",
-    rng
+    rng,
+    [
+      "طرحت الضلعين بدل فيثاغورس.",
+      "جمعت الوتر مع الضلع.",
+      "جمعت المربعات بدل طرحها.",
+    ]
   );
 }
 
@@ -1223,14 +1460,15 @@ export const PATTERN_GENS: Record<SubPattern, GenFn[]> = {
     genPercentFindBase,
     genPercentOfPercent,
     genPercentFindBase,
+    genPercentOfPercent,
   ],
-  ratio: [genRatioSplit, genRatioThree, genInverseWork, genRatioThree],
-  successive: [genSuccessive, genSuccessiveNet, genSuccessive],
-  average: [genAverage, genAverageMissing, genAverageShift],
-  buy_sell: [genBuySell, genBuySellPair, genBuySell],
+  ratio: [genRatioSplit, genRatioThree, genInverseWork, genRatioThree, genInverseWork],
+  successive: [genSuccessive, genSuccessiveNet, genSuccessiveNet, genSuccessive],
+  average: [genAverageMissing, genAverageShift, genAverageMissing],
+  buy_sell: [genBuySell, genBuySellPair, genBuySellPair],
   fraction: [genFraction, genFractionChain, genFractionChain],
   rate: [genRate, genRate],
-  number_sense: [genNumberSense, genNumberSenseHard],
+  number_sense: [genNumberSenseHard, genNumberSense, genNumberSenseHard],
   algebra: [
     genLinearEq,
     genLinearEqHard,
@@ -1239,6 +1477,7 @@ export const PATTERN_GENS: Record<SubPattern, GenFn[]> = {
     genSequence,
     genAge,
     genLinearEqHard,
+    genEvalExpr,
   ],
   geometry: [
     genRectArea,
@@ -1249,15 +1488,34 @@ export const PATTERN_GENS: Record<SubPattern, GenFn[]> = {
     genVolume,
     genPythagoras,
     genPythagoras,
+    genGeoCompareHard,
   ],
   statistics: [genMedian, genMode, genTablePct, genRange, genAverageMissing],
-  probability: [genProbability, genProbabilityHard, genProbabilityHard],
+  probability: [genProbabilityHard, genProbability, genProbabilityHard],
   comparison: [
+    genAlgCompareHard,
+    genGeoCompareHard,
     genAlgCompare,
     genGeoCompare,
     genAlgCompareHard,
-    genGeoCompareHard,
   ],
+};
+
+/** Hard-only pool — used heavily for exams 1–5. */
+export const PATTERN_GENS_HARD: Record<SubPattern, GenFn[]> = {
+  percent: [genPercentOfPercent, genPercentFindBase, genPercentDown, genPercentUp],
+  ratio: [genRatioThree, genInverseWork, genRatioThree],
+  successive: [genSuccessiveNet, genSuccessive, genSuccessiveNet],
+  average: [genAverageMissing, genAverageShift],
+  buy_sell: [genBuySellPair, genBuySell],
+  fraction: [genFractionChain, genFraction],
+  rate: [genRate],
+  number_sense: [genNumberSenseHard],
+  algebra: [genLinearEqHard, genEvalExpr, genLinearEq, genAge, genSequence],
+  geometry: [genPythagoras, genVolume, genCircle, genGeoCompareHard, genAngles],
+  statistics: [genAverageMissing, genTablePct, genMedian],
+  probability: [genProbabilityHard],
+  comparison: [genAlgCompareHard, genGeoCompareHard],
 };
 
 export type ExamMix = Partial<Record<SubPattern, number>>;
@@ -1282,16 +1540,35 @@ export const OFFICIAL_MIX_60: ExamMix = {
   probability: 3,
 };
 
+/** Qudurat-like mix for exams 1–5 (heavier successive, comparison, algebra). */
+export const HARD_OPENING_MIX_60: ExamMix = {
+  percent: 5,
+  ratio: 4,
+  successive: 6,
+  average: 3,
+  buy_sell: 3,
+  fraction: 3,
+  rate: 3,
+  number_sense: 3,
+  algebra: 12,
+  geometry: 10,
+  comparison: 6,
+  statistics: 1,
+  probability: 1,
+};
+
 function sumMix(mix: ExamMix): number {
   return Object.values(mix).reduce((a, c) => a + (c ?? 0), 0);
 }
 
-/** 20 exam blueprints — slight jitter around official mix, always 60. */
+/** 20 exam blueprints — first 5 start from HARD_OPENING_MIX. */
 export const EXAM_BLUEPRINTS: { id: string; mix: ExamMix }[] = Array.from(
   { length: 20 },
   (_, i) => {
     const rng = mulberry32(1000 + i * 97);
-    const mix: ExamMix = { ...OFFICIAL_MIX_60 };
+    const mix: ExamMix = {
+      ...(i < 5 ? HARD_OPENING_MIX_60 : OFFICIAL_MIX_60),
+    };
     const bump = (a: SubPattern, b: SubPattern) => {
       if ((mix[a] ?? 0) < 2) return;
       mix[a] = (mix[a] ?? 0) - 1;
@@ -1306,7 +1583,7 @@ export const EXAM_BLUEPRINTS: { id: string; mix: ExamMix }[] = Array.from(
     if (rng() > 0.6) bump("buy_sell", "average");
     let total = sumMix(mix);
     while (total < 60) {
-      mix.percent = (mix.percent ?? 0) + 1;
+      mix.algebra = (mix.algebra ?? 0) + 1;
       total++;
     }
     while (total > 60) {
@@ -1326,9 +1603,32 @@ export const MOCK_BANK_SIZE = EXAM_BLUEPRINTS.length;
 /** First 20 finishes walk the bank; after that remix forever. */
 export const MOCK_REMIX_AFTER = 20;
 
-function genForPattern(pattern: SubPattern, rng: Rng, seq: number): GenQ {
-  const gens = PATTERN_GENS[pattern];
-  return pick(rng, gens)(rng, seq);
+export type GenerateExamOptions = {
+  /** 0 = normal pool, 1 = always hard pool. Exams 1–5 use ~0.9. */
+  hardBias?: number;
+};
+
+function genForPattern(
+  pattern: SubPattern,
+  rng: Rng,
+  seq: number,
+  hardBias: number
+): GenQ {
+  // Exams 1–5 (hardBias ≈ 1): authentic Qudurat-style bank only
+  if (hardBias >= 0.85) {
+    return genQuduratHard(pattern, rng, seq) as GenQ;
+  }
+  const useHard = rng() < hardBias;
+  const pool = useHard
+    ? PATTERN_GENS_HARD[pattern] ?? PATTERN_GENS[pattern]
+    : PATTERN_GENS[pattern];
+  return pick(rng, pool)(rng, seq);
+}
+
+function looksBroken(q: GenQ): boolean {
+  if (!isCleanGenQ(q as Parameters<typeof isCleanGenQ>[0])) return true;
+  const blob = [q.prompt_ar, q.solve_ar, ...q.choices_ar].join("|");
+  return /undefined|NaN|null|Infinity/i.test(blob);
 }
 
 function expandMix(mix: ExamMix, size: number, rng: Rng): SubPattern[] {
@@ -1337,10 +1637,10 @@ function expandMix(mix: ExamMix, size: number, rng: Rng): SubPattern[] {
     for (let i = 0; i < (count ?? 0); i++) plan.push(pat);
   }
   const fillers: SubPattern[] = [
-    "percent",
     "algebra",
     "geometry",
-    "statistics",
+    "successive",
+    "comparison",
   ];
   while (plan.length < size) plan.push(pick(rng, fillers));
   return shuffle(rng, plan).slice(0, size);
@@ -1350,8 +1650,10 @@ export function generateExamQuestions(
   seed: number,
   mix: ExamMix,
   avoid: Set<string>,
-  size = MOCK_EXAM_SIZE
+  size = MOCK_EXAM_SIZE,
+  opts?: GenerateExamOptions
 ): GenQ[] {
+  const hardBias = Math.min(1, Math.max(0, opts?.hardBias ?? 0.55));
   const rng = mulberry32(seed);
   const plan = expandMix(mix, size, rng);
   const out: GenQ[] = [];
@@ -1359,17 +1661,48 @@ export function generateExamQuestions(
 
   for (const pat of plan) {
     let chosen: GenQ | null = null;
-    for (let attempt = 0; attempt < 48; attempt++) {
+    for (let attempt = 0; attempt < 64; attempt++) {
       seq += 1 + Math.floor(rng() * 19);
-      const cand = genForPattern(pat, mulberry32(seed + seq * 9973), seq);
+      const cand = genForPattern(
+        pat,
+        mulberry32(seed + seq * 9973),
+        seq,
+        hardBias
+      );
+      if (looksBroken(cand)) continue;
+      // Prefer tagged hard when bias is high
+      if (
+        hardBias >= 0.75 &&
+        cand.difficulty !== "hard" &&
+        attempt < 24
+      ) {
+        continue;
+      }
       if (!avoid.has(cand.fingerprint)) {
         chosen = cand;
         break;
       }
     }
-    if (!chosen) {
+    if (!chosen || looksBroken(chosen)) {
       seq += 131;
-      chosen = genForPattern(pat, mulberry32(seed + seq), seq);
+      chosen = genForPattern(pat, mulberry32(seed + seq), seq, 1);
+      let guard = 0;
+      while (looksBroken(chosen) && guard < 12) {
+        seq += 17;
+        chosen = genForPattern(pat, mulberry32(seed + seq * 13), seq, 1);
+        guard++;
+      }
+    }
+    // Validate: exactly 4 choices, one correct, no undefined
+    if (
+      looksBroken(chosen) ||
+      chosen.choices_ar.length !== 4 ||
+      chosen.correct_index < 0 ||
+      chosen.correct_index > 3 ||
+      new Set(chosen.choices_ar).size !== 4
+    ) {
+      seq += 19;
+      chosen = genQuduratHard(pat, mulberry32(seed + seq * 41), seq) as GenQ;
     }
     avoid.add(chosen.fingerprint);
     out.push({

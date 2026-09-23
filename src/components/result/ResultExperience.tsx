@@ -22,6 +22,22 @@ function messageFor(score: number, total: number): string {
   return "ابدأ بأضعف مهارة في المسار ثم أعد الاختبار.";
 }
 
+/** Split solve text into steps without breaking formulas like (1+20/100). */
+function splitSolveSteps(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  if (trimmed.includes("\n")) {
+    return trimmed
+      .split(/\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  // Legacy space-joined "1) … 2) …" — only split after sentence end, never inside /100)
+  const parts = trimmed.split(/(?<=[.\u06D4\u061F])\s+(?=\d{1,2}\)\s)/);
+  if (parts.length > 1) return parts.map((s) => s.trim()).filter(Boolean);
+  return [trimmed];
+}
+
 export function ResultExperience() {
   const ready = useClientReady();
   const { user, loading, configured } = useAuth();
@@ -236,9 +252,9 @@ export function ResultExperience() {
 
       {answeredReview.length > 0 && (
         <div className="mt-4 space-y-3">
-          <p className="text-sm font-bold text-ink">مراجعة إجاباتك</p>
+          <p className="text-sm font-bold text-ink">مراجعة إجاباتك مع طريقة الحل</p>
           <p className="text-xs text-slate-500">
-            الأسئلة التي أجبت عليها فقط — بدون شرح مفصّل
+            لكل سؤال: إجابتك، الصحيحة، وخطوات الحل
           </p>
           <ul className="space-y-3">
             {answeredReview.map((item, i) => {
@@ -276,11 +292,29 @@ export function ResultExperience() {
                       <MathText text={chosenText} />
                     </p>
                   )}
-                  {!ok && correctText != null && (
+                  {correctText != null && (
                     <p className="mt-1.5 text-sm font-semibold text-teal-800">
                       <span className="font-bold">الإجابة الصحيحة: </span>
                       <MathText text={correctText} />
                     </p>
+                  )}
+                  {item.solve_ar && (
+                    <div className="mt-3 rounded-xl bg-white/90 px-3 py-2.5 ring-1 ring-slate-200/80">
+                      <p className="text-[11px] font-extrabold tracking-wide text-teal-700">
+                        طريقة الحل
+                      </p>
+                      <div className="mt-1.5 space-y-2 text-[13px] font-semibold leading-relaxed text-ink">
+                        {splitSolveSteps(item.solve_ar).map((line, li) => (
+                          <p key={li} className="whitespace-pre-wrap break-words">
+                            {line.includes("$") ? (
+                              <MathText text={line} />
+                            ) : (
+                              line
+                            )}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </li>
               );

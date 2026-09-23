@@ -16,8 +16,21 @@ export function randInt(rng: Rng, min: number, max: number): number {
   return Math.floor(rng() * (max - min + 1)) + min;
 }
 
+/** Never returns undefined — throws if the array is empty. */
 export function pick<T>(rng: Rng, arr: readonly T[]): T {
+  if (!arr.length) {
+    throw new Error("pick() called with empty array");
+  }
   return arr[Math.floor(rng() * arr.length)]!;
+}
+
+/** Prefer filtered list; fall back if filter is empty. */
+export function pickPrefer<T>(
+  rng: Rng,
+  preferred: readonly T[],
+  fallback: readonly T[]
+): T {
+  return pick(rng, preferred.length > 0 ? preferred : fallback);
 }
 
 export function shuffle<T>(rng: Rng, arr: T[]): T[] {

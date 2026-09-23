@@ -230,15 +230,18 @@ export function buildMockExamAtSlot(
     ? 1 + (h.lastSlots.includes(safeSlot) ? 1 : 0)
     : 0;
   const seedBase = hashStr(
-    `${deviceId}|mock|slot${safeSlot}|try${attemptsOnSlot}|n${h.completedCount}`
+    `${deviceId}|mock|v4qudurat|slot${safeSlot}|try${attemptsOnSlot}|n${h.completedCount}`
   );
   const blueprint = EXAM_BLUEPRINTS[safeSlot]!;
   const seed = seedBase ^ (safeSlot * 7919) ^ (attemptsOnSlot * 1301);
+  // Exams 1–5 (slots 0–4): full Qudurat-style hard bank
+  const hardBias = safeSlot < 5 ? 1 : 0.55;
   const gens = generateExamQuestions(
     seed,
     blueprint.mix,
     avoid,
-    MOCK_EXAM_SIZE
+    MOCK_EXAM_SIZE,
+    { hardBias }
   );
   return strip(gens, safeSlot, "bank", seed);
 }

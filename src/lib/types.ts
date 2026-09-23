@@ -187,6 +187,10 @@ export type MockReviewItem = {
   chosen: number | null;
   correct_index: number;
   correct: boolean;
+  /** Full solution steps (Arabic). */
+  solve_ar?: string;
+  /** Why the chosen wrong option is wrong (if any). */
+  trap_note_ar?: string | null;
 };
 
 export type ProgressState = {

@@ -353,6 +353,7 @@ export function MockExperience() {
           chosen,
           correct_index: q.correct_index,
           correct: Boolean(records[i]?.correct),
+          solve_ar: q.solve_ar,
         };
       });
       saveMock(attempt);
